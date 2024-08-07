@@ -1,20 +1,23 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import BottomTabNavigator from './navigation/BottomTabNavigator'; // Ajuste o caminho se necessário
+import { TransactionProvider } from './context/TransactionContext'; // Ajuste o caminho se necessário
+import { AccountProvider } from './context/AccountContext'; // Certifique-se de que este caminho está correto
+import { CategoryProvider } from './context/CategoryContext'; // Ajuste o caminho se necessário
+import StackNavigator from './navigation/StackNavigator'; 
 
-export default function App() {
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <CategoryProvider>
+        <TransactionProvider>
+          <AccountProvider>
+            <BottomTabNavigator />
+          </AccountProvider>
+        </TransactionProvider>
+      </CategoryProvider>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
