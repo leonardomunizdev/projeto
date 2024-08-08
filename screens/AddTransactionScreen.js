@@ -93,6 +93,7 @@ const AddTransactionScreen = () => {
       description,
       amount: parseFloat(amount),
       date: format(date, 'yyyy-MM-dd', { locale: ptBR }),
+      startDate: date,
       accountId: selectedAccount,
       accountName,
       categoryId: transactionType === 'expense' ? expenseCategory : incomeCategory,
@@ -257,6 +258,8 @@ const AddTransactionScreen = () => {
           />
         </View>
 
+
+        \\modal de adicionar conta
         {isRecurring && (
           <Modal
             visible={showRecurrenceModal}
@@ -268,13 +271,7 @@ const AddTransactionScreen = () => {
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Configurar Recorrência</Text>
 
-                <TextInput
-                  style={styles.modalInput}
-                  placeholder="Quantidade"
-                  keyboardType="numeric"
-                  value={recurrence.count.toString()}
-                  onChangeText={handleRecurrenceCountChange}
-                />
+                
 
                 <Picker
                   selectedValue={recurrence.unit}

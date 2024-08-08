@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
+import AddTransactionScreen from '../screens/AddTransactionScreen';
 import ExportScreen from '../screens/ExportScreen';
 import OptionsScreen from '../screens/OptionsScreen';
 import AddStackNavigator from './AddStackNavigator'; // Importar o StackNavigator
@@ -63,7 +64,7 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="AddTransactionScreen"
-        component={AddStackNavigator} // Usar o StackNavigator aqui
+        component={AddTransactionScreen} // Usar o StackNavigator aqui
         options={{ tabBarLabel: '', headerShown: false }} // Remover o label do botão Add
       />
       <Tab.Screen

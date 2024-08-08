@@ -320,7 +320,7 @@ const HomeScreen = () => {
               <View style={styles.balanceContainer}>
                 <View style={styles.column}>
                   <Text style={styles.modalSectionTitle}>Receitas</Text>
-                  <Text style={styles.incomeTotal}>
+                  <Text style={styles.movementTextIncome}>
                     R$ {getCategoryTotals('income').totalSum}
                   </Text>
                   {getCategoryTotals('income').totals.map((category) => (
@@ -332,7 +332,7 @@ const HomeScreen = () => {
                 </View>
                 <View style={styles.column}>
                   <Text style={styles.modalSectionTitle}>Despesas</Text>
-                  <Text style={styles.expenseTotal}>
+                  <Text style={styles.movementTextExpense}>
                     R$ {getCategoryTotals('expense').totalSum}
                   </Text>
                   {getCategoryTotals('expense').totals.map((category) => (
@@ -355,7 +355,7 @@ const HomeScreen = () => {
                 <View style={styles.column}>
                   <Text style={styles.modalSectionTitle}>Receitas</Text>
                   <Text style={styles.incomeTotal}>
-                    R$ {getAccountTotals('income').totalSum}
+                    R$ {getAccountTotals('income').totalSum} {'\n'}
                   </Text>
                   {getAccountTotals('income').totals.map((account) => (
                     <Text key={account.id}>
@@ -377,12 +377,7 @@ const HomeScreen = () => {
                   ))}
                 </View>
               </View>
-              <Text style={styles.modalSectionTotal}>
-                Total Receita: R$ {getAccountTotals('income').totalSum}
-              </Text>
-              <Text style={styles.modalSectionTotal}>
-                Total Despesa: R$ {getAccountTotals('expense').totalSum}
-              </Text>
+              
             </View>
           )}
         </ScrollView>
@@ -552,6 +547,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+    alignItems: 'center',
+    alignContent: 'center'
   },
   modalBalanceTotal: {
     fontSize: 20,
@@ -560,12 +557,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalSectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
     marginTop: 16,
   },
   modalSectionTotal: {
-    fontSize: 16,
+    fontSize:35,
     fontWeight: 'bold',
     marginTop: 8,
   },
@@ -579,6 +576,14 @@ const styles = StyleSheet.create({
   },
   incomeTotal: {
     color: 'blue',
+  },
+  movementTextIncome: {
+    fontSize: 25,
+    color: 'blue',
+  },
+  movementTextExpense: {
+    fontSize: 25,
+    color: 'red',
   },
   expenseTotal: {
     color: 'red',
