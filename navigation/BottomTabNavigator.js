@@ -8,10 +8,24 @@ import ExportScreen from '../screens/ExportScreen';
 import OptionsScreen from '../screens/OptionsScreen';
 import AddStackNavigator from './AddStackNavigator'; // Importar o StackNavigator
 import PlusButton from '../components/PlusButton';
+import { useNavigation } from '@react-navigation/native';
+import { TouchableOpacity } from 'react-native';
+
+const Tab = createBottomTabNavigator();
+
+const TransactionsTabButton = (props) => {
+  const navigation = useNavigation();
+  return (
+    <TouchableOpacity
+      {...props}
+      onPress={() => {
+        navigation.navigate('Transactions', { paramKey: 'paramValue' });
+      }}
+    />
+  );
+};
 
 const BottomTabNavigator = () => {
-  const Tab = createBottomTabNavigator();
-
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -42,7 +56,10 @@ const BottomTabNavigator = () => {
       <Tab.Screen
         name="Transactions"
         component={TransactionsScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarButton: (props) => <TransactionsTabButton {...props} />,
+        }}
       />
       <Tab.Screen
         name="AddTransactionScreen"

@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, Button, Modal, FlatList, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { View, Text, Button, Modal, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTransactions } from '../context/TransactionContext';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
 import moment from 'moment';
 import 'moment/locale/pt-br';
+import { Swipeable } from 'react-native-gesture-handler';
 
 // Função para formatar valores em reais (R$)
 const formatCurrency = (value) => {
@@ -33,6 +34,7 @@ const TransactionsScreen = () => {
 
   const [filterType, setFilterType] = useState(route.params?.filterType || undefined);
   const [selectedMonth, setSelectedMonth] = useState(moment().startOf('month'));
+  const [searchText, setSearchText] = useState('');
 
   // Estado para modais
   const [modalVisible, setModalVisible] = useState(false);
@@ -43,13 +45,15 @@ const TransactionsScreen = () => {
   const applyFilter = (transactions) => {
     return transactions.filter(transaction =>
       moment(transaction.date, 'YYYY-MM-DD').isSame(selectedMonth, 'month') &&
-      (!filterType || transaction.type === filterType)
+      (!filterType || transaction.type === filterType) &&
+      (searchText === '' || transaction.description.toLowerCase().includes(searchText.toLowerCase()))
     );
   };
 
   // Função para limpar o filtro
   const clearFilter = () => {
     setFilterType(undefined);
+    setSearchText('');
   };
 
   // Atualiza o filtro e mês selecionado quando a tela ganhar foco
@@ -157,36 +161,52 @@ const TransactionsScreen = () => {
 
   const isValidDate = (date) => moment(date, 'YYYY-MM-DD', true).isValid();
 
-  const renderItem = ({ item }) => (
-    <View style={[styles.item, item.type === 'expense' ? styles.expenseItem : styles.incomeItem]}>
-      <Text style={[styles.description, item.type === 'expense' ? styles.expenseText : styles.incomeText]}>
-        {item.description}
-      </Text>
-      <Text style={[styles.amount, item.type === 'expense' ? styles.expenseAmount : styles.incomeAmount]}>
-        {formatCurrency(item.amount)}
-      </Text>
-      <Text style={[styles.date, item.type === 'expense' ? styles.expenseText : styles.incomeText]}>
-        {formatDate(item.date)}
-      </Text>
-      <Text style={[styles.category, item.type === 'expense' ? styles.expenseText : styles.incomeText]}>
-        Categoria: {getCategoryName(item.categoryId)}
-      </Text>
-      <Text style={[styles.account, item.type === 'expense' ? styles.expenseText : styles.incomeText]}>
-        Conta: {getAccountName(item.accountId)}
-      </Text>
-      {item.isRecurring && (
-        <Text style={[styles.installment, item.type === 'expense' ? styles.expenseText : styles.incomeText]}>
-          {getCurrentInstallment(item)}
-        </Text>
-      )}
-      <TouchableOpacity onPress={() => handleDelete(item.id, item.isRecurring, item.date, item.recurrenceId)} style={styles.deleteButton}>
-        <Text style={styles.deleteButtonText}>Excluir</Text>
+  const renderItem = ({ item }) => {
+    const renderRightActions = () => (
+      <TouchableOpacity
+        onPress={() => handleDelete(item.id, item.isRecurring, item.date, item.recurrenceId)}
+        style={styles.deleteButton}
+      >
+        <Text style={[styles.incomeItem, styles.deleteButtonText ]}>Excluir</Text>
       </TouchableOpacity>
-    </View>
-  );
+    );
+
+    return (
+      <Swipeable renderRightActions={renderRightActions}>
+        <View style={[styles.item, item.type === 'expense' ? styles.expenseItem : styles.incomeItem]}>
+          <View style={styles.row}>
+            <Text style={[styles.description]}>
+              {item.description}
+            </Text>
+            <Text style={[styles.amount, item.type === 'expense' ? styles.expenseAmount : styles.incomeAmount]}>
+              {formatCurrency(item.amount)}
+            </Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={[styles.category]}>
+              {getCategoryName(item.categoryId)}   |   {getAccountName(item.accountId)}
+            </Text>
+          </View>
+          {item.isRecurring && (
+            <Text style={[styles.installment]}>
+              {getCurrentInstallment(item)}
+            </Text>
+          )}
+        </View>
+      </Swipeable>
+    );
+  };
 
   return (
     <View style={styles.container}>
+      {/* Barra de pesquisa */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Pesquisar por descrição"
+        value={searchText}
+        onChangeText={setSearchText}
+      />
+
       <FlatList
         data={filteredTransactions}
         renderItem={renderItem}
@@ -205,53 +225,117 @@ const TransactionsScreen = () => {
         </TouchableOpacity>
       </View>
       
-      {/* Modal de Exclusão */}
+      {/* Modais */}
       <Modal
-  transparent={true}
-  animationType="slide"
-  visible={modalVisible}
-  onRequestClose={() => setModalVisible(false)}
->
-  <View style={styles.modalContainer}>
-    <View style={styles.modalContent}>
-      <Text style={styles.modalTitle}>
-        {modalType === 'recurring' ? 'Confirmar exclusão' : 'Confirmar exclusão'}
-      </Text>
-      <Text style={styles.modalMessage}>
-        {modalType === 'recurring' 
-          ? 'Esta transação é recorrente. O que você deseja fazer?' 
-          : 'Você realmente deseja excluir esta transação?'}
-      </Text>
-      {modalType === 'recurring' && (
-        <View style={styles.modalOptions}>
-          <Pressable style={[styles.modalButton, styles.optionButton]} onPress={removeAllRecurringTransactions}>
-            <Text style={styles.optionButtonText}>Excluir todas as parcelas</Text>
-          </Pressable>
-          <Pressable style={[styles.modalButton, styles.optionButton]} onPress={removePreviousRecurringTransactions}>
-            <Text style={styles.optionButtonText}>Excluir parcelas anteriores</Text>
-          </Pressable>
-          <Pressable style={[styles.modalButton, styles.optionButton]} onPress={removeFutureRecurringTransactions}>
-            <Text style={styles.optionButtonText}>Excluir parcelas futuras</Text>
-          </Pressable>
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {modalType === 'single' && (
+              <View>
+                <Text style={styles.modalTitle}>Excluir transação</Text>
+                <Text>Tem certeza de que deseja excluir esta transação?</Text>
+                <TouchableOpacity onPress={removeTransactionById} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Sim</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Não</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {modalType === 'recurring' && (
+              <View>
+                <Text style={styles.modalTitle}>Excluir transações recorrentes</Text>
+                <TouchableOpacity onPress={removeAllRecurringTransactions} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Excluir todas</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={removePreviousRecurringTransactions} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Excluir anteriores</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={removeFutureRecurringTransactions} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Excluir futuras</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalButton}>
+                  <Text style={styles.modalButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
         </View>
-      )}
-      <Pressable style={[styles.modalButton, styles.deleteButton]} onPress={removeTransactionById}>
-        <Text style={styles.deleteButtonText}>Excluir</Text>
-      </Pressable>
-      <Pressable style={[styles.modalButton, styles.cancelButton]} onPress={() => setModalVisible(false)}>
-        <Text style={styles.cancelButtonText}>Cancelar</Text>
-      </Pressable>
-    </View>
-  </View>
-</Modal>
-
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  // Adicione estilos para o modal aqui
-  modalContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f2f5',
+    padding: 10,
+    paddingTop: 30,
+  },
+  searchInput: {
+    height: 45,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    backgroundColor: '#fff',
+  },
+  listContent: {
+    paddingBottom: 80,
+  },
+  item: {
+    padding: 15,
+    margin: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    borderLeftWidth: 5,
+  },
+  expenseItem: {
+    borderLeftColor: 'red',
+  },
+  incomeItem: {
+    borderLeftColor: 'blue',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  description: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+  },
+  amount: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'right',
+  },
+  date: {
+    fontSize: 14,
+    color: '#888',
+  },
+  category: {
+    fontSize: 14,
+    color: '#888',
+  },
+  account: {
+    fontSize: 14,
+    color: '#888',
+  },
+  installment: {
+    fontSize: 1,
+    color: '#888',
+    fontStyle: 'italic',
+  },
+  modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -259,173 +343,64 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderRadius: 10,
+    padding: 20,
     alignItems: 'center',
+  },
+  expenseAmount: {
+    color: 'red',
+  },
+  incomeAmount:{
+    color: 'blue',
+
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 10,
   },
-  modalMessage: {
-    fontSize: 16,
-    marginVertical: 10,
-  },
-  modalOptions: {
-    marginVertical: 10,
-  },
-  deleteButton: {
-    marginTop: 10,
-    backgroundColor: 'red',
+  modalButton: {
+    marginVertical: 5,
     padding: 10,
     borderRadius: 5,
+    backgroundColor: '#fff',
   },
-  deleteButtonText: {
-    color: 'white',
-  },
-  // Outros estilos
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  item: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  description: {
-    fontSize: 16,
-  },
-  amount: {
-    fontSize: 18,
+  modalButtonText: {
+    color: '#000',
     fontWeight: 'bold',
-  },
-  date: {
-    fontSize: 14,
-    color: '#555',
-  },
-  category: {
-    fontSize: 14,
-    color: '#555',
-  },
-  account: {
-    fontSize: 14,
-    color: '#555',
-  },
-  installment: {
-    fontSize: 14,
-    color: '#555',
-  },
-  expenseItem: {
-    backgroundColor: '#ffe6e6',
-  },
-  incomeItem: {
-    backgroundColor: '#e6ffe6',
-  },
-  expenseText: {
-    color: '#cc0000',
-  },
-  incomeText: {
-    color: '#009900',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 10,
+    backgroundColor: '#fff',
   },
   navButton: {
     padding: 10,
   },
   navButtonText: {
-    fontSize: 16,
-    color: 'blue',
+    fontSize: 18,
+    color: '#007bff',
   },
   footerTitle: {
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '70%',
+    width: 100,
+    borderRadius: 8,
+    marginHorizontal: 2,
+  },
+  deleteButtonText: {
+    color: '#fff',
     fontWeight: 'bold',
   },
-
-
-    // Estilo para o container do modal
-    modalContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.3)', // Fundo semi-transparente
-    },
-    // Estilo para o conteúdo do modal
-    modalContent: {
-      width: '90%',
-      maxWidth: 400,
-      padding: 20,
-      backgroundColor: '#ffffff',
-      borderRadius: 15,
-      shadowColor: '#000', // Sombra do modal
-      shadowOffset: { width: 0, height: 5 },
-      shadowOpacity: 0.3,
-      shadowRadius: 10,
-      elevation: 10, // Sombra para Android
-      alignItems: 'center',
-    },
-    // Estilo para o título do modal
-    modalTitle: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#333', // Cor do texto
-      marginBottom: 10,
-    },
-    // Estilo para a mensagem do modal
-    modalMessage: {
-      fontSize: 16,
-      color: '#666',
-      marginBottom: 20,
-      textAlign: 'center',
-    },
-    // Estilo para o container das opções no modal
-    modalOptions: {
-      width: '100%',
-      marginBottom: 20,
-    },
-    // Estilo para os botões do modal
-    modalButton: {
-      width: '100%',
-      padding: 15,
-      borderRadius: 10,
-      marginVertical: 5,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    // Estilo para o botão de excluir
-    deleteButton: {
-      backgroundColor: '#ff4d4d', // Cor vermelha para exclusão
-    },
-    deleteButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    // Estilo para o botão de cancelar
-    cancelButton: {
-      backgroundColor: '#ccc', // Cor cinza para cancelar
-    },
-    cancelButtonText: {
-      color: '#333',
-      fontWeight: 'bold',
-    },
-    // Estilo para o botão de opção
-    optionButton: {
-      backgroundColor: '#007bff', // Cor azul para opções
-    },
-    optionButtonText: {
-      color: '#fff',
-      fontWeight: 'bold',
-    },
-    // Estilo para o modal interno
-    modalInnerContent: {
-      width: '100%',
-    },
-  });
-
+});
 
 export default TransactionsScreen;

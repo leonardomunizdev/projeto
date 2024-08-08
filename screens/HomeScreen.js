@@ -196,10 +196,11 @@ const HomeScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceText}>Saldo</Text>
-          <Text style={[styles.balanceAmount, balance < 0 && styles.balanceAmountNegative]}>
+          
+        </View>
+        <Text style={[styles.balanceAmount, balance < 0 && styles.balanceAmountNegative]}>
             R$ {balance.toFixed(2).replace('.', ',')}
           </Text>
-        </View>
         <View style={styles.summaryContainer}>
           <Card style={styles.card} onPress={() => navigateToTransactions('income')}>
             <Card.Content>
@@ -277,16 +278,16 @@ const HomeScreen = () => {
     <View style={styles.modalContent}>
       <View style={styles.modalBody}>
         <View style={styles.monthYearSelector}>
-              <TouchableOpacity onPress={() => changeMonth('prev')}>
-                <Icon name="chevron-left" size={24} />
-              </TouchableOpacity>
-              <Text style={styles.monthYearText}>
-                {formatMonthYear(currentMonth, currentYear)}
-              </Text>
-              <TouchableOpacity onPress={() => changeMonth('next')}>
-                <Icon name="chevron-right" size={24} />
-              </TouchableOpacity>
-            </View>
+          <TouchableOpacity onPress={() => changeMonth('prev')}>
+            <Icon name="chevron-left" size={24} />
+          </TouchableOpacity>
+          <Text style={styles.monthYearText}>
+            {formatMonthYear(currentMonth, currentYear)}
+          </Text>
+          <TouchableOpacity onPress={() => changeMonth('next')}>
+            <Icon name="chevron-right" size={24} />
+          </TouchableOpacity>
+        </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[
@@ -322,7 +323,6 @@ const HomeScreen = () => {
                   <Text style={styles.incomeTotal}>
                     R$ {getCategoryTotals('income').totalSum}
                   </Text>
-                  <Text></Text>
                   {getCategoryTotals('income').totals.map((category) => (
                     <Text key={category.id}>
                       {category.name}
@@ -335,8 +335,6 @@ const HomeScreen = () => {
                   <Text style={styles.expenseTotal}>
                     R$ {getCategoryTotals('expense').totalSum}
                   </Text>
-                  <Text></Text>
-
                   {getCategoryTotals('expense').totals.map((category) => (
                     <Text key={category.id}>
                       {category.name}
@@ -349,7 +347,7 @@ const HomeScreen = () => {
           ) : (
             <View>
               <Text style={styles.modalTitle}>Balanço
-              <Text style={styles.modalBalanceTotal}>
+                <Text style={styles.modalBalanceTotal}>
                   {'\n'}R$ {parseFloat(getAccountTotals('income').totalSum) - parseFloat(getAccountTotals('expense').totalSum)}
                 </Text>
               </Text> 
@@ -359,7 +357,6 @@ const HomeScreen = () => {
                   <Text style={styles.incomeTotal}>
                     R$ {getAccountTotals('income').totalSum}
                   </Text>
-                  <Text></Text>
                   {getAccountTotals('income').totals.map((account) => (
                     <Text key={account.id}>
                       {account.name}
@@ -372,8 +369,6 @@ const HomeScreen = () => {
                   <Text style={styles.expenseTotal}>
                     R$ {getAccountTotals('expense').totalSum}
                   </Text>
-                  <Text></Text>
-
                   {getAccountTotals('expense').totals.map((account) => (
                     <Text key={account.id}>
                       {account.name}
@@ -392,7 +387,7 @@ const HomeScreen = () => {
           )}
         </ScrollView>
 
-        <TouchableOpacity onPress={closeModal}>
+        <TouchableOpacity onPress={closeModal} style={styles.modalCloseButton}>
           <Text style={styles.modalCloseText}>Fechar</Text>
         </TouchableOpacity>
       </View>
@@ -403,12 +398,14 @@ const HomeScreen = () => {
 
 
 
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 30,
     flex: 1,
     padding: 16,
   },
@@ -445,7 +442,7 @@ const styles = StyleSheet.create({
   },
   cardAmountIncome: {
     fontSize: 16,
-    color: 'green',
+    color: 'blue',
   },
   cardAmountExpense: {
     fontSize: 16,
@@ -594,7 +591,18 @@ const styles = StyleSheet.create({
   modalAccountContainer: {
     padding: 8,
   },
-  
+  modalCloseButton: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#FF4C4C', // Cor de fundo do botão fechar
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 
 
 
