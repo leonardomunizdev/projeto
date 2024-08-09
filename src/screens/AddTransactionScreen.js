@@ -1,4 +1,3 @@
-// Importe os módulos necessários do React Native
 import React, { useState, useEffect } from "react";
 import {
   Image,
@@ -13,6 +12,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Alert,
+  ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -28,7 +29,6 @@ import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import { MaterialIcons } from "@expo/vector-icons";
 
-// Definição do componente AddTransactionScreen
 const AddTransactionScreen = () => {
   const navigation = useNavigation();
   const { addTransaction } = useTransactions();
@@ -98,7 +98,7 @@ const AddTransactionScreen = () => {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
     }
-
+  
     if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
       return;
@@ -119,6 +119,7 @@ const AddTransactionScreen = () => {
       categoryName,
       isRecurring,
       recurrenceId,
+      attachments,
     };
 
     const transactions = isRecurring
@@ -140,6 +141,7 @@ const AddTransactionScreen = () => {
     setIsRecurring(false);
     setRecurrence({ count: "", unit: "month" });
     setRecurrenceInfo("");
+    setAttachments([]);
 
     navigation.navigate("Home");
   };
@@ -252,136 +254,164 @@ const AddTransactionScreen = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Adicionar Transação</Text>
+    <KeyboardAvoidingView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>Adicionar Transação</Text>
 
-        <View style={styles.transactionTypeContainer}>
-          <TouchableOpacity
-            style={getButtonStyle("income")}
-            onPress={() => handleTransactionTypeChange("income")}
-          >
-            <Text style={styles.transactionButtonText}>Receita</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={getButtonStyle("expense")}
-            onPress={() => handleTransactionTypeChange("expense")}
-          >
-            <Text style={styles.transactionButtonText}>Despesa</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Descrição"
-          value={description}
-          onChangeText={setDescription}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Valor"
-          keyboardType="numeric"
-          value={amount}
-          onChangeText={setAmount}
-        />
-        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-          <TextInput
-            style={styles.input}
-            placeholder="Data"
-            value={format(date, "dd/MM/yyyy", { locale: ptBR })}
-            editable={false}
-            pointerEvents="none"
-          />
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            testID="dateTimePicker"
-            value={date}
-            mode="date"
-            display="default"
-            onChange={onChange}
-          />
-        )}
-        <Picker
-          selectedValue={selectedAccount}
-          onValueChange={handleAccountChange}
-        >
-          <Picker.Item label="Selecione uma conta" value="" />
-          {accounts.map((account) => (
-            <Picker.Item
-              key={account.id}
-              label={account.name}
-              value={account.id}
-            />
-          ))}
-        </Picker>
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={handleValueChange}
-        >
-          <Picker.Item label="Selecione uma categoria" value="" />
-          {filteredCategories.map((category) => (
-            <Picker.Item
-              key={category.id}
-              label={category.name}
-              value={category.id}
-            />
-          ))}
-        </Picker>
-
-        <View style={styles.switchContainer}>
-          <Text style={styles.switchText}>Repetir</Text>
-          <Switch
-            value={isRecurring}
-            onValueChange={(value) => setIsRecurring(value)}
-            thumbColor={isRecurring ? "#4caf50" : "#f44336"}
-            trackColor={{ false: "#ddd", true: "#b2dfdb" }}
-          />
-        </View>
-
-        {isRecurring && (
-          <View style={styles.recurrenceContainer}>
-            <Text style={styles.recurrenceLabel}>Quantidade</Text>
-            <View style={styles.recurrenceButtons}>
-              <Button title="-" onPress={handleDecrement} />
-              <TextInput
-                style={styles.input}
-                placeholder="Repetir"
-                value={recurrence.count}
-                keyboardType="numeric"
-                onChangeText={handleRecurrenceCountChange}
-              />
-              <Button title="+" onPress={handleIncrement} />
-              <Picker
-                selectedValue={recurrence.unit}
-                onValueChange={(itemValue) =>
-                  setRecurrence((prevRecurrence) => ({
-                    ...prevRecurrence,
-                    unit: itemValue,
-                  }))
-                }
+            <View style={styles.transactionTypeContainer}>
+              <TouchableOpacity
+                style={getButtonStyle("income")}
+                onPress={() => handleTransactionTypeChange("income")}
               >
-                <Picker.Item label="Meses" value="month" />
-                <Picker.Item label="Semanas" value="week" />
-              </Picker>
+                <Text style={styles.transactionButtonText}>Receita</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={getButtonStyle("expense")}
+                onPress={() => handleTransactionTypeChange("expense")}
+              >
+                <Text style={styles.transactionButtonText}>Despesa</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Descrição"
+              value={description}
+              onChangeText={setDescription}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Valor"
+              keyboardType="numeric"
+              value={amount}
+              onChangeText={setAmount}
+            />
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              style={styles.datePickerButton}
+            >
+              <TextInput
+                style={styles.datePickerInput}
+                placeholder="Data"
+                value={format(date, "dd/MM/yyyy", { locale: ptBR })}
+                editable={false}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                display="default"
+                onChange={onChange}
+              />
+            )}
+            <Picker
+              selectedValue={selectedAccount}
+              onValueChange={handleAccountChange}
+              style={styles.picker}
+            >
+              <Picker.Item label="Selecione uma conta" value="" />
+              {accounts.map((account) => (
+                <Picker.Item
+                  key={account.id}
+                  label={account.name}
+                  value={account.id}
+                />
+              ))}
+            </Picker>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={handleValueChange}
+              style={styles.picker}
+            >
+              <Picker.Item label="Selecione uma categoria" value="" />
+              {filteredCategories.map((category) => (
+                <Picker.Item
+                  key={category.id}
+                  label={category.name}
+                  value={category.id}
+                />
+              ))}
+            </Picker>
+
+            <View style={styles.switchContainer}>
+              <Text style={styles.switchText}>Repetir</Text>
+              <Switch
+                value={isRecurring}
+                onValueChange={(value) => setIsRecurring(value)}
+                thumbColor={isRecurring ? "#4caf50" : "#f44336"}
+                trackColor={{ false: "#ddd", true: "#b2dfdb" }}
+              />
+            </View>
+
+            {isRecurring && (
+              <View style={styles.recurrenceContainer}>
+                <View style={styles.recurrenceLabelContainer}>
+                  <Text style={styles.recurrenceLabel}>Quantidade</Text>
+                  <View style={styles.recurrenceControls}>
+                    <TouchableOpacity
+                      style={styles.recurrenceButton}
+                      onPress={handleDecrement}
+                    >
+                      <Text style={styles.recurrenceButtonText}>-</Text>
+                    </TouchableOpacity>
+
+                    <TextInput
+                      style={styles.recurrenceInput}
+                      placeholder="0"
+                      value={recurrence.count.toString()}
+                      keyboardType="numeric"
+                      onChangeText={handleRecurrenceCountChange}
+                    />
+
+                    <TouchableOpacity
+                      style={styles.recurrenceButton}
+                      onPress={handleIncrement}
+                    >
+                      <Text style={styles.recurrenceButtonText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.periodContainer}>
+                  <Text style={styles.recurrenceLabel}>Período</Text>
+                  <Picker
+                    selectedValue={recurrence.unit}
+                    onValueChange={(itemValue) =>
+                      setRecurrence((prevRecurrence) => ({
+                        ...prevRecurrence,
+                        unit: itemValue,
+                      }))
+                    }
+                    style={styles.recurrencePicker}
+                  >
+                    <Picker.Item label="Mensal" value="month" />
+                    <Picker.Item label="Semanal" value="week" />
+                  </Picker>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.attachmentContainer}>
+              <TouchableOpacity
+                onPress={pickImage}
+                style={styles.addAttachmentButton}
+              >
+                <Text style={styles.addAttachmentButtonText}>Adicionar Anexo</Text>
+              </TouchableOpacity>
+              <View style={styles.attachmentList}>{renderAttachments()}</View>
             </View>
           </View>
-        )}
-
-        <View style={styles.attachmentContainer}>
-          <TouchableOpacity
-            onPress={pickImage}
-            style={styles.addAttachmentButton}
-          >
-            <Text style={styles.addAttachmentButtonText}>Adicionar Anexo</Text>
-          </TouchableOpacity>
-          <View style={styles.attachmentList}>{renderAttachments()}</View>
-        </View>
-      <Button title="Salvar" onPress={handleSaveAndNavigate} />
-
+        </TouchableWithoutFeedback>
+      </ScrollView>
+      <View style={styles.footer}>
+        <Button title="Salvar" onPress={handleSaveAndNavigate} />
       </View>
-
-    </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
   );
 };
 
@@ -391,16 +421,34 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  formContainer: {
+    flex: 1,
+  },
   title: {
     fontSize: 24,
     marginBottom: 16,
+    fontWeight: "bold",
   },
   input: {
     height: 40,
-    borderColor: "gray",
+    borderColor: "#ccc",
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
+    borderRadius: 5,
+  },
+  datePickerButton: {
+    backgroundColor: "#2196F3",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 12,
+  },
+  datePickerInput: {
+    color: "#fff",
+    fontSize: 16,
   },
   transactionTypeContainer: {
     flexDirection: "row",
@@ -428,6 +476,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   recurrenceContainer: {
+    flexDirection: "column",
+    marginBottom: 16,
+  },
+  recurrenceLabelContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
@@ -436,9 +488,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 8,
   },
-  recurrenceButtons: {
+  recurrenceControls: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+  recurrenceButton: {
+    backgroundColor: "#ddd",
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  recurrenceButtonText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  recurrenceInput: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    width: 80,
+    textAlign: "center",
+    fontSize: 16,
+    marginHorizontal: 10,
+  },
+  periodContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  recurrencePicker: {
+    width: 150,
   },
   attachmentContainer: {
     marginTop: 20,
@@ -464,6 +543,13 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginRight: 10,
+  },
+  picker: {
+    marginBottom: 12,
+  },
+  footer: {
+    padding: 16,
+    backgroundColor: "#f1f1f1",
   },
 });
 

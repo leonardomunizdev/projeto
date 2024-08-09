@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, Modal, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Corrigido para usar Ionicons
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,7 +9,7 @@ const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
-  const [isClearDataConfirmVisible, setIsClearDataConfirmVisible] = useState(false); // Adicionado para a confirmação de limpeza
+  const [isClearDataConfirmVisible, setIsClearDataConfirmVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newAccountName, setNewAccountName] = useState('');
@@ -27,7 +28,7 @@ const OptionsScreen = () => {
 
   const handleAddCategory = () => {
     if (newCategoryName.trim() && selectedCategoryType) {
-      addCategory(newCategoryName, selectedCategoryType); // Passa o nome e o tipo
+      addCategory(newCategoryName, selectedCategoryType);
       setNewCategoryName('');
     }
   };
@@ -86,7 +87,6 @@ const OptionsScreen = () => {
     setIsClearDataConfirmVisible(false);
   };
 
-  // Função para filtrar categorias com base no tipo selecionado
   const filteredCategories = categories.filter(category =>
     !selectedCategoryType || category.type === selectedCategoryType
   );
@@ -94,10 +94,35 @@ const OptionsScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Options Screen</Text>
-      <Button title="Gerir Contas" onPress={() => setIsAccountModalVisible(true)} />
-      <Button title="Gerir Categorias" onPress={() => setIsCategoryModalVisible(true)} />
-      <Button title="Limpar Todos os Dados" onPress={confirmClearData} color="red" />
-
+      <TouchableOpacity style={styles.optionButton} onPress={() => setIsAccountModalVisible(true)}>
+        <Ionicons name="wallet" size={24} color="black" />
+        <Text style={styles.optionText}>Gerir Contas</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton} onPress={() => setIsCategoryModalVisible(true)}>
+        <Ionicons name="list" size={24} color="black" />
+        <Text style={styles.optionText}>Gerir Categorias</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.optionButton}>
+        <Ionicons name="download" size={24} color="black" />
+        <Text style={styles.optionText}>Baixar Notas Fiscais</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton}>
+        <Ionicons name="folder-open" size={24} color="black" />
+        <Text style={styles.optionText}>Importar</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton}>
+        <Ionicons name="folder" size={24} color="black" />
+        <Text style={styles.optionText}>Exportar</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton}>
+        <Ionicons name="stats-chart" size={24} color="black" />
+        <Text style={styles.optionText}>Gráficos</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.optionButton} onPress={confirmClearData}>
+        <Ionicons name="trash" size={24} color="red" />
+        <Text style={styles.optionText}>Limpar Todos os Dados</Text>
+      </TouchableOpacity>
       {/* Modal de Contas */}
       <Modal
         visible={isAccountModalVisible}
@@ -141,10 +166,7 @@ const OptionsScreen = () => {
       >
         <View style={styles.fullScreenModal}>
           <View style={styles.modalContent}>
-          <Text >Gerir asdfsdfsdfsdfsdfsdfsdfsdasd</Text>
             <Text style={styles.modalTitle}>Gerir Categorias</Text>
-
-            {/* Botões Despesa e Receita */}
             <View style={styles.categoryButtonContainer}>
               <TouchableOpacity
                 style={[
@@ -180,7 +202,7 @@ const OptionsScreen = () => {
             />
             <Button title="Adicionar Categoria" onPress={handleAddCategory} />
             <FlatList
-              data={filteredCategories} // Use filteredCategories para mostrar as categorias filtradas
+              data={filteredCategories}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <View style={styles.categoryItem}>
@@ -191,7 +213,6 @@ const OptionsScreen = () => {
                 </View>
               )}
             />
-
             <Button title="Fechar" onPress={() => setIsCategoryModalVisible(false)} />
           </View>
         </View>
@@ -214,11 +235,11 @@ const OptionsScreen = () => {
               <Button title="Cancelar" onPress={cancelRemoveAccount} />
               <Button title="Excluir" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} color="red" />
             </View>
-          </View>
+            </View>
         </View>
       </Modal>
 
-      {/* Modal de Confirmação para Limpar Dados */}
+      {/* Modal de Confirmação de Limpeza de Dados */}
       <Modal
         visible={isClearDataConfirmVisible}
         animationType="slide"
@@ -239,19 +260,37 @@ const OptionsScreen = () => {
         </View>
       </Modal>
     </View>
+    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f4f4f4',
   },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  optionText: {
+    fontSize: 16,
+    marginLeft: 12,
   },
   fullScreenModal: {
     flex: 1,
@@ -260,10 +299,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
@@ -271,17 +312,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
+    width: '100%',
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
+    borderColor: '#ddd',
+    borderRadius: 4,
     marginBottom: 10,
   },
   accountItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   accountName: {
     fontSize: 16,
@@ -291,44 +335,48 @@ const styles = StyleSheet.create({
   },
   categoryButtonContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
   categoryButton: {
     flex: 1,
-    padding: 10,
-    borderRadius: 5,
-    margin: 5,
+    padding: 12,
+    borderRadius: 4,
     alignItems: 'center',
   },
   incomeButton: {
-    backgroundColor: 'lightblue',
+    backgroundColor: '#d4edda',
   },
   expenseButton: {
-    backgroundColor: 'lightcoral',
+    backgroundColor: '#f8d7da',
   },
   categoryButtonText: {
     fontSize: 16,
   },
   incomeButtonText: {
-    color: 'blue',
+    color: '#155724',
   },
   expenseButtonText: {
-    color: 'red',
+    color: '#721c24',
   },
   categoryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   categoryName: {
     fontSize: 16,
   },
   confirmModalContent: {
-    width: '80%',
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
+    alignItems: 'center',
   },
   confirmTitle: {
     fontSize: 18,
@@ -338,11 +386,14 @@ const styles = StyleSheet.create({
   confirmText: {
     fontSize: 16,
     marginBottom: 20,
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    width: '100%',
   },
 });
 
 export default OptionsScreen;
+

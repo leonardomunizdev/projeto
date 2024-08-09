@@ -43,7 +43,6 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(prevTransactions => [...prevTransactions, transaction]);
     }
   };
-  
 
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
@@ -87,7 +86,17 @@ export const TransactionProvider = ({ children }) => {
   
     return transactions;
   };
-  
+
+  // Atualiza uma transação existente com novos anexos
+  const updateTransactionAttachments = (id, attachments) => {
+    setTransactions(prevTransactions =>
+      prevTransactions.map(transaction =>
+        transaction.id === id
+          ? { ...transaction, attachments }
+          : transaction
+      )
+    );
+  };
 
   return (
     <TransactionContext.Provider value={{
@@ -96,7 +105,8 @@ export const TransactionProvider = ({ children }) => {
       addMultipleTransactions,
       removeTransaction,
       calculateTotalBalance,
-      generateRecurringTransactions
+      generateRecurringTransactions,
+      updateTransactionAttachments
     }}>
       {children}
     </TransactionContext.Provider>
