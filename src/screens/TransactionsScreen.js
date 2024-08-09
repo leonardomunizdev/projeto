@@ -4,9 +4,11 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import { useTransactions } from '../context/TransactionContext';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
+import {styles} from '../styles/screens/TransactionsScreenStyles'
 import moment from 'moment';
 import 'moment/locale/pt-br';
 
+// FORMATA OS VALORES PARA REAIS(BRL)
 const formatCurrency = (value) => {
   const numberValue = parseFloat(value);
   if (isNaN(numberValue)) {
@@ -17,17 +19,14 @@ const formatCurrency = (value) => {
     currency: 'BRL',
   }).format(numberValue);
 };
-
-const formatDate = (date) => {
-  return moment(date, 'YYYY-MM-DD').format('DD/MM/YYYY');
-};
+//////////////////////////////////////////////////
 
 const TransactionsScreen = () => {
   const { transactions, removeTransaction } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
   const route = useRoute();
-  const navigation = useNavigation();
+ 
 
   const [filterType, setFilterType] = useState(route.params?.filterType || undefined);
   const [selectedMonth, setSelectedMonth] = useState(moment().startOf('month'));
@@ -37,6 +36,8 @@ const TransactionsScreen = () => {
   const [modalType, setModalType] = useState(null);
   const [currentTransaction, setCurrentTransaction] = useState(null);
 
+
+  // CONTROLE DE FILTROS
   const applyFilter = (transactions) => {
     return transactions.filter(transaction =>
       moment(transaction.date, 'YYYY-MM-DD').isSame(selectedMonth, 'month') &&
@@ -45,32 +46,33 @@ const TransactionsScreen = () => {
     );
   };
 
-  const clearFilter = () => {
-    setFilterType(undefined);
-    setSearchText('');
-  };
-
   useFocusEffect(
     useCallback(() => {
       const { filterType: receivedFilter } = route.params || {};
       if (receivedFilter) {
         setFilterType(receivedFilter);
       } else {
-        clearFilter();
+        setFilterType(undefined);
       }
 
       return () => {
-        clearFilter();
+        setFilterType(undefined);
+        
       };
     }, [route.params?.filterType])
   );
 
   const filteredTransactions = applyFilter(transactions).sort((a, b) => moment(a.date).diff(moment(b.date)));
+  //////////////////////////////////////////////////
 
+  // FUNÇÃO PARA MUDANÇA DE MÊS
   const changeMonth = (direction) => {
     setSelectedMonth(prevMonth => prevMonth.clone().add(direction, 'month'));
   };
+  //////////////////////////////////////////////////
 
+
+  // FUNÇÃO PARA CONTAGEM DE PARECLAS
   const getCurrentInstallment = (transaction) => {
     if (!transaction.isRecurring || !transaction.date || !transaction.totalInstallments) {
       return console.log(transaction.date, transaction.description, transaction.isRecurring);
@@ -86,7 +88,9 @@ const TransactionsScreen = () => {
   
     return `Parcela ${installmentNumber} de ${totalInstallments}`;
   };
+  //////////////////////////////////////////////////
 
+  // FUNÇÕES PARA PEGAR OS NOMES DAS CONTAS E DAS CATEGORIAS
   const getAccountName = (accountId) => {
     const account = accounts.find(acc => acc.id === accountId);
     return account ? account.name : 'Conta desconhecida';
@@ -96,7 +100,9 @@ const TransactionsScreen = () => {
     const category = categories.find(cat => cat.id === categoryId);
     return category ? category.name : 'Categoria desconhecida';
   };
-
+  //////////////////////////////////////////////////
+  
+  // FUNÇÕES PARA DELETAR TRANSAÇÕES  
   const handleDelete = (id, isRecurring, date, recurrenceId) => {
     setCurrentTransaction({ id, isRecurring, date, recurrenceId });
     setModalVisible(true);
@@ -135,11 +141,15 @@ const TransactionsScreen = () => {
     removeTransaction(id);
     setModalVisible(false);
   };
+  //////////////////////////////////////////////////
 
+  // FUNÇÃO DE FORMATAÇÃO DE DATA
   const formatDayOfWeek = (date) => {
     return moment(date, 'YYYY-MM-DD').format('dddd, DD/MM/YYYY');
   };
+  //////////////////////////////////////////////////
 
+  // RENDERIZAÇÃO DAS TRANSAÇÕES
   const renderItem = ({ item, index }) => {
     const dayOfWeek = formatDayOfWeek(item.date);
     const previousDate = index > 0 ? filteredTransactions[index - 1].date : null;
@@ -180,6 +190,7 @@ const TransactionsScreen = () => {
       </View>
     );
   };
+  {/*/////////////////////////////////////////////////////////////////////////////////////////// */}
 
   return (
     <View style={styles.container}>
@@ -209,6 +220,7 @@ const TransactionsScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/*  MODAL DE EXCLUSÃO DE TRANSAÇÕES  */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -221,16 +233,16 @@ const TransactionsScreen = () => {
               <>
                 <Text style={styles.modalTitle}>Excluir transações recorrentes</Text>
                 <TouchableOpacity onPress={removeAllRecurringTransactions} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Excluir todas as transações</Text>
+                  <Text style={styles.modalButtonText}>Todas as parcelas</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={removePreviousRecurringTransactions} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Excluir transações anteriores</Text>
+                  <Text style={styles.modalButtonText}>Parcelas anteriores</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={removeFutureRecurringTransactions} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Excluir transações futuras</Text>
+                  <Text style={styles.modalButtonText}>Parcelas futuras</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={removeTransactionById} style={styles.modalButton}>
-                  <Text style={styles.modalButtonText}>Excluir apenas esta transação</Text>
+                  <Text style={styles.modalButtonText}>Esta parcela</Text>
                 </TouchableOpacity>
               </>
             ) : (
@@ -247,131 +259,12 @@ const TransactionsScreen = () => {
           </View>
         </View>
       </Modal>
+      {/*/////////////////////////////////////////////////////////////////////////////////////////// */}
+
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-  },
-  searchInput: {
-    height: 40,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingLeft: 10,
-    marginBottom: 10,
-    fontSize: 16,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  item: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  expenseItem: {
-    borderLeftColor: '#ff4d4f',
-    borderLeftWidth: 5,
-  },
-  incomeItem: {
-    borderLeftColor: '#4caf50',
-    borderLeftWidth: 5,
-  },
-  description: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  category: {
-    fontSize: 14,
-    color: '#999',
-  },
-  installment: {
-    fontSize: 14,
-    color: 'black',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 15,
-    paddingBottom: 15,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  footerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  navButton: {
-    padding: 10,
-  },
-  navButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007bff',
-  },
-  dateHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    color: '#333',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: 300,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  modalButton: {
-    padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 5,
-    marginTop: 10,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  cancelButton: {
-    backgroundColor: '#ff4d4f',
-  },
-});
 
 export default TransactionsScreen;
 

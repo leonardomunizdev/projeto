@@ -1,11 +1,10 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler'; // Importe o GestureHandlerRootView
 import { NavigationContainer } from '@react-navigation/native';
-import BottomTabNavigator from './navigation/BottomTabNavigator'; // Ajuste o caminho se necessário
-import { TransactionProvider } from './context/TransactionContext'; // Ajuste o caminho se necessário
-import { AccountProvider } from './context/AccountContext'; // Ajuste o caminho se necessário
-import { CategoryProvider } from './context/CategoryContext'; // Ajuste o caminho se necessário
-import StackNavigator from './navigation/StackNavigator'; // Se necessário, ajuste o caminho
+import BottomTabNavigator from './src/navigation/BottomTabNavigator'; // Ajuste o caminho se necessário
+import { TransactionProvider } from './src/context/TransactionContext'; // Ajuste o caminho se necessário
+import { AccountProvider } from './src/context/AccountContext'; // Ajuste o caminho se necessário
+import { CategoryProvider } from './src/context/CategoryContext'; // Ajuste o caminho se necessário
 
 const App = () => {
   return (
