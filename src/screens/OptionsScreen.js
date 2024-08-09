@@ -141,6 +141,7 @@ const OptionsScreen = () => {
       >
         <View style={styles.fullScreenModal}>
           <View style={styles.modalContent}>
+          <Text >Gerir asdfsdfsdfsdfsdfsdfsdfsdasd</Text>
             <Text style={styles.modalTitle}>Gerir Categorias</Text>
 
             {/* Botões Despesa e Receita */}

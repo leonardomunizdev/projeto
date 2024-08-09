@@ -1,5 +1,19 @@
+// Importe os módulos necessários do React Native
 import React, { useState, useEffect } from "react";
-import { Image, View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Platform, Modal, TouchableWithoutFeedback, Keyboard, Alert, } from "react-native";
+import {
+  Image,
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Alert,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, addMonths, addWeeks } from "date-fns";
@@ -14,6 +28,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import { MaterialIcons } from "@expo/vector-icons";
 
+// Definição do componente AddTransactionScreen
 const AddTransactionScreen = () => {
   const navigation = useNavigation();
   const { addTransaction } = useTransactions();
@@ -36,8 +51,6 @@ const AddTransactionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
-
-
 
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
@@ -203,18 +216,40 @@ const AddTransactionScreen = () => {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Apenas imagens
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      aspect: [4, 3],
       quality: 1,
     });
 
+    console.log(result); // Adicione isto para verificar o retorno
+
     if (!result.canceled) {
-      setAttachments([...attachments, result.uri]);
+      setAttachments([...attachments, result.assets[0].uri]);
     }
   };
 
-
-
+  const renderAttachments = () => {
+    return attachments.map((attachment, index) => (
+      <View key={index} style={styles.attachmentItem}>
+        <Image
+          source={{ uri: attachment }}
+          style={styles.attachmentImage}
+          onError={(error) => console.log("Image failed to load", error)}
+        />
+        <MaterialIcons
+          name="delete"
+          size={24}
+          color="red"
+          onPress={() => {
+            const updatedAttachments = [...attachments];
+            updatedAttachments.splice(index, 1);
+            setAttachments(updatedAttachments);
+          }}
+        />
+      </View>
+    ));
+  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -234,7 +269,6 @@ const AddTransactionScreen = () => {
           >
             <Text style={styles.transactionButtonText}>Despesa</Text>
           </TouchableOpacity>
-
         </View>
 
         <TextInput
@@ -250,337 +284,185 @@ const AddTransactionScreen = () => {
           value={amount}
           onChangeText={setAmount}
         />
-
-        <Picker
-          selectedValue={selectedAccount}
-          onValueChange={handleAccountChange}
-          style={styles.picker}
-        >
-          <Picker.Item label="Selecione uma conta" value="" />
-          {accounts.map((acc) => (
-            <Picker.Item key={acc.id} label={acc.name} value={acc.id} />
-          ))}
-        </Picker>
-
-        <Picker
-          selectedValue={
-            transactionType === "expense" ? expenseCategory : incomeCategory
-          }
-          onValueChange={handleValueChange}
-          style={styles.picker}
-        >
-          <Picker.Item label="Selecione uma categoria" value="" />
-          {filteredCategories.map((cat) => (
-            <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-          ))}
-        </Picker>
-
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.datePickerText}>
-            {format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </Text>
-          <MaterialIcons name="calendar-today" size={24} color="black" />
+        <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+          <TextInput
+            style={styles.input}
+            placeholder="Data"
+            value={format(date, "dd/MM/yyyy", { locale: ptBR })}
+            editable={false}
+            pointerEvents="none"
+          />
         </TouchableOpacity>
-
         {showDatePicker && (
           <DateTimePicker
+            testID="dateTimePicker"
             value={date}
             mode="date"
             display="default"
             onChange={onChange}
-            locale="pt-BR"
           />
         )}
+        <Picker
+          selectedValue={selectedAccount}
+          onValueChange={handleAccountChange}
+        >
+          <Picker.Item label="Selecione uma conta" value="" />
+          {accounts.map((account) => (
+            <Picker.Item
+              key={account.id}
+              label={account.name}
+              value={account.id}
+            />
+          ))}
+        </Picker>
+        <Picker
+          selectedValue={selectedCategory}
+          onValueChange={handleValueChange}
+        >
+          <Picker.Item label="Selecione uma categoria" value="" />
+          {filteredCategories.map((category) => (
+            <Picker.Item
+              key={category.id}
+              label={category.name}
+              value={category.id}
+            />
+          ))}
+        </Picker>
 
         <View style={styles.switchContainer}>
-          <Text>Repetir Transação</Text>
+          <Text style={styles.switchText}>Repetir</Text>
           <Switch
             value={isRecurring}
-            onValueChange={() => setIsRecurring(!isRecurring)}
+            onValueChange={(value) => setIsRecurring(value)}
+            thumbColor={isRecurring ? "#4caf50" : "#f44336"}
+            trackColor={{ false: "#ddd", true: "#b2dfdb" }}
           />
         </View>
 
         {isRecurring && (
-          <>
-            <TouchableOpacity
-              style={styles.recurrenceButton}
-              onPress={() => setShowRecurrenceModal(true)}
-            >
-              <Text style={styles.recurrenceButtonText}>
-                {recurrenceInfo || "Definir recorrência"}
-              </Text>
-            </TouchableOpacity>
-
-            <Modal
-              visible={showRecurrenceModal}
-              animationType="slide"
-              transparent={true}
-              onRequestClose={() => setShowRecurrenceModal(false)}
-            >
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>
-                    Configurar Recorrência
-                  </Text>
-
-                  <View style={styles.modalRecurrenceContainer}>
-                    <TouchableOpacity
-                      style={styles.modalButton}
-                      onPress={handleDecrement}
-                    >
-                      <Text style={styles.modalButtonText}>-</Text>
-                    </TouchableOpacity>
-
-                    <TextInput
-                      style={styles.modalInput}
-                      keyboardType="numeric"
-                      value={recurrence.count.toString()}
-                      onChangeText={handleRecurrenceCountChange}
-                      placeholder="Períodos"
-                    />
-
-                    <TouchableOpacity
-                      style={styles.modalButton}
-                      onPress={handleIncrement}
-                    >
-                      <Text style={styles.modalButtonText}>+</Text>
-                    </TouchableOpacity>
-
-                    <Picker
-                      selectedValue={recurrence.unit}
-                      onValueChange={(itemValue) =>
-                        setRecurrence((prevRecurrence) => ({
-                          ...prevRecurrence,
-                          unit: itemValue,
-                        }))
-                      }
-                      style={styles.modalPicker}
-                    >
-                      <Picker.Item label="Mês" value="month" />
-                      <Picker.Item label="Semana" value="week" />
-                    </Picker>
-                  </View>
-                  <View style={styles.attachmentsContainer}>
-                    {attachments.map((attachment, index) => (
-                      <View key={index} style={styles.attachmentItem}>
-                        <Text style={styles.attachmentName}>
-                          {attachment ? attachment.split("/").pop() : "Nome não disponível"}
-                        </Text>
-
-
-
-                        <MaterialIcons
-                          name="delete"
-                          size={24}
-                          color="red"
-                          onPress={() => {
-                            const updatedAttachments = [...attachments];
-                            updatedAttachments.splice(index, 1);
-                            setAttachments(updatedAttachments);
-                          }}
-                        />
-                      </View>
-                    ))}
-                  </View>
-                  <Button title="Salvar" onPress={handleSave} />
-                </View>
-              </View>
-            </Modal>
-          </>
+          <View style={styles.recurrenceContainer}>
+            <Text style={styles.recurrenceLabel}>Quantidade</Text>
+            <View style={styles.recurrenceButtons}>
+              <Button title="-" onPress={handleDecrement} />
+              <TextInput
+                style={styles.input}
+                placeholder="Repetir"
+                value={recurrence.count}
+                keyboardType="numeric"
+                onChangeText={handleRecurrenceCountChange}
+              />
+              <Button title="+" onPress={handleIncrement} />
+              <Picker
+                selectedValue={recurrence.unit}
+                onValueChange={(itemValue) =>
+                  setRecurrence((prevRecurrence) => ({
+                    ...prevRecurrence,
+                    unit: itemValue,
+                  }))
+                }
+              >
+                <Picker.Item label="Meses" value="month" />
+                <Picker.Item label="Semanas" value="week" />
+              </Picker>
+            </View>
+          </View>
         )}
 
-        <TouchableOpacity
-          style={styles.attachButton}
-          onPress={pickImage}
-        >
-          <Text style={styles.attachButtonText}>Anexar Imagem</Text>
-        </TouchableOpacity>
-
-
-
-        <View style={styles.attachmentsContainer}>
-          {attachments.map((attachment, index) => (
-            <View key={index} style={styles.attachmentItem}>
-              {attachment ? (
-                <>
-                  <Image
-                    source={{ uri: attachment }}
-                    style={styles.attachmentImage}
-                  />
-                  <Text style={styles.attachmentName}>
-                    {attachment.split("/").pop()}
-                  </Text>
-                </>
-              ) : (
-                <Text style={styles.attachmentName}>Imagem não disponível</Text>
-              )}
-              <MaterialIcons
-                name="delete"
-                size={24}
-                color="red"
-                onPress={() => {
-                  const updatedAttachments = [...attachments];
-                  updatedAttachments.splice(index, 1);
-                  setAttachments(updatedAttachments);
-                }}
-              />
-            </View>
-          ))}
-
+        <View style={styles.attachmentContainer}>
+          <TouchableOpacity
+            onPress={pickImage}
+            style={styles.addAttachmentButton}
+          >
+            <Text style={styles.addAttachmentButtonText}>Adicionar Anexo</Text>
+          </TouchableOpacity>
+          <View style={styles.attachmentList}>{renderAttachments()}</View>
         </View>
+      <Button title="Salvar" onPress={handleSaveAndNavigate} />
 
-
-        <Button title="Adicionar" onPress={handleSaveAndNavigate} />
       </View>
+
     </TouchableWithoutFeedback>
   );
 };
 
+// Estilos para o componente AddTransactionScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
+    padding: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    marginBottom: 16,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 12,
+    paddingLeft: 8,
   },
   transactionTypeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   transactionButton: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
+    padding: 10,
     marginHorizontal: 5,
+    borderRadius: 5,
     alignItems: "center",
   },
   transactionButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginBottom: 20,
-    fontSize: 16,
-    paddingVertical: 5,
-  },
-  picker: {
-    height: 50,
-    marginBottom: 20,
-  },
-  datePickerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#ddd",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 20,
-  },
-  datePickerText: {
-    fontSize: 16,
-  },
   switchContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  recurrenceButton: {
-    backgroundColor: "#ddd",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  recurrenceButtonText: {
+  switchText: {
+    marginRight: 8,
     fontSize: 16,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalContent: {
-    width: "80%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  modalRecurrenceContainer: {
+  recurrenceContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  modalButton: {
-    backgroundColor: "#ddd",
+  recurrenceLabel: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  recurrenceButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  attachmentContainer: {
+    marginTop: 20,
+  },
+  addAttachmentButton: {
+    backgroundColor: "#2196F3",
     padding: 10,
     borderRadius: 5,
-    alignItems: "center",
   },
-  modalButtonText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  modalInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginHorizontal: 10,
-    paddingVertical: 5,
-    fontSize: 16,
-    flex: 1,
+  addAttachmentButtonText: {
+    color: "#fff",
     textAlign: "center",
   },
-  modalPicker: {
-    flex: 1,
-  },
-  attachButton: {
-    backgroundColor: "#ddd",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  attachButtonText: {
-    fontSize: 16,
-  },
-  attachmentsContainer: {
-    marginBottom: 20,
+  attachmentList: {
+    marginTop: 10,
   },
   attachmentItem: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#eee",
-    padding: 10,
-    borderRadius: 5,
     marginBottom: 10,
   },
-  attachmentName: {
-    fontSize: 16,
-  },
   attachmentImage: {
-    width: 100, // Largura da imagem
-    height: 100, // Altura da imagem
-    borderRadius: 5,
+    width: 100,
+    height: 100,
     marginRight: 10,
   },
 });

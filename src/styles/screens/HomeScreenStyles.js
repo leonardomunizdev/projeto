@@ -10,28 +10,32 @@ export const styles = StyleSheet.create({
       flexGrow: 1,
     },
     balanceContainer: {
-      alignItems: 'center',
-      marginBottom: 16,
+      marginVertical: 20,
+      alignItems: "center", // Centraliza o conteúdo dentro da View
     },
     balanceText: {
-      fontSize: 24,
-      fontWeight: 'bold',
+      fontSize: 18,
+      fontWeight: "bold",
     },
     balanceAmount: {
       fontSize: 32,
-      fontWeight: 'bold',
+      fontWeight: "bold",
+      marginTop: 20,
+      textAlign: "center", // Centraliza o texto
+      justifyContent: 'center',
+      alignItems: 'center'
     },
     balanceAmountNegative: {
-      color: 'red',
+      color: "red",
     },
     summaryContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 16,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginVertical: 20,
     },
     card: {
       flex: 1,
-      margin: 4,
+      marginHorizontal: 10,
     },
     cardTitle: {
       fontSize: 18,
