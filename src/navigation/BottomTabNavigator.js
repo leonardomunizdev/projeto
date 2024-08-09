@@ -5,7 +5,7 @@ import { MaterialCommunityIcons, FontAwesome5, MaterialIcons } from '@expo/vecto
 import HomeScreen from '../screens/HomeScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
-import ExportScreen from '../screens/ExportScreen';
+import OptionsScreen from '../screens/OptionsScreen';
 import StatisticsScreen from '../screens/StatisticsScreen';
 import PlusButton from '../components/PlusButton';
 import { useNavigation } from '@react-navigation/native';
@@ -34,11 +34,11 @@ const BottomTabNavigator = () => {
           let iconName;
           if (route.name === 'Transações') {
             iconName = 'clipboard-list';
-          } else if (route.name === 'Exportar') {
+          } else if (route.name === 'Relatório') {
             iconName = 'export';
           } else if (route.name === 'Home') {
             iconName = 'home';
-          } else if (route.name === 'Relatório') {
+          } else if (route.name === 'Opções') {
             iconName = 'cog';
           } else if (route.name === 'AddTransactionScreen') {
             return <PlusButton />;
@@ -67,13 +67,13 @@ const BottomTabNavigator = () => {
         options={{ tabBarLabel: '', headerShown: false }} // Remover o label do botão Add
       />
       <Tab.Screen
-        name="Exportar"
-        component={ExportScreen}
+        name="Relatório"
+        component={StatisticsScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="Relatório"
-        component={StatisticsScreen}
+        name="Opções"
+        component={OptionsScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>

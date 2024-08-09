@@ -1,17 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  TouchableOpacity,
-  Platform,
-  Modal,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Alert,
-} from "react-native";
+import { Image, View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Platform, Modal, TouchableWithoutFeedback, Keyboard, Alert, } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, addMonths, addWeeks } from "date-fns";
@@ -23,9 +11,8 @@ import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
 import UUID from "react-native-uuid";
 import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
+import * as Sharing from "expo-sharing";
 import { MaterialIcons } from "@expo/vector-icons";
-import * as FileSystem from "expo-file-system";
 
 const AddTransactionScreen = () => {
   const navigation = useNavigation();
@@ -49,6 +36,8 @@ const AddTransactionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
+
+
 
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
@@ -214,7 +203,7 @@ const AddTransactionScreen = () => {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Apenas imagens
       allowsEditing: true,
       quality: 1,
     });
@@ -224,15 +213,8 @@ const AddTransactionScreen = () => {
     }
   };
 
-  const pickDocument = async () => {
-    let result = await DocumentPicker.getDocumentAsync({
-      type: "application/pdf",
-    });
 
-    if (result.type === "success") {
-      setAttachments([...attachments, result.uri]);
-    }
-  };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -241,17 +223,18 @@ const AddTransactionScreen = () => {
 
         <View style={styles.transactionTypeContainer}>
           <TouchableOpacity
-            style={getButtonStyle("expense")}
-            onPress={() => handleTransactionTypeChange("expense")}
-          >
-            <Text style={styles.transactionButtonText}>Despesa</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
             style={getButtonStyle("income")}
             onPress={() => handleTransactionTypeChange("income")}
           >
             <Text style={styles.transactionButtonText}>Receita</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={getButtonStyle("expense")}
+            onPress={() => handleTransactionTypeChange("expense")}
+          >
+            <Text style={styles.transactionButtonText}>Despesa</Text>
+          </TouchableOpacity>
+
         </View>
 
         <TextInput
@@ -380,7 +363,28 @@ const AddTransactionScreen = () => {
                       <Picker.Item label="Semana" value="week" />
                     </Picker>
                   </View>
+                  <View style={styles.attachmentsContainer}>
+                    {attachments.map((attachment, index) => (
+                      <View key={index} style={styles.attachmentItem}>
+                        <Text style={styles.attachmentName}>
+                          {attachment ? attachment.split("/").pop() : "Nome não disponível"}
+                        </Text>
 
+
+
+                        <MaterialIcons
+                          name="delete"
+                          size={24}
+                          color="red"
+                          onPress={() => {
+                            const updatedAttachments = [...attachments];
+                            updatedAttachments.splice(index, 1);
+                            setAttachments(updatedAttachments);
+                          }}
+                        />
+                      </View>
+                    ))}
+                  </View>
                   <Button title="Salvar" onPress={handleSave} />
                 </View>
               </View>
@@ -395,19 +399,24 @@ const AddTransactionScreen = () => {
           <Text style={styles.attachButtonText}>Anexar Imagem</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.attachButton}
-          onPress={pickDocument}
-        >
-          <Text style={styles.attachButtonText}>Anexar Documento</Text>
-        </TouchableOpacity>
+
 
         <View style={styles.attachmentsContainer}>
           {attachments.map((attachment, index) => (
             <View key={index} style={styles.attachmentItem}>
-              <Text style={styles.attachmentName}>
-                {attachment.split("/").pop()}
-              </Text>
+              {attachment ? (
+                <>
+                  <Image
+                    source={{ uri: attachment }}
+                    style={styles.attachmentImage}
+                  />
+                  <Text style={styles.attachmentName}>
+                    {attachment.split("/").pop()}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.attachmentName}>Imagem não disponível</Text>
+              )}
               <MaterialIcons
                 name="delete"
                 size={24}
@@ -420,7 +429,9 @@ const AddTransactionScreen = () => {
               />
             </View>
           ))}
+
         </View>
+
 
         <Button title="Adicionar" onPress={handleSaveAndNavigate} />
       </View>
@@ -565,6 +576,12 @@ const styles = StyleSheet.create({
   },
   attachmentName: {
     fontSize: 16,
+  },
+  attachmentImage: {
+    width: 100, // Largura da imagem
+    height: 100, // Altura da imagem
+    borderRadius: 5,
+    marginRight: 10,
   },
 });
 

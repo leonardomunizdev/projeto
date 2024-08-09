@@ -18,7 +18,23 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "SEND",
+          "data": {
+            "mimeType": "image/*"
+          },
+          "category": ["DEFAULT", "BROWSABLE"]
+        },
+        {
+          "action": "SEND_MULTIPLE",
+          "data": {
+            "mimeType": "image/*"
+          },
+          "category": ["DEFAULT", "BROWSABLE"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

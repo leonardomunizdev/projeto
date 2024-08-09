@@ -44,7 +44,12 @@ const DashboardScreen = () => {
   const incomeCategories = calculateCategoryTotals('income');
 
   const totalBalance = calculateTotalBalance();
-  const balanceColor = totalBalance >= 0 ? styles.balancePositive : styles.balanceNegative;
+  const balanceColor = totalBalance === 0 
+  ? styles.balanceZero 
+  : totalBalance < 0 
+  ? styles.balanceNegative 
+  : styles.balancePositive;
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -54,7 +59,16 @@ const DashboardScreen = () => {
           <Icon name="menu" size={24} color="#000" />
         </TouchableOpacity>
       </View>
-
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionHeader}>Receitas por Categoria</Text>
+        {incomeCategories.map(item => (
+          <View style={styles.item} key={item.id}>
+            <Text style={styles.categoryItem}>
+              {item.name} ({item.percentage.toFixed(2)}%) {item.total.toFixed(2)}
+            </Text>
+          </View>
+        ))}
+      </View>
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionHeader}>Despesas por Categoria</Text>
         {expenseCategories.map(item => (
@@ -66,27 +80,6 @@ const DashboardScreen = () => {
         ))}
       </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionHeader}>Receitas por Categoria</Text>
-        {incomeCategories.map(item => (
-          <View style={styles.item} key={item.id}>
-            <Text style={styles.categoryItem}>
-              {item.name} ({item.percentage.toFixed(2)}%) {item.total.toFixed(2)}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionHeader}>Despesas</Text>
-        {transactions.filter(transaction => transaction.type === 'expense').map(item => (
-          <View style={styles.transactionItemContainer} key={item.id}>
-            <Text style={styles.transactionItem}>
-              {item.date}  /  {item.categoryName}  /  ({item.amount.toFixed(2)})
-            </Text>
-          </View>
-        ))}
-      </View>
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionHeader}>Receitas</Text>
@@ -98,6 +91,18 @@ const DashboardScreen = () => {
           </View>
         ))}
       </View>
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionHeader}>Despesas</Text>
+        {transactions.filter(transaction => transaction.type === 'expense').map(item => (
+          <View style={styles.transactionItemContainer} key={item.id}>
+            <Text style={styles.transactionItem}>
+              {item.date}  /  {item.categoryName}  /  ({item.amount.toFixed(2)})
+            </Text>
+          </View>
+        ))}
+      </View>
+
+
 
       <View style={styles.tableContainer}>
         <View style={styles.sectionContainer}>
@@ -239,6 +244,9 @@ const styles = StyleSheet.create({
   },
   balanceNegative: {
     color: '#f44336', // Cor vermelha para saldo negativo
+  },
+  balanceZero: {
+    color: 'black',
   },
 });
 
