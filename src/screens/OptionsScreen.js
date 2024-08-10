@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Button, Modal, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Corrigido para usar Ionicons
+import { Ionicons } from '@expo/vector-icons';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
@@ -18,6 +19,14 @@ const OptionsScreen = () => {
 
   const { accounts, addAccount, removeAccount } = useAccounts();
   const { categories, addCategory, removeCategory } = useCategories();
+  const isFocused = useIsFocused();
+
+  useEffect(() => { 
+    if (isFocused) {
+      console.log('A tela options está em foco');
+      // Aqui você pode executar outras ações necessárias quando a tela estiver em foco
+    }
+  }, [isFocused]);
 
   const handleAddAccount = () => {
     if (newAccountName.trim()) {
@@ -229,13 +238,11 @@ const OptionsScreen = () => {
           <View style={styles.confirmModalContent}>
             <Text style={styles.confirmTitle}>Confirmar Exclusão</Text>
             <Text style={styles.confirmText}>
-              Tem certeza que deseja apagar esta {selectedAccount ? 'conta' : 'categoria'}? Todas as movimentações associadas também serão excluídas.
+              Tem certeza que deseja apagar esta {selectedAccount ? 'conta' : 'categoria'}?
             </Text>
-            <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={cancelRemoveAccount} />
-              <Button title="Excluir" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} color="red" />
-            </View>
-            </View>
+            <Button title="Confirmar" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} />
+            <Button title="Cancelar" onPress={cancelRemoveAccount} />
+          </View>
         </View>
       </Modal>
 
@@ -252,45 +259,35 @@ const OptionsScreen = () => {
             <Text style={styles.confirmText}>
               Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.
             </Text>
-            <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={cancelClearData} />
-              <Button title="Limpar" onPress={handleClearData} color="red" />
-            </View>
+            <Button title="Limpar Dados" onPress={handleClearData} />
+            <Button title="Cancelar" onPress={cancelClearData} />
           </View>
         </View>
       </Modal>
     </View>
-    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f4f4f4',
+    padding: 20,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    backgroundColor: '#ffffff',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
+    padding: 10,
+    marginVertical: 10,
   },
   optionText: {
-    fontSize: 16,
-    marginLeft: 12,
+    fontSize: 18,
+    marginLeft: 10,
   },
   fullScreenModal: {
     flex: 1,
@@ -299,33 +296,31 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '90%',
-    maxWidth: 400,
+    width: '80%',
     backgroundColor: '#fff',
-    borderRadius: 8,
     padding: 20,
+    borderRadius: 10,
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   input: {
     width: '100%',
-    padding: 12,
-    borderWidth: 1,
+    padding: 10,
     borderColor: '#ddd',
-    borderRadius: 4,
+    borderWidth: 1,
+    borderRadius: 5,
     marginBottom: 10,
   },
   accountItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    padding: 10,
+    width: '100%',
   },
   accountName: {
     fontSize: 16,
@@ -335,65 +330,57 @@ const styles = StyleSheet.create({
   },
   categoryButtonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 10,
   },
   categoryButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 4,
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
     alignItems: 'center',
   },
   incomeButton: {
-    backgroundColor: '#d4edda',
+    backgroundColor: 'blue',
   },
   expenseButton: {
-    backgroundColor: '#f8d7da',
+    backgroundColor: 'red',
   },
   categoryButtonText: {
+    color: '#fff',
     fontSize: 16,
   },
   incomeButtonText: {
-    color: '#155724',
+    color: '#fff',
   },
   expenseButtonText: {
-    color: '#721c24',
+    color: '#fff',
   },
   categoryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    padding: 10,
+    width: '100%',
   },
   categoryName: {
     fontSize: 16,
   },
   confirmModalContent: {
-    width: '90%',
-    maxWidth: 400,
+    width: '80%',
     backgroundColor: '#fff',
-    borderRadius: 8,
     padding: 20,
+    borderRadius: 10,
     alignItems: 'center',
   },
   confirmTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   confirmText: {
     fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    marginBottom: 10,
   },
 });
 
 export default OptionsScreen;
-

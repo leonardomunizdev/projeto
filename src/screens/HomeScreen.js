@@ -9,7 +9,7 @@ import {
   Modal,
 } from "react-native";
 import { Card } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused  } from "@react-navigation/native";
 import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
@@ -31,6 +31,7 @@ const HomeScreen = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [modalVisible, setModalVisible] = useState(false);
+  const isFocused = useIsFocused();
   const [selectedCalculationType, setSelectedCalculationType] =
     useState("category"); // Default to 'category'
 
@@ -40,7 +41,12 @@ const HomeScreen = () => {
   const expenseCategories = categories.filter(
     (category) => category.type === "expense"
   );
-
+  useEffect(() => { 
+    if (isFocused) {
+      console.log('A tela Home está em foco');
+      // Aqui você pode executar outras ações necessárias quando a tela estiver em foco
+    }
+  }, [isFocused]);
   useEffect(() => {
     let income = 0;
     let expense = 0;
