@@ -20,7 +20,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, addMonths, addWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Switch } from "react-native-elements";
-import { useNavigation, useRoute  } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
@@ -28,10 +28,8 @@ import UUID from "react-native-uuid";
 import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import { MaterialIcons } from "@expo/vector-icons";
-import PlusButton from "../components/PlusButton";
 
 const AddTransactionScreen = () => {
-  
   const navigation = useNavigation();
   const { addTransaction } = useTransactions();
   const { accounts } = useAccounts();
@@ -53,15 +51,6 @@ const AddTransactionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
-
-  const route = useRoute();
-  const { onSaveAndNavigate } = route.params || {};
-  useEffect(() => {
-    // Exemplo de uso: Chamar a função após a renderização da tela
-    if (onSaveAndNavigate) {
-        onSaveAndNavigate();
-    }
-}, [onSaveAndNavigate]);
 
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
@@ -419,8 +408,9 @@ const AddTransactionScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       </ScrollView>
-      <PlusButton onCheckPress={handleSaveAndNavigate} />
-      
+      <View style={styles.footer}>
+        <Button title="Salvar" onPress={handleSaveAndNavigate} />
+      </View>
       </KeyboardAvoidingView>
   );
 };

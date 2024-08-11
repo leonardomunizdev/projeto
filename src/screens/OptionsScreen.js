@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Button, Modal, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons'; // Corrigido para usar Ionicons
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useIsFocused } from "@react-navigation/native";
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
@@ -19,14 +18,6 @@ const OptionsScreen = () => {
 
   const { accounts, addAccount, removeAccount } = useAccounts();
   const { categories, addCategory, removeCategory } = useCategories();
-  const isFocused = useIsFocused();
-
-  useEffect(() => { 
-    if (isFocused) {
-      console.log('A tela options está em foco');
-      // Aqui você pode executar outras ações necessárias quando a tela estiver em foco
-    }
-  }, [isFocused]);
 
   const handleAddAccount = () => {
     if (newAccountName.trim()) {
@@ -238,11 +229,13 @@ const OptionsScreen = () => {
           <View style={styles.confirmModalContent}>
             <Text style={styles.confirmTitle}>Confirmar Exclusão</Text>
             <Text style={styles.confirmText}>
-              Tem certeza que deseja apagar esta {selectedAccount ? 'conta' : 'categoria'}?
+              Tem certeza que deseja apagar esta {selectedAccount ? 'conta' : 'categoria'}? Todas as movimentações associadas também serão excluídas.
             </Text>
-            <Button title="Confirmar" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} />
-            <Button title="Cancelar" onPress={cancelRemoveAccount} />
-          </View>
+            <View style={styles.buttonContainer}>
+              <Button title="Cancelar" onPress={cancelRemoveAccount} />
+              <Button title="Excluir" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} color="red" />
+            </View>
+            </View>
         </View>
       </Modal>
 
@@ -259,35 +252,45 @@ const OptionsScreen = () => {
             <Text style={styles.confirmText}>
               Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.
             </Text>
-            <Button title="Limpar Dados" onPress={handleClearData} />
-            <Button title="Cancelar" onPress={cancelClearData} />
+            <View style={styles.buttonContainer}>
+              <Button title="Cancelar" onPress={cancelClearData} />
+              <Button title="Limpar" onPress={handleClearData} color="red" />
+            </View>
           </View>
         </View>
       </Modal>
     </View>
+    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor: '#f4f4f4',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    marginVertical: 10,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   optionText: {
-    fontSize: 18,
-    marginLeft: 10,
+    fontSize: 16,
+    marginLeft: 12,
   },
   fullScreenModal: {
     flex: 1,
@@ -296,31 +299,33 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '90%',
+    maxWidth: 400,
     backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 20,
-    borderRadius: 10,
     alignItems: 'center',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   input: {
     width: '100%',
-    padding: 10,
-    borderColor: '#ddd',
+    padding: 12,
     borderWidth: 1,
-    borderRadius: 5,
+    borderColor: '#ddd',
+    borderRadius: 4,
     marginBottom: 10,
   },
   accountItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
-    width: '100%',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   accountName: {
     fontSize: 16,
@@ -330,57 +335,65 @@ const styles = StyleSheet.create({
   },
   categoryButtonContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
   categoryButton: {
     flex: 1,
-    padding: 10,
-    margin: 5,
-    borderRadius: 5,
+    padding: 12,
+    borderRadius: 4,
     alignItems: 'center',
   },
   incomeButton: {
-    backgroundColor: 'blue',
+    backgroundColor: '#d4edda',
   },
   expenseButton: {
-    backgroundColor: 'red',
+    backgroundColor: '#f8d7da',
   },
   categoryButtonText: {
-    color: '#fff',
     fontSize: 16,
   },
   incomeButtonText: {
-    color: '#fff',
+    color: '#155724',
   },
   expenseButtonText: {
-    color: '#fff',
+    color: '#721c24',
   },
   categoryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
-    width: '100%',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   categoryName: {
     fontSize: 16,
   },
   confirmModalContent: {
-    width: '80%',
+    width: '90%',
+    maxWidth: 400,
     backgroundColor: '#fff',
+    borderRadius: 8,
     padding: 20,
-    borderRadius: 10,
     alignItems: 'center',
   },
   confirmTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   confirmText: {
     fontSize: 16,
-    marginBottom: 10,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
   },
 });
 
 export default OptionsScreen;
+

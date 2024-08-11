@@ -2,40 +2,20 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 
-const PlusButton = ({ onCheckPress }) => {
+const PlusButton = () => {
     const navigation = useNavigation();
-    const isFocused = useIsFocused();
-
-    const handlePress = () => {
-        if (isFocused) {
-            if (onCheckPress) {
-                onCheckPress();  // Chama o callback passado como prop
-            }
-        } else {
-            navigation.navigate('AddTransactionScreen', {
-                onSaveAndNavigate: () => {
-                    // Aqui você pode chamar handleSaveAndNavigate ou qualquer função após a navegação
-                    if (onCheckPress) {
-                        onCheckPress(); // Exemplo, substitua pela função desejada
-                    }
-                },
-            });
-        }
-    };
 
     return (
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.button}
-                onPress={handlePress}
+                onPress={() => {
+                    navigation.navigate('AddTransactionScreen');
+                }}
             >
-                <MaterialCommunityIcons
-                    name={isFocused ? "check" : "plus"}
-                    size={30}
-                    color="#fff"
-                />
+                <MaterialCommunityIcons name="plus" size={30} color="#fff" />
             </TouchableOpacity>
         </View>
     );
@@ -44,7 +24,7 @@ const PlusButton = ({ onCheckPress }) => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 20, // Ajuste a posição conforme necessário
         right: 10,
         height: 0,
         width: 60,
