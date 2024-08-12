@@ -52,6 +52,7 @@ const DashboardScreen = () => {
 
 
   return (
+    console.log(transactions),
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Relatório</Text>
