@@ -405,12 +405,14 @@ const AddTransactionScreen = () => {
               </TouchableOpacity>
               <View style={styles.attachmentList}>{renderAttachments()}</View>
             </View>
+            
           </View>
         </TouchableWithoutFeedback>
-      </ScrollView>
-      <View style={styles.footer}>
+        <View>
         <Button title="Salvar" onPress={handleSaveAndNavigate} />
       </View>
+      </ScrollView>
+      
       </KeyboardAvoidingView>
   );
 };
@@ -550,6 +552,8 @@ const styles = StyleSheet.create({
   footer: {
     padding: 16,
     backgroundColor: "#f1f1f1",
+    marginTop: 'auto',
+
   },
 });
 
