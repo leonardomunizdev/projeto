@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCategories } from '../context/CategoryContext';
@@ -9,7 +9,7 @@ import { Picker } from '@react-native-picker/picker';
 
 const DashboardScreen = () => {
   const { categories } = useCategories();
-  const { transactions, calculateTotalBalance } = useTransactions();
+  const { transactions } = useTransactions();
   const { accounts } = useAccounts(); // Adiciona contas do contexto
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState('all'); // Adiciona estado para tipo de transação
@@ -21,13 +21,7 @@ const DashboardScreen = () => {
   const [endDate, setEndDate] = useState(null);
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
-
-  const totalBalance = calculateTotalBalance();
-  const balanceColor = totalBalance > 0 
-    ? styles.balancePositive 
-    : totalBalance < 0 
-    ? styles.balanceNegative 
-    : styles.balanceZero;
+  const [filteredBalance, setFilteredBalance] = useState(0); // Novo estado para o saldo filtrado
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
@@ -62,6 +56,14 @@ const DashboardScreen = () => {
   // Filtra e calcula os dados para a visão geral
   const filteredTransactions = applyFilters();
 
+  // Calcular saldo filtrado
+  useEffect(() => {
+    const balance = filteredTransactions.reduce((total, transaction) => {
+      return transaction.type === 'income' ? total + transaction.amount : total - transaction.amount;
+    }, 0);
+    setFilteredBalance(balance);
+  }, [filteredTransactions]);
+
   const totalRevenues = filteredTransactions
     .filter(transaction => transaction.type === 'income')
     .reduce((total, transaction) => total + transaction.amount, 0);
@@ -76,7 +78,6 @@ const DashboardScreen = () => {
   const avgRevenuePerDay = quantityRevenues > 0 ? totalRevenues / quantityRevenues : 0;
   const avgExpensePerDay = quantityExpenses > 0 ? totalExpenses / quantityExpenses : 0;
 
-  // Calcula categorias com total maior que zero
   const calculateCategoryTotals = (type) => {
     return categories
       .filter(cat => cat.type === type)
@@ -91,11 +92,17 @@ const DashboardScreen = () => {
           percentage: (totalForCategory / (type === 'expense' ? totalExpenses : totalRevenues)) * 100,
         };
       })
-      .filter(cat => cat.total > 0); // Filtra categorias com total maior que zero
+      .filter(cat => cat.total > 0);
   };
 
   const expenseCategories = calculateCategoryTotals('expense');
   const incomeCategories = calculateCategoryTotals('income');
+
+  const balanceColor = filteredBalance > 0 
+    ? styles.balancePositive 
+    : filteredBalance < 0 
+    ? styles.balanceNegative 
+    : styles.balanceZero;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -106,15 +113,6 @@ const DashboardScreen = () => {
         </TouchableOpacity>
       </View>
 
-          
-          <View selectedValue={selectedType}  style={styles.sectionContainer}>
-        
-        
-          
-        
-      </View>
-
-      {/* Selecione apenas categorias e transações relevantes com base no tipo selecionado */}
       {selectedType === 'all' || selectedType === 'income' ? (
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionHeader}>Receitas por Categoria</Text>
@@ -204,29 +202,45 @@ const DashboardScreen = () => {
             <Text style={styles.tableCell}>{totalExpenses.toFixed(2)}</Text>
           </View>
           <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Média por dia</Text>
+            <Text style={styles.tableCell}>Média por Dia</Text>
             <Text style={styles.tableCell}>{avgRevenuePerDay.toFixed(2)}</Text>
             <Text style={styles.tableCell}>{avgExpensePerDay.toFixed(2)}</Text>
+          </View>
+          <View style={styles.balanceRow}>
+            <Text style={[styles.tableCell, styles.balanceLabel]}>Saldo</Text>
+            <Text style={[styles.tableCell, balanceColor]}>{filteredBalance.toFixed(2)}</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.total}>
-        <Text style={balanceColor}>
-          Saldo Total: {totalBalance.toFixed(2)}
-        </Text>
-      </View>
-
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Filtros</Text>
+
+            <Text style={styles.filterLabel}>Tipo de Transação</Text>
+            <Picker
+              selectedValue={selectedType}
+              style={styles.picker}
+              onValueChange={(itemValue) => setSelectedType(itemValue)}
+            >
+              <Picker.Item label="Todas" value="all" />
+              <Picker.Item label="Receitas" value="income" />
+              <Picker.Item label="Despesas" value="expense" />
+            </Picker>
+
             <Text style={styles.filterLabel}>Categoria</Text>
             <Picker
               selectedValue={selectedCategory}
+              style={styles.picker}
               onValueChange={(itemValue) => setSelectedCategory(itemValue)}
             >
-              <Picker.Item label="Todas as Categorias" value="all" />
+              <Picker.Item label="Todas" value="all" />
               {categories.map(category => (
                 <Picker.Item key={category.id} label={category.name} value={category.id} />
               ))}
@@ -235,58 +249,64 @@ const DashboardScreen = () => {
             <Text style={styles.filterLabel}>Conta</Text>
             <Picker
               selectedValue={selectedAccount}
+              style={styles.picker}
               onValueChange={(itemValue) => setSelectedAccount(itemValue)}
             >
-              <Picker.Item label="Todas as Contas" value="all" />
+              <Picker.Item label="Todas" value="all" />
               {accounts.map(account => (
                 <Picker.Item key={account.id} label={account.name} value={account.id} />
               ))}
             </Picker>
 
-            <Text style={styles.filterLabel}>Tipo</Text>
-            <Picker
-              selectedValue={selectedType}
-              onValueChange={(itemValue) => setSelectedType(itemValue)}
-            >
-              <Picker.Item label="Todos" value="all" />
-              <Picker.Item label="Receita" value="income" />
-              <Picker.Item label="Despesa" value="expense" />
-            </Picker>
-
-            <Text style={styles.filterLabel}>Data Inicial</Text>
+            <Text style={styles.filterLabel}>Data de Início</Text>
             <TouchableOpacity onPress={showStartDatePicker}>
-              <Text>{startDate ? startDate.toDateString() : 'Selecionar data'}</Text>
+              <TextInput
+                style={styles.dateInput}
+                value={startDate ? startDate.toLocaleDateString() : ''}
+                placeholder="Selecionar Data de Início"
+                editable={false}
+              />
             </TouchableOpacity>
             {isStartDatePickerVisible && (
               <DateTimePicker
                 value={startDate || new Date()}
                 mode="date"
-                onChange={(event, date) => {
-                  setStartDate(date);
+                display="default"
+                onChange={(event, selectedDate) => {
                   hideStartDatePicker();
+                  setStartDate(selectedDate || startDate);
                 }}
               />
             )}
 
-            <Text style={styles.filterLabel}>Data Final</Text>
+            <Text style={styles.filterLabel}>Data de Fim</Text>
             <TouchableOpacity onPress={showEndDatePicker}>
-              <Text>{endDate ? endDate.toDateString() : 'Selecionar data'}</Text>
+              <TextInput
+                style={styles.dateInput}
+                value={endDate ? endDate.toLocaleDateString() : ''}
+                placeholder="Selecionar Data de Fim"
+                editable={false}
+              />
             </TouchableOpacity>
             {isEndDatePickerVisible && (
               <DateTimePicker
                 value={endDate || new Date()}
                 mode="date"
-                onChange={(event, date) => {
-                  setEndDate(date);
+                display="default"
+                onChange={(event, selectedDate) => {
                   hideEndDatePicker();
+                  setEndDate(selectedDate || endDate);
                 }}
               />
             )}
 
-            <View style={styles.modalButtonContainer}>
-              <Button title="Aplicar" onPress={applyFilters} />
-              <Button title="Limpar" onPress={clearFilters} />
-              <Button title="Fechar" onPress={closeModal} />
+            <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity onPress={clearFilters} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Limpar Filtros</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={closeModal} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Fechar </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -299,11 +319,13 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 16,
+    backgroundColor: '#f9f9f9',
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
   header: {
     fontSize: 24,
@@ -313,64 +335,86 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   sectionContainer: {
-    marginVertical: 8,
+    marginBottom: 16,
   },
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 8,
+    backgroundColor: 'white'
   },
   item: {
-    marginVertical: 4,
+    marginBottom: 8,
   },
   categoryItem: {
     fontSize: 16,
+    color: '#333',
   },
   noData: {
     fontSize: 16,
-    color: 'grey',
+    color: '#999',
   },
   transactionItemContainer: {
-    marginVertical: 4,
+    marginBottom: 8,
   },
   transactionItem: {
     fontSize: 16,
+    color: '#333',
   },
   tableContainer: {
-    marginVertical: 16,
+    marginTop: 16,
   },
   table: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 4,
-    overflow: 'hidden',
+    borderRadius: 8,
   },
   tableRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   tableHeader: {
+    fontSize: 16,
     fontWeight: 'bold',
+    flex: 1,
   },
   tableCell: {
+    fontSize: 16,
+    flex: 1,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  balanceLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    flex: 2,
+  },
+  balancePositive: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'green',
     flex: 1,
     textAlign: 'right',
   },
-  total: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 16,
-  },
-  balancePositive: {
-    color: 'green',
-  },
   balanceNegative: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: 'red',
+    flex: 1,
+    textAlign: 'right',
   },
   balanceZero: {
-    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+    textAlign: 'right',
   },
   modalContainer: {
     flex: 1,
@@ -379,25 +423,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
+    width: '90%',
     backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 8,
-    width: '80%',
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
   },
   filterLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 8,
+    marginBottom: 8,
   },
-  modalButtonContainer: {
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 16,
+  },
+  dateInput: {
+    height: 50,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 16,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+  },
+  modalButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: 'blue',
+    borderRadius: 5,
+    marginHorizontal: 5,
+    marginBottom: 10,
+  },
+  modalButtonText: {
+    fontSize: 16,
+    color: 'white',
   },
 });
 
