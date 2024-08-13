@@ -197,16 +197,19 @@ const HomeScreen = () => {
         }, 0);
       return { ...category, total };
     });
-    const totalSum = totals.reduce((sum, category) => sum + category.total, 0);
+  
+    // Filtra categorias com total maior que zero
+    const filteredTotals = totals.filter(category => category.total > 0);
+  
+    const totalSum = filteredTotals.reduce((sum, category) => sum + category.total, 0);
     return {
-      totals: totals.map((category) => ({
+      totals: filteredTotals.map((category) => ({
         ...category,
         total: category.total.toFixed(2).replace(".", ","),
       })),
       totalSum: totalSum.toFixed(2).replace(".", ","),
     };
   };
-
   const getAccountTotals = (type) => {
     const totals = accounts.map((account) => {
       const total = transactions
@@ -230,16 +233,18 @@ const HomeScreen = () => {
       return { ...account, total };
     });
 
-    const totalSum = totals.reduce((sum, account) => sum + account.total, 0);
+    const filteredTotals = totals.filter(account => account.total > 0);
 
-    return {
-      totals: totals.map((account) => ({
-        ...account,
-        total: account.total.toFixed(2).replace(".", ","),
-      })),
-      totalSum: totalSum.toFixed(2).replace(".", ","),
-    };
+  const totalSum = filteredTotals.reduce((sum, account) => sum + account.total, 0);
+
+  return {
+    totals: filteredTotals.map((account) => ({
+      ...account,
+      total: account.total.toFixed(2).replace(".", ","),
+    })),
+    totalSum: totalSum.toFixed(2).replace(".", ","),
   };
+};
 
   return (
     <View style={styles.container}>
@@ -453,8 +458,8 @@ const HomeScreen = () => {
                     <View style={styles.balanceContainer}>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Receitas</Text>
-                        <Text style={styles.incomeTotal}>
-                          R$ {getAccountTotals("income").totalSum} {"\n"}
+                        <Text style={styles.movementTextIncome}>
+                          R$ {getAccountTotals("income").totalSum}
                         </Text>
                         {getAccountTotals("income").totals.map((account) => (
                           <Text key={account.id}>
@@ -468,7 +473,7 @@ const HomeScreen = () => {
                       </View>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Despesas</Text>
-                        <Text style={styles.expenseTotal}>
+                        <Text style={styles.movementTextExpense}>
                           R$ {getAccountTotals("expense").totalSum}
                         </Text>
                         {getAccountTotals("expense").totals.map((account) => (

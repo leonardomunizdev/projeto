@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, Modal, TextInput, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Button, Modal, TextInput, FlatList, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Corrigido para usar Ionicons
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../context/CategoryContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RFPercentage, RFValue } from 'react-native-responsive-fontsize'; // Importando para ajustar o tamanho da fonte
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
@@ -19,6 +20,8 @@ const OptionsScreen = () => {
   const { accounts, addAccount, removeAccount } = useAccounts();
   const { categories, addCategory, removeCategory } = useCategories();
 
+
+  
   const handleAddAccount = () => {
     if (newAccountName.trim()) {
       addAccount(newAccountName);
@@ -63,7 +66,7 @@ const OptionsScreen = () => {
       setIsConfirmModalVisible(false);
     }
   };
-  
+
   const clearAllData = async () => {
     try {
       await AsyncStorage.clear();
@@ -90,39 +93,82 @@ const OptionsScreen = () => {
   const filteredCategories = categories.filter(category =>
     !selectedCategoryType || category.type === selectedCategoryType
   );
+  const generateAndSharePDF = async () => {
+    try {
+      // Cria um novo documento PDF
+      const page = PDFPage
+        .create()
+        .setMediaBox(200, 200)
+        .drawText('Notas Fiscais', { x: 5, y: 180, color: '#007386', fontSize: 18 });
 
+      // Adiciona cada transação ao PDF
+      transactions.forEach((transaction, index) => {
+        page.drawText(`ID: ${transaction.id}`, { x: 5, y: 150 - index * 20, fontSize: 12 });
+        page.drawText(`Data: ${transaction.date}`, { x: 5, y: 140 - index * 20, fontSize: 12 });
+        page.drawText(`Valor: R$${transaction.amount}`, { x: 5, y: 130 - index * 20, fontSize: 12 });
+        page.drawText(`Tipo: ${transaction.type === 'income' ? 'Receita' : 'Despesa'}`, { x: 5, y: 120 - index * 20, fontSize: 12 });
+      });
+
+      const pdfDoc = PDFDocument
+        .create()
+        .addPages(page);
+
+      const pdfBytes = await pdfDoc.writeToBytes(); // Obtém o PDF como bytes
+
+      // Cria um arquivo temporário
+      const tempFilePath = `${RNFetchBlob.fs.dirs.CacheDir}/NotasFiscais.pdf`;
+
+      await RNFetchBlob.fs.writeFile(tempFilePath, pdfBytes, 'base64');
+
+      // Compartilha o PDF usando react-native-share
+      await Share.open({
+        title: 'Compartilhar Notas Fiscais',
+        url: `file://${tempFilePath}`,
+        type: 'application/pdf',
+        message: 'Confira suas notas fiscais!',
+      });
+
+    } catch (error) {
+      Alert.alert('Erro', 'Ocorreu um erro ao gerar o PDF.');
+      console.error('Failed to generate or share PDF', error);
+    }
+  };
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Options Screen</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <Text style={styles.title}>Opções</Text>
       <TouchableOpacity style={styles.optionButton} onPress={() => setIsAccountModalVisible(true)}>
-        <Ionicons name="wallet" size={24} color="black" />
+        <Ionicons name="wallet" size={RFValue(24)} color="black" />
         <Text style={styles.optionText}>Gerir Contas</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.optionButton} onPress={() => setIsCategoryModalVisible(true)}>
-        <Ionicons name="list" size={24} color="black" />
+        <Ionicons name="list" size={RFValue(24)} color="black" />
         <Text style={styles.optionText}>Gerir Categorias</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.optionButton}>
+
+      <TouchableOpacity style={styles.optionButton} onPress={generateAndSharePDF}>
         <Ionicons name="download" size={24} color="black" />
         <Text style={styles.optionText}>Baixar Notas Fiscais</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.optionButton}>
-        <Ionicons name="folder-open" size={24} color="black" />
+        <Ionicons name="folder-open" size={RFValue(24)} color="black" />
         <Text style={styles.optionText}>Importar</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.optionButton}>
-        <Ionicons name="folder" size={24} color="black" />
+        <Ionicons name="folder" size={RFValue(24)} color="black" />
         <Text style={styles.optionText}>Exportar</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.optionButton}>
-        <Ionicons name="stats-chart" size={24} color="black" />
+        <Ionicons name="stats-chart" size={RFValue(24)} color="black" />
         <Text style={styles.optionText}>Gráficos</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.optionButton} onPress={confirmClearData}>
-        <Ionicons name="trash" size={24} color="red" />
+        <Ionicons name="trash" size={RFValue(24)} color="red" />
         <Text style={styles.optionText}>Limpar Todos os Dados</Text>
       </TouchableOpacity>
+
       {/* Modal de Contas */}
       <Modal
         visible={isAccountModalVisible}
@@ -132,6 +178,12 @@ const OptionsScreen = () => {
       >
         <View style={styles.fullScreenModal}>
           <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setIsAccountModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
             <Text style={styles.modalTitle}>Gerir Contas</Text>
             <TextInput
               style={styles.input}
@@ -152,10 +204,10 @@ const OptionsScreen = () => {
                 </View>
               )}
             />
-            <Button title="Fechar" onPress={() => setIsAccountModalVisible(false)} />
           </View>
         </View>
       </Modal>
+
 
       {/* Modal de Categorias */}
       <Modal
@@ -166,6 +218,12 @@ const OptionsScreen = () => {
       >
         <View style={styles.fullScreenModal}>
           <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setIsCategoryModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
             <Text style={styles.modalTitle}>Gerir Categorias</Text>
             <View style={styles.categoryButtonContainer}>
               <TouchableOpacity
@@ -193,7 +251,6 @@ const OptionsScreen = () => {
                 ]}>Despesa</Text>
               </TouchableOpacity>
             </View>
-
             <TextInput
               style={styles.input}
               value={newCategoryName}
@@ -213,7 +270,6 @@ const OptionsScreen = () => {
                 </View>
               )}
             />
-            <Button title="Fechar" onPress={() => setIsCategoryModalVisible(false)} />
           </View>
         </View>
       </Modal>
@@ -235,7 +291,7 @@ const OptionsScreen = () => {
               <Button title="Cancelar" onPress={cancelRemoveAccount} />
               <Button title="Excluir" onPress={selectedAccount ? confirmRemoveAccount : confirmRemoveCategory} color="red" />
             </View>
-            </View>
+          </View>
         </View>
       </Modal>
 
@@ -259,22 +315,24 @@ const OptionsScreen = () => {
           </View>
         </View>
       </Modal>
-    </View>
     
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 16,
     backgroundColor: '#f4f4f4',
   },
   title: {
-    fontSize: 24,
+    fontSize: RFPercentage(4), // Ajusta o tamanho da fonte com base no tamanho da tela
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 45,
+    marginTop: 35,
     color: '#333',
+    textAlign: 'center',
   },
   optionButton: {
     flexDirection: 'row',
@@ -290,7 +348,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: RFValue(16), // Ajusta o tamanho da fonte com base no tamanho da tela
     marginLeft: 12,
     color: '#333',
   },
@@ -301,34 +359,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '90%',
-    height: '80%',
-    maxWidth: 400,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    width: '100%', // Use percentuais para responsividade
+    height: '100%',
+    maxWidth: 600, // Define um máximo para telas grandes
+    backgroundColor: 'white',
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: RFValue(24),
     fontWeight: '600',
     marginBottom: 20,
     color: '#333',
     textAlign: 'center',
-    fontWeight: 'bold',
   },
   input: {
     width: '100%',
     padding: 14,
-    borderWidth: 1,
+    borderWidth: 1, 
     borderColor: '#ccc',
-    borderRadius: 8,
+    borderRadius: 20,
     marginBottom: 16,
-    fontSize: 16,
+    fontSize: RFValue(16),
     color: '#333',
   },
   accountItem: {
@@ -340,7 +391,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   accountName: {
-    fontSize: 20,
+    fontSize: RFValue(20),
     color: '#333',
     fontWeight: 'bold',
   },
@@ -350,7 +401,7 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: RFValue(20),
   },
   categoryButtonContainer: {
     flexDirection: 'row',
@@ -369,10 +420,9 @@ const styles = StyleSheet.create({
   },
   expenseButton: {
     backgroundColor: 'red',
-
   },
   categoryButtonText: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     fontWeight: '500',
     color: '#333',
   },
@@ -391,8 +441,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   confirmModalContent: {
-    width: '80%',
-    maxWidth: 350,
+    width: '90%',
+    maxWidth: 600,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
@@ -403,14 +453,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   confirmTitle: {
-    fontSize: 22,
+    fontSize: RFValue(22),
     fontWeight: '600',
     marginBottom: 16,
     color: '#333',
     textAlign: 'center',
   },
   confirmText: {
-    fontSize: 16,
+    fontSize: RFValue(16),
     color: '#666',
     marginBottom: 20,
     textAlign: 'center',
@@ -418,6 +468,12 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });
 

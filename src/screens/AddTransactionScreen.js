@@ -51,7 +51,10 @@ const AddTransactionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
+  const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
 
+ 
+  
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
   }, [isRecurring]);

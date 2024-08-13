@@ -328,11 +328,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   header: {
-    fontSize: 24,
+    paddingTop: 25,
+    fontSize: 35,
     fontWeight: 'bold',
+    textAlign: 'center',
+    justifyContent: 'center'
   },
   iconButton: {
     padding: 8,
+    backgroundColor: 'silver',
+    borderRadius: 100,
   },
   sectionContainer: {
     marginBottom: 16,
@@ -341,7 +346,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
-    backgroundColor: 'white'
+    backgroundColor: 'silver'
   },
   item: {
     marginBottom: 8,
@@ -430,13 +435,15 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 16,
+    textAlign: 'center',
   },
   filterLabel: {
     fontSize: 16,
     marginBottom: 8,
+    fontWeight: 'bold',
   },
   picker: {
     height: 50,
@@ -470,6 +477,12 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     color: 'white',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
   },
 });
 

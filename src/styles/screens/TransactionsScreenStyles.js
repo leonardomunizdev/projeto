@@ -4,6 +4,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
+    paddingTop: 35,
   },
   searchInput: {
     height: 40,
@@ -147,6 +148,13 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+  attachmentImage: {
+    width: 200,  // Defina a largura da imagem
+    height: 200, // Defina a altura da imagem
+    resizeMode: 'contain', // Ajusta a imagem dentro do contêiner mantendo a proporção
+    marginBottom: 10, // Espaçamento inferior
+  },
+  
   
 });
 
