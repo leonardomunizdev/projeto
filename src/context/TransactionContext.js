@@ -7,7 +7,8 @@ const TransactionContext = createContext();
 
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
-
+  const [attachments, setAttachments] = useState([]);
+  
   useEffect(() => {
     const loadTransactions = async () => {
       try {
@@ -31,10 +32,12 @@ export const TransactionProvider = ({ children }) => {
         console.error('Failed to save transactions', error);
       }
     };
-
+  
     saveTransactions();
   }, [transactions]);
+  
 
+  
   const addTransaction = (transaction, recurrence) => {
     if (recurrence && recurrence.isRecurring) {
       const recurringTransactions = generateRecurringTransactions(transaction, recurrence);
@@ -43,7 +46,7 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(prevTransactions => [...prevTransactions, transaction]);
     }
   };
-
+  
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
   };

@@ -207,7 +207,7 @@ const DashboardScreen = () => {
             <Text style={styles.tableCell}>{avgExpensePerDay.toFixed(2)}</Text>
           </View>
           <View style={styles.balanceRow}>
-            <Text style={[styles.tableCell, styles.balanceLabel]}>Saldo</Text>
+            <Text style={[styles.tableCell, styles.balanceLabel]}>Fluxo de caixa</Text>
             <Text style={[styles.tableCell, balanceColor]}>{filteredBalance.toFixed(2)}</Text>
           </View>
         </View>

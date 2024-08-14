@@ -1,5 +1,4 @@
 import React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import BottomTabNavigator from './src/navigation/BottomTabNavigator';
 import { TransactionProvider } from './src/context/TransactionContext';
@@ -8,15 +7,15 @@ import { CategoryProvider } from './src/context/CategoryContext';
 
 const App = () => {
   return (
-      <NavigationContainer>
+    <NavigationContainer>
+      <TransactionProvider>
         <CategoryProvider>
-          <TransactionProvider>
-            <AccountProvider>
-              <BottomTabNavigator />
-            </AccountProvider>
-          </TransactionProvider>
+          <AccountProvider>
+            <BottomTabNavigator />
+          </AccountProvider>
         </CategoryProvider>
-      </NavigationContainer>
+      </TransactionProvider>
+    </NavigationContainer>
   );
 };
 
