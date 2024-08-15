@@ -1,10 +1,13 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTransactions } from './TransactionContext';
 
 const AccountContext = createContext();
 
 export const AccountProvider = ({ children }) => {
+
   const [accounts, setAccounts] = useState([]);
+  const {transactions, setTransactions} = useTransactions();
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -38,8 +41,17 @@ export const AccountProvider = ({ children }) => {
     ]);
   };
 
-  const removeAccount = (id) => {
-    setAccounts((prevAccounts) => prevAccounts.filter(account => account.id !== id));
+  const removeAccount = (accountId) => {
+    //Filtra todas as transações que não estão ligadas à conta a ser removida
+    const updatedTransactions = transactions.filter(
+      (transaction) => transaction.accountId !== accountId
+    );
+
+    setTransactions(updatedTransactions);
+
+    //Remove a conta
+    const updatedAccounts = accounts.filter((account) => account.id !== accountId);
+    setAccounts(updatedAccounts);
   };
 
   return (

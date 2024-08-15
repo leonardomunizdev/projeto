@@ -1,0 +1,37 @@
+<Modal
+        visible={isAccountModalVisible}
+        animationType="slide"
+        onRequestClose={() => setIsAccountModalVisible(false)}
+        transparent={true}
+      >
+        <View style={styles.fullScreenModal}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setIsAccountModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Gerir Contas</Text>
+            <TextInput
+              style={styles.input}
+              value={newAccountName}
+              onChangeText={setNewAccountName}
+              placeholder="Nome da nova conta"
+            />
+            <Button title="Adicionar Conta" onPress={handleAddAccount} />
+            <FlatList
+              data={accounts}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.accountItem}>
+                  <Text style={styles.accountName}>{item.name}</Text>
+                  <TouchableOpacity onPress={() => handleRemoveAccount(item.id)}>
+                    <Text style={styles.removeButton}>Remover</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>

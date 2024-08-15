@@ -1,30 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, TextInput } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useCategories } from '../context/CategoryContext';
-import { useTransactions } from '../context/TransactionContext';
-import { useAccounts } from '../context/AccountContext';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { TextInput, TouchableOpacity, StyleSheet, Modal, View, Text } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useCategories } from '../../../context/CategoryContext';
+import { useTransactions } from '../../../context/TransactionContext';
+import { useAccounts } from '../../../context/AccountContext';
+import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
-const DashboardScreen = () => {
-  const { categories } = useCategories(); 
+
+const ExportModal = ({ visible, onClose}) => {
+
+  const { categories } = useCategories();
   const { transactions } = useTransactions();
-  const { accounts } = useAccounts(); // Adiciona contas do contexto
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedType, setSelectedType] = useState('all'); // Adiciona estado para tipo de transação
-
-  // Estados para os filtros
+  const { accounts } = useAccounts();
+  const [selectedType, setSelectedType] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedAccount, setSelectedAccount] = useState('all');
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
-  const [filteredBalance, setFilteredBalance] = useState(0); // Novo estado para o saldo filtrado
-
-  const openModal = () => setModalVisible(true);
-  const closeModal = () => setModalVisible(false);
+  const [filteredBalance, setFilteredBalance] = useState(0);
 
   const clearFilters = () => {
     setSelectedCategory('all');
@@ -33,6 +31,7 @@ const DashboardScreen = () => {
     setStartDate(null);
     setEndDate(null);
   };
+
 
   const showStartDatePicker = () => setStartDatePickerVisible(true);
   const hideStartDatePicker = () => setStartDatePickerVisible(false);
@@ -104,124 +103,134 @@ const DashboardScreen = () => {
     ? styles.balanceNegative 
     : styles.balanceZero;
 
+    const generatePDF = async () => {
+      // Supondo que você tenha as variáveis `totalRevenues`, `totalExpenses`, `filteredBalance`, `avgRevenuePerDay`, `avgExpensePerDay`, `expenseCategories`, e `incomeCategories` já definidas.
+    
+      // Dados de exemplo para receitas por categoria
+      const categoryReports = `
+        <div class="section">
+          <h2>Receitas por Categoria</h2>
+          <p><strong>Investimento (100,00%)</strong> 2615,00</p>
+          <div class="section">
+            <h3>Receitas</h3>
+            <p>06 ago., 2024 Investimento(2/5) 950,00</p>
+            <p>05 ago., 2024 Investimento 99,00</p>
+            <p>05 ago., 2024 Investimento(1/2) 566,00</p>
+            <p>05 ago., 2024 Investimento 500,00</p>
+            <p>05 ago., 2024 Investimento(1/2) 500,00</p>
+          </div>
+          <div class="section">
+            <h3>Visão Geral</h3>
+            <p><strong>Receitas:</strong> 5</p>
+            <p><strong>Média (Dia):</strong> 187,00</p>
+            <p><strong>Total:</strong> 2.615,00</p>
+            <p><strong>Fluxo de Caixa (Receitas - Despesas):</strong> 2.615,00</p>
+          </div>
+        </div>
+      `;
+    
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; }
+              h1 { text-align: center; }
+              h2 { margin-bottom: 10px; }
+              h3 { margin-top: 10px; }
+              .section { margin: 20px; }
+              .balance { font-size: 20px; text-align: right; }
+              .positive { color: green; }
+              .negative { color: red; }
+              .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              .table th, .table td { border: 1px solid #ddd; padding: 8px; }
+              .table th { background-color: #f2f2f2; }
+              p { margin: 5px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>Relatório Financeiro</h1>
+            <div class="section">
+              <h2>Resumo</h2>
+              <p><strong>Total de Receitas:</strong> ${totalRevenues.toFixed(2)}</p>
+              <p><strong>Total de Despesas:</strong> ${totalExpenses.toFixed(2)}</p>
+              <p><strong>Saldo Filtrado:</strong> <span class="${filteredBalance > 0 ? 'positive' : filteredBalance < 0 ? 'negative' : ''}">
+                ${filteredBalance.toFixed(2)}
+              </span></p>
+              <p><strong>Receitas Diárias Médias:</strong> ${avgRevenuePerDay.toFixed(2)}</p>
+              <p><strong>Despesas Diárias Médias:</strong> ${avgExpensePerDay.toFixed(2)}</p>
+            </div>
+            ${categoryReports}
+            <div class="section">
+              <h2>Categorias de Despesas</h2>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Total</th>
+                    <th>Percentual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${expenseCategories.map(cat => `
+                    <tr>
+                      <td>${cat.name}</td>
+                      <td>${cat.total.toFixed(2)}</td>
+                      <td>${cat.percentage.toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="section">
+              <h2>Categorias de Receitas</h2>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Categoria</th>
+                    <th>Total</th>
+                    <th>Percentual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${incomeCategories.map(cat => `
+                    <tr>
+                      <td>${cat.name}</td>
+                      <td>${cat.total.toFixed(2)}</td>
+                      <td>${cat.percentage.toFixed(2)}%</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </body>
+        </html>
+      `;
+    
+      try {
+        const { uri } = await Print.printToFileAsync({ html: htmlContent });
+        await Sharing.shareAsync(uri);
+      } catch (error) {
+        console.error('Error generating or sharing PDF:', error);
+      }
+    };
+    
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>Relatório</Text>
-        <TouchableOpacity onPress={openModal} style={styles.iconButton}>
-          <Icon name="menu" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      {selectedType === 'all' || selectedType === 'income' ? (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>Receitas por Categoria</Text>
-          {incomeCategories.length > 0 ? (
-            incomeCategories.map(item => (
-              <View style={styles.item} key={item.id}>
-                <Text style={styles.categoryItem}>
-                  {item.name} ({item.percentage.toFixed(2)}%) {item.total.toFixed(2)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noData}>Nenhuma receita por categoria.</Text>
-          )}
-        </View>
-      ) : null}
-
-      {selectedType === 'all' || selectedType === 'expense' ? (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>Despesas por Categoria</Text>
-          {expenseCategories.length > 0 ? (
-            expenseCategories.map(item => (
-              <View style={styles.item} key={item.id}>
-                <Text style={styles.categoryItem}>
-                  {item.name} ({item.percentage.toFixed(2)}%) {item.total.toFixed(2)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noData}>Nenhuma despesa por categoria.</Text>
-          )}
-        </View>
-      ) : null}
-
-      {selectedType === 'all' || selectedType === 'income' ? (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>Receitas</Text>
-          {filteredTransactions.filter(transaction => transaction.type === 'income').length > 0 ? (
-            filteredTransactions.filter(transaction => transaction.type === 'income').map(item => (
-              <View style={styles.transactionItemContainer} key={item.id}>
-                <Text style={styles.transactionItem}>
-                  {item.date} / {item.categoryName} / {item.amount.toFixed(2)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noData}>Nenhuma receita encontrada.</Text>
-          )}
-        </View>
-      ) : null}
-
-      {selectedType === 'all' || selectedType === 'expense' ? (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>Despesas</Text>
-          {filteredTransactions.filter(transaction => transaction.type === 'expense').length > 0 ? (
-            filteredTransactions.filter(transaction => transaction.type === 'expense').map(item => (
-              <View style={styles.transactionItemContainer} key={item.id}>
-                <Text style={styles.transactionItem}>
-                  {item.date} / {item.categoryName} / ({item.amount.toFixed(2)})
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noData}>Nenhuma despesa encontrada.</Text>
-          )}
-        </View>
-      ) : null}
-
-      <View style={styles.tableContainer}>
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeader}>Visão Geral</Text>
-        </View>
-        <View style={styles.table}>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Visão geral</Text>
-            <Text style={styles.tableHeader}>Receitas</Text>
-            <Text style={styles.tableHeader}>Despesas</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Quantidade</Text>
-            <Text style={styles.tableCell}>{quantityRevenues}</Text>
-            <Text style={styles.tableCell}>{quantityExpenses}</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Total</Text>
-            <Text style={styles.tableCell}>{totalRevenues.toFixed(2)}</Text>
-            <Text style={styles.tableCell}>{totalExpenses.toFixed(2)}</Text>
-          </View>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableCell}>Média por Dia</Text>
-            <Text style={styles.tableCell}>{avgRevenuePerDay.toFixed(2)}</Text>
-            <Text style={styles.tableCell}>{avgExpensePerDay.toFixed(2)}</Text>
-          </View>
-          <View style={styles.balanceRow}>
-            <Text style={[styles.tableCell, styles.balanceLabel]}>Fluxo de caixa</Text>
-            <Text style={[styles.tableCell, balanceColor]}>{filteredBalance.toFixed(2)}</Text>
-          </View>
-        </View>
-      </View>
-
-      <Modal
+  <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+        visible={visible}
+        onRequestClose={onClose}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filtros</Text>
+          <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onClose}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Exportar Relátorio</Text>
 
             <Text style={styles.filterLabel}>Tipo de Transação</Text>
             <Picker
@@ -301,20 +310,20 @@ const DashboardScreen = () => {
             )}
 
             <View style={styles.modalButtonsContainer}>
+            <TouchableOpacity onPress={generatePDF} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Exportar </Text>
+              </TouchableOpacity>
+
               <TouchableOpacity onPress={clearFilters} style={styles.modalButton}>
                 <Text style={styles.modalButtonText}>Limpar Filtros</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={closeModal} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>Fechar </Text>
-              </TouchableOpacity>
+              
             </View>
           </View>
         </View>
       </Modal>
-    </ScrollView>
-  );
+);
 };
-
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -486,4 +495,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DashboardScreen;
+export default ExportModal;

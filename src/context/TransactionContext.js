@@ -100,7 +100,10 @@ export const TransactionProvider = ({ children }) => {
       )
     );
   };
-
+  
+  const clearTransactions = () => {
+    setTransactions([]);
+  };
   return (
     <TransactionContext.Provider value={{
       transactions,
@@ -109,7 +112,9 @@ export const TransactionProvider = ({ children }) => {
       removeTransaction,
       calculateTotalBalance,
       generateRecurringTransactions,
-      updateTransactionAttachments
+      updateTransactionAttachments,
+      setTransactions,
+      clearTransactions
     }}>
       {children}
     </TransactionContext.Provider>

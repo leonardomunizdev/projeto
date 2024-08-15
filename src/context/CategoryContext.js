@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect  } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTransactions } from './TransactionContext';
 
 const CategoryContext = createContext();
 
 
 export const CategoryProvider = ({ children }) => {
+
   const [categories, setCategories] = useState([]);
+  const {transactions, setTransactions} = useTransactions();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -40,10 +43,23 @@ export const CategoryProvider = ({ children }) => {
   };
   
 
-  const removeCategory = (id) => {
+  const r = (id) => {
     setCategories((prevCategory) => prevCategory.filter(category => category.id !== id));
   };
-  
+
+  const removeCategory = (categoryId) => {
+    //Filtra todas as transações que não estão ligadas à conta a ser removida
+    const updatedTransactions = transactions.filter(
+      (transaction) => transaction.categoryId !== categoryId
+    );
+
+    setTransactions(updatedTransactions);
+
+    //Remove a conta
+    const updatedCategories = categories.filter((category) => category.id !== categoryId);
+    setCategories(updatedCategories);
+  };
+
   return (
     <CategoryContext.Provider value={{ categories, addCategory, removeCategory }}>
       {children}
