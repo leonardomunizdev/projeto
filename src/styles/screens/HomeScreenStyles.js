@@ -1,30 +1,31 @@
 import {StyleSheet} from 'react-native';
 
 export const styles = StyleSheet.create({
-    container: {
-      paddingTop: 30,
-      flex: 1,
-      padding: 16,
-    },
-    scrollViewContent: {
-      flexGrow: 1,
-    },
-    balanceContainer: {
-      marginVertical: 20,
-      alignItems: "center", // Centraliza o conteúdo dentro da View
-    },
-    balanceText: {
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    balanceAmount: {
-      fontSize: 32,
-      fontWeight: "bold",
-      marginTop: 20,
-      textAlign: "center", // Centraliza o texto
-      justifyContent: 'center',
-      alignItems: 'center'
-    },
+  container: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 50,
+    backgroundColor: "#f5f5f5",
+  },
+  balanceContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  balanceText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  balanceAmount: {
+    fontSize: 36,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  textContainer: {
+    width: "100%", // Garante que cada View ocupe 100% da largura disponível
+    alignItems: "center", // Centraliza o conteúdo horizontalmente
+  },
     balanceAmountNegative: {
       color: "red",
     },
@@ -148,18 +149,20 @@ export const styles = StyleSheet.create({
     modalButtonText: {
       fontSize: 16,
     },
+    balanceRow: {
+      flexDirection: 'row', // Alinha os itens na horizontal
+      justifyContent: 'space-between', // Espaça os itens igualmente
+      alignItems: 'center', // Centraliza verticalmente os itens
+      marginVertical: 10, // Espaçamento vertical ao redor do container
+    },
     modalTitle: {
       fontSize: 18,
       fontWeight: 'bold',
-      marginBottom: 8,
-      alignItems: 'center',
-      alignContent: 'center'
     },
     modalBalanceTotal: {
-      fontSize: 20,
+      fontSize: 18,
       fontWeight: 'bold',
-      color: 'green',
-      marginBottom: 16,
+      color: 'green', // ou 'red', dependendo do valor do balanço
     },
     modalSectionTitle: {
       fontSize: 20,

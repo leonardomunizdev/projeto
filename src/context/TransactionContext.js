@@ -8,7 +8,8 @@ const TransactionContext = createContext();
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [attachments, setAttachments] = useState([]);
-  
+
+
   useEffect(() => {
     const loadTransactions = async () => {
       try {
@@ -32,12 +33,12 @@ export const TransactionProvider = ({ children }) => {
         console.error('Failed to save transactions', error);
       }
     };
-  
+
     saveTransactions();
   }, [transactions]);
-  
 
-  
+
+
   const addTransaction = (transaction, recurrence) => {
     if (recurrence && recurrence.isRecurring) {
       const recurringTransactions = generateRecurringTransactions(transaction, recurrence);
@@ -46,7 +47,7 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(prevTransactions => [...prevTransactions, transaction]);
     }
   };
-  
+
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
   };
@@ -70,7 +71,7 @@ export const TransactionProvider = ({ children }) => {
   const generateRecurringTransactions = (baseTransaction, recurrence) => {
     const transactions = [];
     let nextDate = moment(baseTransaction.date);
-  
+
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...baseTransaction,
@@ -78,7 +79,7 @@ export const TransactionProvider = ({ children }) => {
         id: `${baseTransaction.id}-${i}`, // Adiciona um identificador único para cada transação
         recurringId: baseTransaction.id,  // Adiciona um identificador recorrente comum
       });
-  
+
       // Incrementa a data com base na unidade de recorrência
       if (recurrence.unit === 'month') {
         nextDate = nextDate.add(1, 'month');
@@ -86,7 +87,7 @@ export const TransactionProvider = ({ children }) => {
         nextDate = nextDate.add(1, 'week');
       }
     }
-  
+
     return transactions;
   };
 
@@ -100,7 +101,25 @@ export const TransactionProvider = ({ children }) => {
       )
     );
   };
-  
+  const saveAttachmentToTransaction = async (transactionId, attachmentPath) => {
+    try {
+      const updatedTransactions = transactions.map(transaction => {
+        if (transaction.id === transactionId) {
+          return {
+            ...transaction,
+            attachments: [...(transaction.attachments || []), attachmentPath]
+          };
+        }
+        return transaction;
+      });
+
+      await AsyncStorage.setItem('transactions', JSON.stringify(updatedTransactions));
+      setTransactions(updatedTransactions);
+    } catch (error) {
+      console.error('Failed to save attachment', error);
+    }
+  };
+
   const clearTransactions = () => {
     setTransactions([]);
   };
@@ -113,6 +132,7 @@ export const TransactionProvider = ({ children }) => {
       calculateTotalBalance,
       generateRecurringTransactions,
       updateTransactionAttachments,
+      saveAttachmentToTransaction,
       setTransactions,
       clearTransactions
     }}>

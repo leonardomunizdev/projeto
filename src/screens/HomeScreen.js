@@ -16,6 +16,7 @@ import { useCategories } from "../context/CategoryContext";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { styles } from "../styles/screens/HomeScreenStyles";
 
+
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { transactions } = useTransactions();
@@ -33,6 +34,16 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCalculationType, setSelectedCalculationType] =
     useState("category"); // Default to 'category'
+
+
+  const formatToBRL = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
+
 
   const incomeCategories = categories.filter(
     (category) => category.type === "income"
@@ -197,10 +208,10 @@ const HomeScreen = () => {
         }, 0);
       return { ...category, total };
     });
-  
+
     // Filtra categorias com total maior que zero
     const filteredTotals = totals.filter(category => category.total > 0);
-  
+
     const totalSum = filteredTotals.reduce((sum, category) => sum + category.total, 0);
     return {
       totals: filteredTotals.map((category) => ({
@@ -235,31 +246,35 @@ const HomeScreen = () => {
 
     const filteredTotals = totals.filter(account => account.total > 0);
 
-  const totalSum = filteredTotals.reduce((sum, account) => sum + account.total, 0);
+    const totalSum = filteredTotals.reduce((sum, account) => sum + account.total, 0);
 
-  return {
-    totals: filteredTotals.map((account) => ({
-      ...account,
-      total: account.total.toFixed(2).replace(".", ","),
-    })),
-    totalSum: totalSum.toFixed(2).replace(".", ","),
+    return {
+      totals: filteredTotals.map((account) => ({
+        ...account,
+        total: account.total.toFixed(2).replace(".", ","),
+      })),
+      totalSum: totalSum.toFixed(2).replace(".", ","),
+    };
   };
-};
 
+  const [balanceColor, setBalanceColor] = useState("blue");
+
+  useEffect(() => {
+    setBalanceColor(balance > 0 ? "blue" : "red");
+  }, [balance]);
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.balanceContainer}>
-          <Text style={[styles.balanceText]}>Saldo{'\n'}</Text>
-          <Text
-            style={[
-              styles.balanceAmount,
-              { color: balance < 0 ? "red" : "green", textAlign: "center" }, // Define a cor do saldo com base no valor e centraliza
-            ]}
-          >
-            R$ {balance.toFixed(2).replace(".", ",")}
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.balanceText}>Saldo</Text>
+            <Text style={[styles.balanceAmount, { color: balanceColor }]}>
+              {formatToBRL(parseFloat(balance.toFixed(2).replace(".", ",")))}
+            </Text>
+          </View>
         </View>
+
+
         <View style={styles.summaryContainer}>
           <Card
             style={styles.card}
@@ -268,7 +283,7 @@ const HomeScreen = () => {
             <Card.Content>
               <Text style={styles.cardTitle}>Receitas</Text>
               <Text style={styles.cardAmountIncome}>
-                R$ {totalIncome.toFixed(2).replace(".", ",")}
+                {formatToBRL(parseFloat(totalIncome.toFixed(2).replace(".", ",")))}
               </Text>
             </Card.Content>
           </Card>
@@ -279,7 +294,7 @@ const HomeScreen = () => {
             <Card.Content>
               <Text style={styles.cardTitle}>Despesas</Text>
               <Text style={styles.cardAmountExpense}>
-                R$ {totalExpense.toFixed(2).replace(".", ",")}
+                {formatToBRL(parseFloat(totalExpense.toFixed(2).replace(".", ",")))}
               </Text>
             </Card.Content>
           </Card>
@@ -296,10 +311,10 @@ const HomeScreen = () => {
                     { color: getAccountColor(accountValues[account.id] || 0) },
                   ]}
                 >
-                  R${" "}
-                  {(accountValues[account.id] || 0)
+
+                  {formatToBRL(parseFloat((accountValues[account.id] || 0)
                     .toFixed(2)
-                    .replace(".", ",")}
+                    .replace(".", ",")))}
                 </Text>
               </View>
             ))}
@@ -316,11 +331,11 @@ const HomeScreen = () => {
                   },
                 ]}
               >
-                R${" "}
-                {Object.values(accountValues)
+
+                {formatToBRL(parseFloat(Object.values(accountValues)
                   .reduce((a, b) => a + b, 0)
                   .toFixed(2)
-                  .replace(".", ",")}
+                  .replace(".", ",")))}
               </Text>
             </View>
           </Card.Content>
@@ -332,24 +347,24 @@ const HomeScreen = () => {
               <View style={styles.monthlyBalanceItem}>
                 <Text style={styles.monthlyBalanceLabel}>Receitas:</Text>
                 <Text style={styles.monthlyBalanceValue}>
-                  R$ {monthlyIncome.toFixed(2).replace(".", ",")}
+                  {formatToBRL(parseFloat(monthlyIncome.toFixed(2).replace(".", ",")))}
                 </Text>
               </View>
               <View style={styles.monthlyBalanceItem}>
                 <Text style={styles.monthlyBalanceLabel}>Despesas:</Text>
                 <Text style={styles.monthlyBalanceValue}>
-                  R$ {monthlyExpense.toFixed(2).replace(".", ",")}
+                  {formatToBRL(parseFloat(monthlyExpense.toFixed(2).replace(".", ",")))}
                 </Text>
               </View>
               <View style={styles.monthlyBalanceItem}>
-                <Text style={styles.monthlyBalanceLabel}>Saldo:</Text>
+                <Text style={styles.monthlyBalanceLabel}>Balanço:</Text>
                 <Text
                   style={[
                     styles.monthlyBalanceValue,
                     { color: monthlyBalance < 0 ? "red" : "green" },
                   ]}
                 >
-                  R$ {monthlyBalance.toFixed(2).replace(".", ",")}
+                  {formatToBRL(parseFloat(monthlyBalance.toFixed(2).replace(".", ",")))}
                 </Text>
               </View>
             </View>
@@ -367,23 +382,12 @@ const HomeScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalBody}>
-              <View style={styles.monthYearSelector}>
-                <TouchableOpacity onPress={() => changeMonth("prev")}>
-                  <Icon name="chevron-left" size={24} />
-                </TouchableOpacity>
-                <Text style={styles.monthYearText}>
-                  {formatMonthYear(currentMonth, currentYear)}
-                </Text>
-                <TouchableOpacity onPress={() => changeMonth("next")}>
-                  <Icon name="chevron-right" size={24} />
-                </TouchableOpacity>
-              </View>
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={[
                     styles.modalButton,
                     selectedCalculationType === "category" &&
-                      styles.modalButtonSelected,
+                    styles.modalButtonSelected,
                   ]}
                   onPress={() => setSelectedCalculationType("category")}
                 >
@@ -393,7 +397,7 @@ const HomeScreen = () => {
                   style={[
                     styles.modalButton,
                     selectedCalculationType === "account" &&
-                      styles.modalButtonSelected,
+                    styles.modalButtonSelected,
                   ]}
                   onPress={() => setSelectedCalculationType("account")}
                 >
@@ -403,27 +407,22 @@ const HomeScreen = () => {
               <ScrollView>
                 {selectedCalculationType === "category" ? (
                   <View>
-                    <Text style={styles.modalTitle}>
-                      Balanço
-                      <Text style={styles.modalBalanceTotal}>
-                        {"\n"}R${" "}
-                        {parseFloat(getCategoryTotals("income").totalSum) -
-                          parseFloat(getCategoryTotals("expense").totalSum)}
-                      </Text>
-                    </Text>
+
 
                     <View style={styles.balanceContainer}>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Receitas</Text>
                         <Text style={styles.movementTextIncome}>
-                          R$ {getCategoryTotals("income").totalSum}
+                          {formatToBRL(parseFloat(getCategoryTotals("income").totalSum))}
+
                         </Text>
                         {getCategoryTotals("income").totals.map((category) => (
                           <Text key={category.id}>
                             {category.name}
                             {"\n"}
                             <Text style={styles.incomeTotal}>
-                              R$ {category.total}
+                              {formatToBRL(parseFloat(category.total))}
+
                             </Text>
                           </Text>
                         ))}
@@ -431,7 +430,8 @@ const HomeScreen = () => {
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Despesas</Text>
                         <Text style={styles.movementTextExpense}>
-                          R$ {getCategoryTotals("expense").totalSum}
+                          {formatToBRL(parseFloat(getCategoryTotals("expense").totalSum))}
+
                         </Text>
                         {getCategoryTotals("expense").totals.map((category) => (
                           <Text key={category.id}>
@@ -447,26 +447,21 @@ const HomeScreen = () => {
                   </View>
                 ) : (
                   <View>
-                    <Text style={styles.modalTitle}>
-                      Balanço
-                      <Text style={styles.modalBalanceTotal}>
-                        {"\n"}R${" "}
-                        {parseFloat(getAccountTotals("income").totalSum) -
-                          parseFloat(getAccountTotals("expense").totalSum)}
-                      </Text>
-                    </Text>
+
                     <View style={styles.balanceContainer}>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Receitas</Text>
                         <Text style={styles.movementTextIncome}>
-                          R$ {getAccountTotals("income").totalSum}
+                          {formatToBRL(parseFloat(getAccountTotals("income").totalSum))}
+
                         </Text>
                         {getAccountTotals("income").totals.map((account) => (
                           <Text key={account.id}>
                             {account.name}
                             {"\n"}
                             <Text style={styles.incomeTotal}>
-                              R$ {account.total}
+                              {formatToBRL(parseFloat(account.total))}
+
                             </Text>
                           </Text>
                         ))}
@@ -474,15 +469,16 @@ const HomeScreen = () => {
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Despesas</Text>
                         <Text style={styles.movementTextExpense}>
-                          R$ {getAccountTotals("expense").totalSum}
+                          {formatToBRL(parseFloat(getAccountTotals("expense").totalSum))}
                         </Text>
                         {getAccountTotals("expense").totals.map((account) => (
                           <Text key={account.id}>
                             {account.name}
                             {"\n"}
                             <Text style={styles.expenseTotal}>
-                              R$ {account.total}
+                              {formatToBRL(parseFloat(account.total))}
                             </Text>
+
                           </Text>
                         ))}
                       </View>
@@ -490,6 +486,26 @@ const HomeScreen = () => {
                   </View>
                 )}
               </ScrollView>
+              <View style={styles.balanceRow}>
+                <Text style={styles.modalTitle}>Balanço</Text>
+                <Text style={styles.modalBalanceTotal}>
+
+                  {formatToBRL(parseFloat(getCategoryTotals("income").totalSum) -
+                    parseFloat(getCategoryTotals("expense").totalSum))}
+                </Text>
+              </View>
+
+              <View style={styles.monthYearSelector}>
+                <TouchableOpacity onPress={() => changeMonth("prev")}>
+                  <Icon name="chevron-left" size={24} />
+                </TouchableOpacity>
+                <Text style={styles.monthYearText}>
+                  {formatMonthYear(currentMonth, currentYear)}
+                </Text>
+                <TouchableOpacity onPress={() => changeMonth("next")}>
+                  <Icon name="chevron-right" size={24} />
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                 onPress={closeModal}

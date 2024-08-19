@@ -18,11 +18,7 @@ const ClearDataModal = ({ visible, onCancel }) => {
       }, 1000);
     } else if (countdown === 0 && !isCancelled) {
       clearInterval(interval);
-      // Força a reinicialização e fecha o aplicativo após o delay
-      setTimeout(() => {
-        Updates.reloadAsync(); // Força a reinicialização do aplicativo
-        BackHandler.exitApp(); // Simula o fechamento do aplicativo
-      }, 1000); // Adiciona um pequeno atraso para garantir que a UI seja atualizada
+      clearAllData(); // Limpa os dados após o término da contagem regressiva
     }
 
     return () => clearInterval(interval);
@@ -31,13 +27,21 @@ const ClearDataModal = ({ visible, onCancel }) => {
   const clearAllData = async () => {
     try {
       await AsyncStorage.clear();
-      setCountdown(5); // Reseta a contagem regressiva para 5 segundos
-      setIsCancelled(false); // Garante que a contagem não está cancelada
-      setShowCountdown(true); // Começa a contagem regressiva
+      // Força a reinicialização e fecha o aplicativo após a limpeza dos dados
+      setTimeout(() => {
+        Updates.reloadAsync(); // Força a reinicialização do aplicativo
+        BackHandler.exitApp(); // Simula o fechamento do aplicativo
+      }, 1000); // Adiciona um pequeno atraso para garantir que a UI seja atualizada
     } catch (error) {
       Alert.alert('Erro', 'Ocorreu um erro ao tentar limpar os dados.');
       console.error('Failed to clear AsyncStorage', error);
     }
+  };
+
+  const handleClearData = () => {
+    setCountdown(5); // Reseta a contagem regressiva para 5 segundos
+    setIsCancelled(false); // Garante que a contagem não está cancelada
+    setShowCountdown(true); // Começa a contagem regressiva
   };
 
   const cancelCountdown = () => {
@@ -45,10 +49,6 @@ const ClearDataModal = ({ visible, onCancel }) => {
     setShowCountdown(false); // Oculta o modal de contagem regressiva
     setCountdown(5); // Reseta a contagem regressiva para 5 segundos
     onCancel(); // Fecha o modal
-  };
-
-  const handleClearData = () => {
-    clearAllData(); // Inicia a limpeza dos dados e a contagem regressiva
   };
 
   return (

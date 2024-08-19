@@ -29,16 +29,16 @@ export const styles = StyleSheet.create({
     },
     sectionContainer: {
       marginBottom: 16,
+      marginTop: 10
     },
     sectionHeader: {
       fontSize: 18,
       fontWeight: 'bold',
       marginBottom: 8,
-      backgroundColor: 'silver'
+      backgroundColor: 'silver',
+      textAlign: 'center'
     },
-    item: {
-      marginBottom: 8,
-    },
+   
     categoryItem: {
       fontSize: 16,
       color: '#333',
@@ -64,20 +64,28 @@ export const styles = StyleSheet.create({
     },
     tableRow: {
       flexDirection: 'row',
-      paddingVertical: 8,
-      paddingHorizontal: 16,
+      justifyContent: 'center', // Centraliza o conteúdo das linhas
+      alignItems: 'center',     // Alinha verticalmente ao centro
       borderBottomWidth: 1,
-      borderBottomColor: '#ccc',
+      borderBottomColor: '#ddd',
+      paddingVertical: 8,
     },
+    
     tableHeader: {
-      fontSize: 16,
-      fontWeight: 'bold',
       flex: 1,
+      textAlign: 'center', // Centraliza o texto dos cabeçalhos
+      fontWeight: 'bold',
     },
     tableCell: {
-      fontSize: 16,
       flex: 1,
+      textAlign: 'center', // Centraliza o texto das células
     },
+    item: {
+      borderBottomWidth: 1,
+      borderBottomColor: '#ddd',
+      paddingVertical: 8,
+    },
+  
     balanceRow: {
       flexDirection: 'row',
       paddingVertical: 8,
@@ -87,6 +95,7 @@ export const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: 'bold',
       flex: 2,
+      textAlign: 'left',
     },
     balancePositive: {
       fontSize: 16,
@@ -173,3 +182,5 @@ export const styles = StyleSheet.create({
       zIndex: 1,
     },
   });
+
+  export default styles;

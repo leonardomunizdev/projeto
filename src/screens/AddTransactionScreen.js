@@ -41,8 +41,8 @@ const AddTransactionScreen = () => {
   const [date, setDate] = useState(new Date());
   const [expenseCategory, setExpenseCategory] = useState("");
   const [incomeCategory, setIncomeCategory] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState("Selecione uma conta");
+  const [selectedCategory, setSelectedCategory] = useState("Selecione uma categoria");
   const [accountName, setAccountName] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
@@ -53,7 +53,8 @@ const AddTransactionScreen = () => {
   const [attachments, setAttachments] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
 
- 
+  
+  
   
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
@@ -106,7 +107,7 @@ const AddTransactionScreen = () => {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
       return;
     }
-
+  
     const recurrenceId = UUID.v4();
     const baseTransaction = {
       id: UUID.v4(),
@@ -124,30 +125,32 @@ const AddTransactionScreen = () => {
       recurrenceId,
       attachments,
     };
-
+  
     const transactions = isRecurring
       ? generateRecurringTransactions(baseTransaction, recurrenceId)
       : [baseTransaction];
-
+  
     transactions.forEach((transaction) => {
       addTransaction(transaction);
     });
-
+  
+    // Resetar todos os campos
     setTransactionType("expense");
     setAmount("");
     setDescription("");
     setDate(new Date());
-    setExpenseCategory("");
-    setIncomeCategory("");
-    setSelectedAccount("");
+    setExpenseCategory(""); // Limpar a categoria de despesa
+    setIncomeCategory(""); // Limpar a categoria de receita
+    setSelectedAccount(""); // Limpar a conta selecionada
     setAccountName("");
+    setSelectedCategory(""); // Limpar a categoria selecionada
     setIsRecurring(false);
     setRecurrence({ count: "", unit: "month" });
     setRecurrenceInfo("");
     setAttachments([]);
-
-    navigation.navigate("Home");
+  
   };
+  
 
   const handleIncrement = () => {
     setRecurrence((prevRecurrence) => ({
