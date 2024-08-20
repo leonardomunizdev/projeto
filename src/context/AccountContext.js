@@ -35,11 +35,18 @@ export const AccountProvider = ({ children }) => {
   }, [accounts]);
 
   const addAccount = (name) => {
-    setAccounts((prevAccounts) => [
-      ...prevAccounts,
-      { id: Date.now().toString(), name },
-    ]);
+    // Verifica se a conta já existe
+    const existingAccount = accounts.find((account) => account.name === name);
+    if (existingAccount) {
+      return existingAccount.id; // Retorna o ID existente
+    }
+  
+    // Adiciona uma nova conta se não existir
+    const newAccount = { id: Date.now().toString(), name };
+    setAccounts((prevAccounts) => [...prevAccounts, newAccount]);
+    return newAccount.id;
   };
+  
 
   const removeAccount = (accountId) => {
     //Filtra todas as transações que não estão ligadas à conta a ser removida

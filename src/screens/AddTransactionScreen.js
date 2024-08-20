@@ -135,7 +135,7 @@ const AddTransactionScreen = () => {
     });
   
     // Resetar todos os campos
-    setTransactionType("expense");
+    setTransactionType("income");
     setAmount("");
     setDescription("");
     setDate(new Date());

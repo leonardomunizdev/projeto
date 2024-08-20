@@ -36,11 +36,18 @@ export const CategoryProvider = ({ children }) => {
   }, [categories]);
 
   const addCategory = (name, type) => {
-    setCategories((prevCategories) => [
-      ...prevCategories,
-      { id: Date.now().toString(), name, type },
-    ]);
+    // Verifica se a categoria já existe
+    const existingCategory = categories.find((category) => category.name === name);
+    if (existingCategory) {
+      return existingCategory.id; // Retorna o ID existente
+    }
+  
+    // Adiciona uma nova categoria se não existir
+    const newCategory = { id: Date.now().toString(), name, type };
+    setCategories((prevCategories) => [...prevCategories, newCategory]);
+    return newCategory.id;
   };
+  
   
 
   const r = (id) => {

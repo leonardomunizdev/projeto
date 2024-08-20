@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextInput, TouchableOpacity,  Modal, View, Text } from 'react-native';
+import { TextInput, TouchableOpacity, Modal, View, Text } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCategories } from '../../../context/CategoryContext';
@@ -10,7 +10,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import styles from '../../../styles/screens/StatisticsScreenStyles';
 
-const ExportModal = ({ visible, onClose}) => {
+const ExportModal = ({ visible, onClose }) => {
 
   const { categories } = useCategories();
   const { transactions } = useTransactions();
@@ -31,7 +31,14 @@ const ExportModal = ({ visible, onClose}) => {
     setStartDate(null);
     setEndDate(null);
   };
+  const formatDateToBrazilian = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Lembre-se que os meses são indexados a partir de 0
+    const year = date.getFullYear();
 
+    return `${day}/${month}/${year}`;
+  };
 
   const showStartDatePicker = () => setStartDatePickerVisible(true);
   const hideStartDatePicker = () => setStartDatePickerVisible(false);
@@ -74,8 +81,16 @@ const ExportModal = ({ visible, onClose}) => {
   const quantityRevenues = filteredTransactions.filter(transaction => transaction.type === 'income').length;
   const quantityExpenses = filteredTransactions.filter(transaction => transaction.type === 'expense').length;
 
-  const avgRevenuePerDay = quantityRevenues > 0 ? totalRevenues / quantityRevenues : 0;
-  const avgExpensePerDay = quantityExpenses > 0 ? totalExpenses / quantityExpenses : 0;
+  // Função para calcular o número de dias únicos entre as transações filtradas
+  const calculateUniqueDays = (transactions) => {
+    const uniqueDays = new Set(transactions.map(transaction => formatDateToBrazilian(transaction.date)));
+    return uniqueDays.size;
+  };
+
+  // Calcular média diária com base nos dias únicos
+  const avgRevenuePerDay = totalRevenues > 0 ? totalRevenues / calculateUniqueDays(filteredTransactions.filter(transaction => transaction.type === 'income')) : 0;
+  const avgExpensePerDay = totalExpenses > 0 ? totalExpenses / calculateUniqueDays(filteredTransactions.filter(transaction => transaction.type === 'expense')) : 0;
+
 
   const calculateCategoryTotals = (type) => {
     return categories
@@ -100,7 +115,7 @@ const ExportModal = ({ visible, onClose}) => {
 
   const generatePDF = async () => {
     const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  
+
     const formatCategory = (categories, title) => {
       return `
         <table class="table">
@@ -126,7 +141,7 @@ const ExportModal = ({ visible, onClose}) => {
         </table>
       `;
     };
-  
+
     const formatTransactions = (transactions, title) => {
       return `
         <table class="table">
@@ -154,7 +169,7 @@ const ExportModal = ({ visible, onClose}) => {
         </table>
       `;
     };
-  
+
     const htmlContent = `
       <html>
         <head>
@@ -226,7 +241,7 @@ const ExportModal = ({ visible, onClose}) => {
         </body>
       </html>
     `;
-  
+
     try {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
       await Sharing.shareAsync(uri);
@@ -234,119 +249,119 @@ const ExportModal = ({ visible, onClose}) => {
       console.error('Erro ao gerar PDF:', error);
     }
   };
-  
-  
 
-    
+
+
+
 
   return (
-  <Modal
-        animationType="slide"
-        transparent={true}
-        visible={visible}
-        onRequestClose={onClose}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
           <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-            >
-              <Ionicons name="close" size={24} color="black" />
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Exportar Relátorio</Text>
+            style={styles.closeButton}
+            onPress={onClose}
+          >
+            <Ionicons name="close" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.modalTitle}>Exportar Relátorio</Text>
 
-            <Text style={styles.filterLabel}>Tipo de Transação</Text>
-            <Picker
-              selectedValue={selectedType}
-              style={styles.picker}
-              onValueChange={(itemValue) => setSelectedType(itemValue)}
-            >
-              <Picker.Item label="Todas" value="all" />
-              <Picker.Item label="Receitas" value="income" />
-              <Picker.Item label="Despesas" value="expense" />
-            </Picker>
+          <Text style={styles.filterLabel}>Tipo de Transação</Text>
+          <Picker
+            selectedValue={selectedType}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedType(itemValue)}
+          >
+            <Picker.Item label="Todas" value="all" />
+            <Picker.Item label="Receitas" value="income" />
+            <Picker.Item label="Despesas" value="expense" />
+          </Picker>
 
-            <Text style={styles.filterLabel}>Categoria</Text>
-            <Picker
-              selectedValue={selectedCategory}
-              style={styles.picker}
-              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            >
-              <Picker.Item label="Todas" value="all" />
-              {categories.map(category => (
-                <Picker.Item key={category.id} label={category.name} value={category.id} />
-              ))}
-            </Picker>
+          <Text style={styles.filterLabel}>Categoria</Text>
+          <Picker
+            selectedValue={selectedCategory}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+          >
+            <Picker.Item label="Todas" value="all" />
+            {categories.map(category => (
+              <Picker.Item key={category.id} label={category.name} value={category.id} />
+            ))}
+          </Picker>
 
-            <Text style={styles.filterLabel}>Conta</Text>
-            <Picker
-              selectedValue={selectedAccount}
-              style={styles.picker}
-              onValueChange={(itemValue) => setSelectedAccount(itemValue)}
-            >
-              <Picker.Item label="Todas" value="all" />
-              {accounts.map(account => (
-                <Picker.Item key={account.id} label={account.name} value={account.id} />
-              ))}
-            </Picker>
+          <Text style={styles.filterLabel}>Conta</Text>
+          <Picker
+            selectedValue={selectedAccount}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedAccount(itemValue)}
+          >
+            <Picker.Item label="Todas" value="all" />
+            {accounts.map(account => (
+              <Picker.Item key={account.id} label={account.name} value={account.id} />
+            ))}
+          </Picker>
 
-            <Text style={styles.filterLabel}>Data de Início</Text>
-            <TouchableOpacity onPress={showStartDatePicker}>
-              <TextInput
-                style={styles.dateInput}
-                value={startDate ? startDate.toLocaleDateString() : ''}
-                placeholder="Selecionar Data de Início"
-                editable={false}
-              />
-            </TouchableOpacity>
-            {isStartDatePickerVisible && (
-              <DateTimePicker
-                value={startDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  hideStartDatePicker();
-                  setStartDate(selectedDate || startDate);
-                }}
-              />
-            )}
+          <Text style={styles.filterLabel}>Data de Início</Text>
+          <TouchableOpacity onPress={showStartDatePicker}>
+            <TextInput
+              style={styles.dateInput}
+              value={startDate ? startDate.toLocaleDateString() : ''}
+              placeholder="Selecionar Data de Início"
+              editable={false}
+            />
+          </TouchableOpacity>
+          {isStartDatePickerVisible && (
+            <DateTimePicker
+              value={startDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                hideStartDatePicker();
+                setStartDate(selectedDate || startDate);
+              }}
+            />
+          )}
 
-            <Text style={styles.filterLabel}>Data de Fim</Text>
-            <TouchableOpacity onPress={showEndDatePicker}>
-              <TextInput
-                style={styles.dateInput}
-                value={endDate ? endDate.toLocaleDateString() : ''}
-                placeholder="Selecionar Data de Fim"
-                editable={false}
-              />
-            </TouchableOpacity>
-            {isEndDatePickerVisible && (
-              <DateTimePicker
-                value={endDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  hideEndDatePicker();
-                  setEndDate(selectedDate || endDate);
-                }}
-              />
-            )}
+          <Text style={styles.filterLabel}>Data de Fim</Text>
+          <TouchableOpacity onPress={showEndDatePicker}>
+            <TextInput
+              style={styles.dateInput}
+              value={endDate ? endDate.toLocaleDateString() : ''}
+              placeholder="Selecionar Data de Fim"
+              editable={false}
+            />
+          </TouchableOpacity>
+          {isEndDatePickerVisible && (
+            <DateTimePicker
+              value={endDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                hideEndDatePicker();
+                setEndDate(selectedDate || endDate);
+              }}
+            />
+          )}
 
-            <View style={styles.modalButtonsContainer}>
+          <View style={styles.modalButtonsContainer}>
             <TouchableOpacity onPress={generatePDF} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>Exportar </Text>
-              </TouchableOpacity>
+              <Text style={styles.modalButtonText}>Exportar </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity onPress={clearFilters} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>Limpar Filtros</Text>
-              </TouchableOpacity>
-              
-            </View>
+            <TouchableOpacity onPress={clearFilters} style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>Limpar Filtros</Text>
+            </TouchableOpacity>
+
           </View>
         </View>
-      </Modal>
-);
+      </View>
+    </Modal>
+  );
 };
 
 
