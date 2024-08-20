@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Button, Modal, Image, StyleSheet, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Button, Modal, Image, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import Papa from 'papaparse';
@@ -9,15 +9,19 @@ import { useTransactions } from '../../../context/TransactionContext';
 import styles from '../../../styles/screens/OptionsScreenStyles';
 
 const ImportModal = ({ onClose, visible }) => {
-  const { addAccount } = useAccounts();
-  const { addCategory } = useCategories();
+  const { addAccount, accounts } = useAccounts();
+  const { addCategory, categories } = useCategories();
   const { addTransaction } = useTransactions();
+  
+  const [loading, setLoading] = useState(false);
 
   const handleParsedData = async (data) => {
     if (data && Array.isArray(data)) {
-      // Usar Set para garantir que contas e categorias sejam únicas
-      const processedAccounts = new Set();
-      const processedCategories = new Set();
+      const existingCategories = new Map();
+      categories.forEach(category => existingCategories.set(`${category.name.trim().toLowerCase()}-${category.type}`, category.id));
+  
+      const existingAccounts = new Map();
+      accounts.forEach(account => existingAccounts.set(account.name.trim().toLowerCase(), account.id));
   
       for (const item of data) {
         const {
@@ -29,51 +33,50 @@ const ImportModal = ({ onClose, visible }) => {
           Tipo = ''
         } = item;
   
-        // Verifica se todos os campos necessários estão presentes e não são vazios
         if (!Valor || !Categoria || !Conta || !Data || !Tipo) {
           console.warn('Dados ausentes ou inválidos no item:', item);
-          continue; // Pular para o próximo item
+          continue;
         }
   
-        // Adicionar conta, se não existir
+        const normalizedAccountName = Conta.trim().toLowerCase();
         let accountId;
-        if (!processedAccounts.has(Conta)) {
+        if (!existingAccounts.has(normalizedAccountName)) {
           accountId = addAccount(Conta);
-          processedAccounts.add(Conta);
+          existingAccounts.set(normalizedAccountName, accountId);
         } else {
-          // Se já processado, pegar o ID existente (ou atualizar conforme necessário)
-          accountId = accounts.find(account => account.name === Conta)?.id;
+          accountId = existingAccounts.get(normalizedAccountName);
         }
   
-        // Adicionar categoria, se não existir
-        let categoryId;
+        const normalizedCategoryName = Categoria.trim().toLowerCase();
         const transactionType = Tipo === 'receita' ? 'income' : 'expense';
-        if (!processedCategories.has(`${Categoria}-${transactionType}`)) {
+        const categoryKey = `${normalizedCategoryName}-${transactionType}`;
+  
+        let categoryId;
+        if (!existingCategories.has(categoryKey)) {
           categoryId = addCategory(Categoria, transactionType);
-          processedCategories.add(`${Categoria}-${transactionType}`);
+          existingCategories.set(categoryKey, categoryId);
         } else {
-          // Se já processado, pegar o ID existente (ou atualizar conforme necessário)
-          categoryId = categories.find(category => category.name === Categoria && category.type === transactionType)?.id;
+          categoryId = existingCategories.get(categoryKey);
         }
   
-        // Corrigir a formatação do valor para garantir que as casas decimais estejam corretas
         const formattedValue = Valor.replace(/R\$|\./g, '').replace(',', '.').trim();
   
-        // Adicionar transação
         const newTransaction = {
           id: Date.now().toString(),
-          description: Descrição || 'Sem descrição', // Valor padrão para descrição
-          categoryId, // Usar o ID da categoria
-          categoryName: Categoria, // Armazenar o nome da categoria
-          accountId, // Usar o ID da conta
-          accountName: Conta, // Armazenar o nome da conta
-          amount: parseFloat(formattedValue), // Converter o valor formatado corretamente
-          date: Data.split('/').reverse().join('-'), // Ajustar o formato da data para YYYY-MM-DD
-          type: transactionType, // Usar o tipo determinado
+          description: Descrição || 'Sem descrição',
+          categoryId,
+          categoryName: Categoria,
+          accountId,
+          accountName: Conta,
+          amount: parseFloat(formattedValue),
+          date: Data.split('/').reverse().join('-'),
+          type: transactionType,
         };
   
         console.log('Nova transação:', newTransaction);
         addTransaction(newTransaction);
+  
+        await new Promise(resolve => setTimeout(resolve, 50)); // Delay de 50ms
       }
   
       console.log('Dados processados e inseridos nos contextos');
@@ -81,13 +84,7 @@ const ImportModal = ({ onClose, visible }) => {
       console.error('Nenhum dado foi processado. Verifique o formato do CSV.');
     }
   };
-  
-  
-  
-  
-  
-  
-  
+
   const pickCsvFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -97,23 +94,25 @@ const ImportModal = ({ onClose, visible }) => {
 
       console.log('DocumentPicker result:', result);
 
-      // Verifica se há assets e se o cancelamento foi falso
       if (result.assets && !result.canceled) {
+        setLoading(true); // Inicia o carregamento
         const fileUri = result.assets[0].uri;
         console.log('CSV file selected:', fileUri);
 
         const csvString = await FileSystem.readAsStringAsync(fileUri);
         console.log('CSV file content read successfully');
 
-        // Parse CSV data
         Papa.parse(csvString, {
           header: true,
-          complete: (parsedResult) => {
+          complete: async (parsedResult) => {
             console.log('CSV parsed successfully:', parsedResult.data);
-            handleParsedData(parsedResult.data);
+            await handleParsedData(parsedResult.data);
+            setLoading(false); // Termina o carregamento
+            onClose(); // Fecha o modal após finalizar a importação
           },
           error: (error) => {
             console.error('Error parsing CSV:', error);
+            setLoading(false); // Termina o carregamento em caso de erro
             Alert.alert('Erro ao processar CSV', 'Ocorreu um erro ao processar o arquivo CSV.');
           }
         });
@@ -135,14 +134,23 @@ const ImportModal = ({ onClose, visible }) => {
     >
       <View style={styles.fullScreenModal}>
         <View style={styles.confirmModalContent}>
-          <Text style={styles.modalText}>Deseja importar um arquivo CSV?</Text>
-          <Image
-            source={require('../../../../assets/test.png')}
-            style={localStyles.image} 
-            resizeMode="contain" 
-          />
-          <Button title="Selecionar CSV" onPress={pickCsvFile} />
-          <Button color="red" title="Cancelar" onPress={onClose} />
+          {loading ? (
+            <View style={localStyles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0000ff" />
+              <Text style={localStyles.loadingText}>Importando dados...</Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.modalText}>Deseja importar um arquivo CSV?</Text>
+              <Image
+                source={require('../../../../assets/test.png')}
+                style={localStyles.image}
+                resizeMode="contain"
+              />
+              <Button title="Selecionar CSV" onPress={pickCsvFile} />
+              <Button color="red" title="Cancelar" onPress={onClose} />
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -154,6 +162,15 @@ const localStyles = StyleSheet.create({
     width: '100%', 
     height: 200, 
     marginVertical: 20, 
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
   },
 });
 

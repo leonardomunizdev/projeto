@@ -63,9 +63,10 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="AddTransactionScreen"
-        component={AddTransactionScreen} // Usar o StackNavigator aqui
-        options={{ tabBarLabel: '', headerShown: false }} // Remover o label do botão Add
+        component={AddTransactionScreen}  
+        options={{ tabBarLabel: '', headerShown: false }}
       />
+
       <Tab.Screen
         name="Relatório"
         component={StatisticsScreen}

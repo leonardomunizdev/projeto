@@ -12,7 +12,7 @@ const PlusButton = () => {
             <TouchableOpacity
                 style={styles.button}
                 onPress={() => {
-                    navigation.navigate('AddTransactionScreen');
+                    navigation.navigate('AddTransactionScreen', { isEditing: false });
                 }}
             >
                 <MaterialCommunityIcons name="plus" size={30} color="#fff" />

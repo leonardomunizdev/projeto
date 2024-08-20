@@ -1,5 +1,5 @@
 // context/TransactionContext.js
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 
@@ -8,7 +8,7 @@ const TransactionContext = createContext();
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [attachments, setAttachments] = useState([]);
-  
+
   console.log(transactions);
   useEffect(() => {
     const loadTransactions = async () => {
@@ -38,6 +38,20 @@ export const TransactionProvider = ({ children }) => {
   }, [transactions]);
 
 
+  // No TransactionsContext
+  const updateTransaction = (updatedTransaction) => {
+    setTransactions(transactions.map(transaction =>
+      transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+    ));
+  };
+  // Dentro do TransactionContext.js
+  const editTransaction = (updatedTransaction) => {
+    setTransactions((prevTransactions) =>
+      prevTransactions.map((transaction) =>
+        transaction.id === updatedTransaction.id ? updatedTransaction : transaction
+      )
+    );
+  };
 
   const addTransaction = (transaction, recurrence) => {
     if (recurrence && recurrence.isRecurring) {

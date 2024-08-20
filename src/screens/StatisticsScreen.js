@@ -42,13 +42,21 @@ const DashboardScreen = () => {
   const hideEndDatePicker = () => setEndDatePickerVisible(false);
 
   const formatDateToBrazilian = (dateString) => {
+    // Cria um novo objeto Date a partir da string de data
     const date = new Date(dateString);
+  
+    // Ajusta a data para a data correta removendo a parte do fuso horário
+    date.setHours(date.getHours() + date.getTimezoneOffset() / 60);
+  
+    // Formata a data para o formato brasileiro
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Lembre-se que os meses são indexados a partir de 0
     const year = date.getFullYear();
-
+  
     return `${day}/${month}/${year}`;
   };
+  
+  
 
   const formatNumberBR = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -61,16 +69,18 @@ const DashboardScreen = () => {
 
   const applyFilters = () => {
     return transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date).getTime();
       const matchCategory = selectedCategory === 'all' || transaction.categoryId === selectedCategory;
       const matchAccount = selectedAccount === 'all' || transaction.accountId === selectedAccount;
       const matchType = selectedType === 'all' || transaction.type === selectedType;
-
-      const matchStartDate = !startDate || new Date(transaction.date) >= startDate;
-      const matchEndDate = !endDate || new Date(transaction.date) <= endDate;
-
+  
+      const matchStartDate = !startDate || transactionDate >= new Date(startDate).getTime();
+      const matchEndDate = !endDate || transactionDate <= new Date(endDate).getTime();
+  
       return matchCategory && matchAccount && matchType && matchStartDate && matchEndDate;
     });
   };
+  
 
   // Filtra e calcula os dados para a visão geral
   const filteredTransactions = applyFilters();
