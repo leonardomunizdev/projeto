@@ -9,6 +9,7 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false); // Estado para o modal de confirmação
   const [accountToRemove, setAccountToRemove] = useState(null); // Estado para armazenar o ID da conta a ser removida
 
+ 
   // Função para adicionar conta
   const handleAddAccount = () => {
     if (newAccountName.trim() === '') {

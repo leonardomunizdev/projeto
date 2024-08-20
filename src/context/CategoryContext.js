@@ -1,14 +1,12 @@
-import React, { createContext, useContext, useState, useEffect  } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTransactions } from './TransactionContext';
 
 const CategoryContext = createContext();
 
-
 export const CategoryProvider = ({ children }) => {
-
   const [categories, setCategories] = useState([]);
-  const {transactions, setTransactions} = useTransactions();
+  const { transactions, setTransactions } = useTransactions();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -29,40 +27,29 @@ export const CategoryProvider = ({ children }) => {
       try {
         await AsyncStorage.setItem('categories', JSON.stringify(categories));
       } catch (error) {
-        console.error('Erro ao salvar contas:', error);
+        console.error('Erro ao salvar categorias:', error);
       }
     };
     saveCategories();
   }, [categories]);
 
   const addCategory = (name, type) => {
-    // Verifica se a categoria já existe
-    const existingCategory = categories.find((category) => category.name === name);
+    const existingCategory = categories.find(category => category.name === name && category.type === type);
     if (existingCategory) {
-      return existingCategory.id; // Retorna o ID existente
+      return existingCategory.id; // Retorna a ID da categoria existente
     }
-  
-    // Adiciona uma nova categoria se não existir
     const newCategory = { id: Date.now().toString(), name, type };
-    setCategories((prevCategories) => [...prevCategories, newCategory]);
+    setCategories(prevCategories => [...prevCategories, newCategory]);
     return newCategory.id;
-  };
-  
-  
-
-  const r = (id) => {
-    setCategories((prevCategory) => prevCategory.filter(category => category.id !== id));
   };
 
   const removeCategory = (categoryId) => {
-    //Filtra todas as transações que não estão ligadas à conta a ser removida
     const updatedTransactions = transactions.filter(
       (transaction) => transaction.categoryId !== categoryId
     );
 
     setTransactions(updatedTransactions);
 
-    //Remove a conta
     const updatedCategories = categories.filter((category) => category.id !== categoryId);
     setCategories(updatedCategories);
   };
@@ -73,4 +60,5 @@ export const CategoryProvider = ({ children }) => {
     </CategoryContext.Provider>
   );
 };
+
 export const useCategories = () => useContext(CategoryContext);

@@ -8,8 +8,8 @@ const TransactionContext = createContext();
 export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [attachments, setAttachments] = useState([]);
-
-
+  
+  console.log(transactions);
   useEffect(() => {
     const loadTransactions = async () => {
       try {

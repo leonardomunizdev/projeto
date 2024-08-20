@@ -13,44 +13,63 @@ const ImportModal = ({ onClose, visible }) => {
   const { addCategory } = useCategories();
   const { addTransaction } = useTransactions();
 
-  const formatDate = (dateString) => {
-    const [day, month, year] = dateString.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
-  const formatValue = (valueString) => {
-    // Remove o símbolo de moeda e os espaços, substitui a vírgula por ponto e converte para número
-    return parseFloat(valueString.replace(/R\$|\s|,/g, '').trim());
-  };
-  
   const handleParsedData = async (data) => {
     if (data && Array.isArray(data)) {
+      // Usar Set para garantir que contas e categorias sejam únicas
+      const processedAccounts = new Set();
+      const processedCategories = new Set();
+  
       for (const item of data) {
-        const { Descrição, Categoria, Conta, Valor, Data, Tipo } = item;
+        const {
+          Descrição = '',
+          Categoria = '',
+          Conta = '',
+          Valor = '',
+          Data = '',
+          Tipo = ''
+        } = item;
+  
+        // Verifica se todos os campos necessários estão presentes e não são vazios
+        if (!Valor || !Categoria || !Conta || !Data || !Tipo) {
+          console.warn('Dados ausentes ou inválidos no item:', item);
+          continue; // Pular para o próximo item
+        }
   
         // Adicionar conta, se não existir
-        const accountId = addAccount(Conta);
-        if (!accountId) {
-          console.error(`Conta não adicionada: ${Conta}`);
-          continue;
+        let accountId;
+        if (!processedAccounts.has(Conta)) {
+          accountId = addAccount(Conta);
+          processedAccounts.add(Conta);
+        } else {
+          // Se já processado, pegar o ID existente (ou atualizar conforme necessário)
+          accountId = accounts.find(account => account.name === Conta)?.id;
         }
   
         // Adicionar categoria, se não existir
-        const categoryId = addCategory(Categoria, Tipo);
-        if (!categoryId) {
-          console.error(`Categoria não adicionada: ${Categoria}`);
-          continue;
+        let categoryId;
+        const transactionType = Tipo === 'receita' ? 'income' : 'expense';
+        if (!processedCategories.has(`${Categoria}-${transactionType}`)) {
+          categoryId = addCategory(Categoria, transactionType);
+          processedCategories.add(`${Categoria}-${transactionType}`);
+        } else {
+          // Se já processado, pegar o ID existente (ou atualizar conforme necessário)
+          categoryId = categories.find(category => category.name === Categoria && category.type === transactionType)?.id;
         }
+  
+        // Corrigir a formatação do valor para garantir que as casas decimais estejam corretas
+        const formattedValue = Valor.replace(/R\$|\./g, '').replace(',', '.').trim();
   
         // Adicionar transação
         const newTransaction = {
           id: Date.now().toString(),
-          description: Descrição,
-          category: categoryId, // Usar o ID da categoria
-          account: accountId, // Usar o ID da conta
-          amount: parseFloat(Valor.replace(/R\$|,/g, '').trim()), // Ajustar a conversão do valor
+          description: Descrição || 'Sem descrição', // Valor padrão para descrição
+          categoryId, // Usar o ID da categoria
+          categoryName: Categoria, // Armazenar o nome da categoria
+          accountId, // Usar o ID da conta
+          accountName: Conta, // Armazenar o nome da conta
+          amount: parseFloat(formattedValue), // Converter o valor formatado corretamente
           date: Data.split('/').reverse().join('-'), // Ajustar o formato da data para YYYY-MM-DD
-          type: Tipo === 'receita' ? 'income' : 'expense', // Mapeamento do tipo
+          type: transactionType, // Usar o tipo determinado
         };
   
         console.log('Nova transação:', newTransaction);
@@ -65,24 +84,27 @@ const ImportModal = ({ onClose, visible }) => {
   
   
   
-
+  
+  
+  
+  
   const pickCsvFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: ['text/csv', 'text/plain', 'application/vnd.ms-excel', 'application/csv', 'text/comma-separated-values', '*/*'],
         copyToCacheDirectory: true,
       });
-  
+
       console.log('DocumentPicker result:', result);
-  
+
       // Verifica se há assets e se o cancelamento foi falso
       if (result.assets && !result.canceled) {
         const fileUri = result.assets[0].uri;
         console.log('CSV file selected:', fileUri);
-  
+
         const csvString = await FileSystem.readAsStringAsync(fileUri);
         console.log('CSV file content read successfully');
-  
+
         // Parse CSV data
         Papa.parse(csvString, {
           header: true,
@@ -103,8 +125,6 @@ const ImportModal = ({ onClose, visible }) => {
       Alert.alert('Erro', 'Não foi possível abrir o arquivo CSV.');
     }
   };
-  
-  
 
   return (
     <Modal

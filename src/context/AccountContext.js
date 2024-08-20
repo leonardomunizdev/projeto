@@ -5,9 +5,8 @@ import { useTransactions } from './TransactionContext';
 const AccountContext = createContext();
 
 export const AccountProvider = ({ children }) => {
-
   const [accounts, setAccounts] = useState([]);
-  const {transactions, setTransactions} = useTransactions();
+  const { transactions, setTransactions } = useTransactions();
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -35,28 +34,22 @@ export const AccountProvider = ({ children }) => {
   }, [accounts]);
 
   const addAccount = (name) => {
-    // Verifica se a conta já existe
-    const existingAccount = accounts.find((account) => account.name === name);
+    const existingAccount = accounts.find(account => account.name === name);
     if (existingAccount) {
-      return existingAccount.id; // Retorna o ID existente
+      return existingAccount.id; // Retorna a ID da conta existente
     }
-  
-    // Adiciona uma nova conta se não existir
     const newAccount = { id: Date.now().toString(), name };
-    setAccounts((prevAccounts) => [...prevAccounts, newAccount]);
+    setAccounts(prevAccounts => [...prevAccounts, newAccount]);
     return newAccount.id;
   };
   
-
   const removeAccount = (accountId) => {
-    //Filtra todas as transações que não estão ligadas à conta a ser removida
     const updatedTransactions = transactions.filter(
       (transaction) => transaction.accountId !== accountId
     );
 
     setTransactions(updatedTransactions);
 
-    //Remove a conta
     const updatedAccounts = accounts.filter((account) => account.id !== accountId);
     setAccounts(updatedAccounts);
   };
