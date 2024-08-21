@@ -3,6 +3,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 
+
 const TransactionContext = createContext();
 
 export const TransactionProvider = ({ children }) => {
@@ -44,6 +45,7 @@ export const TransactionProvider = ({ children }) => {
       transaction.id === updatedTransaction.id ? updatedTransaction : transaction
     ));
   };
+  
   // Dentro do TransactionContext.js
   const editTransaction = (updatedTransaction) => {
     setTransactions((prevTransactions) =>
@@ -148,7 +150,8 @@ export const TransactionProvider = ({ children }) => {
       updateTransactionAttachments,
       saveAttachmentToTransaction,
       setTransactions,
-      clearTransactions
+      clearTransactions,
+      updateTransaction
     }}>
       {children}
     </TransactionContext.Provider>

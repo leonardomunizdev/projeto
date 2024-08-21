@@ -5,7 +5,7 @@ import { useAccounts } from '../../../context/AccountContext';
 import { useTransactions } from '../../../context/TransactionContext';
 import { useCategories } from '../../../context/CategoryContext';
 import { Ionicons } from '@expo/vector-icons';
-
+import MonthYearPicker from 'react-native-month-year-picker';
 const screenWidth = Dimensions.get('window').width;
 
 const ChartsModal = ({ visible, onClose }) => {
@@ -14,7 +14,7 @@ const ChartsModal = ({ visible, onClose }) => {
   const { categories } = useCategories();
   const [selectedOption, setSelectedOption] = useState('Despesas por categoria');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
-
+  
   const options = [
     'Despesas por categoria',
     'Despesas por conta',
@@ -24,9 +24,19 @@ const ChartsModal = ({ visible, onClose }) => {
   ];
 
   const handleMonthChange = (increment) => {
-    const newMonth = new Date(selectedMonth.setMonth(selectedMonth.getMonth() + increment));
-    setSelectedMonth(new Date(newMonth));
+    const newDate = new Date(selectedMonth.setMonth(selectedMonth.getMonth() + increment));
+    setSelectedMonth(newDate);
   };
+
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    label: new Date(0, i).toLocaleDateString('pt-BR', { month: 'long' }),
+    value: i,
+  }));
+
+  const years = Array.from({ length: 10 }, (_, i) => ({
+    label: (new Date().getFullYear() + i).toString(),
+    value: new Date().getFullYear() + i,
+  }));
 
   const filteredTransactions = useMemo(() => {
     const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
@@ -35,9 +45,10 @@ const ChartsModal = ({ visible, onClose }) => {
   }, [transactions, selectedMonth]);
 
   const generateColor = (index) => {
-    const colors = ['#4caf50', '#f44336', '#2196f3', '#ffeb3b', '#ff9800', '#9c27b0', '#00bcd4'];
-    return colors[index % colors.length];
-  };
+    const hue = (index * 137.5) % 360; // Um valor único de matiz para cada índice
+    return `hsl(${hue}, 100%, 50%)`; // Saturação e luminosidade ajustáveis
+};
+
 
   const getChartData = () => {
     if (selectedOption === 'Receita X Despesa') {
@@ -257,7 +268,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: '#f0f0f0',
     borderRadius: 20,
-    marginHorizontal: 100,
+    marginHorizontal: 30,
+    width: '70%'
   },
   monthText: {
     fontSize: 18,

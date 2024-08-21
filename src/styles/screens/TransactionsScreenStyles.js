@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     borderLeftWidth: 5,
   },
   incomeItem: {
-    borderLeftColor: "#4caf50",
+    borderLeftColor: "blue",
     borderLeftWidth: 5,
   },
   description: {
