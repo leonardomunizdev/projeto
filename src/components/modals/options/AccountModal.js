@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
-import { Modal, FlatList, View, Text, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
-import styles from '../../../styles/screens/OptionsScreenStyles';
+import React, { useState, useEffect } from 'react';
+import { Modal, View, Text, TextInput, Button, TouchableOpacity, Alert, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import styles from '../../../styles/screens/OptionsScreenStyles'; // Assumindo que você tem um arquivo de estilos separado.
 import { useAccounts } from '../../../context/AccountContext';
+import EditAccountModal from './EditAccountModal'; // Importa o novo componente
+
+
 
 const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) => {
-  const { accounts, addAccount, removeAccount } = useAccounts();
-  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false); // Estado para o modal de confirmação
-  const [accountToRemove, setAccountToRemove] = useState(null); // Estado para armazenar o ID da conta a ser removida
+  const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [accountToEdit, setAccountToEdit] = useState(null);
+  const [accountToRemove, setAccountToRemove] = useState(null);
+  const [selectedAccount, setSelectedAccount] = useState(null);
 
- 
-  // Função para adicionar conta
   const handleAddAccount = () => {
     if (newAccountName.trim() === '') {
       Alert.alert('Erro', 'O nome da conta não pode estar vazio.');
@@ -20,13 +24,18 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
     setNewAccountName('');
   };
 
-  // Função para abrir o modal de confirmação
+  const openEditModal = (account) => {
+    setSelectedAccount(account);
+    setIsEditModalVisible(true);
+  };
+
+  
+
   const openConfirmModal = (accountId) => {
     setAccountToRemove(accountId);
     setIsConfirmModalVisible(true);
   };
 
-  // Função para confirmar a exclusão
   const confirmRemoveAccount = () => {
     if (accountToRemove) {
       removeAccount(accountToRemove);
@@ -34,7 +43,6 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
     setIsConfirmModalVisible(false);
     setAccountToRemove(null);
   };
-
 
   return (
     <View style={styles.container}>
@@ -66,21 +74,36 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
               renderItem={({ item }) => (
                 <View style={styles.accountItem}>
                   <Text style={styles.accountName}>{item.name}</Text>
-                  <TouchableOpacity onPress={() => openConfirmModal(item.id)}>
-                    <Text style={styles.removeButton}>Remover</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => openEditModal(item)}>
+                      <Ionicons name="create" size={24} color="black" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => openConfirmModal(item.id)} style={{ marginLeft: 10 }}>
+                      <Ionicons name="trash" size={24} color="red" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             />
           </View>
         </View>
       </Modal>
+      {selectedAccount && (
+        <EditAccountModal
+        visible={isEditModalVisible}
+        onClose={() => setIsEditModalVisible(false)}
+        account={selectedAccount} // Passando a conta correta para o modal
+        onSave={updateAccount} // Usando a função que chama updateAccount
+      />
+        
+      )}   
 
-      {/* Modal de Confirmação de Exclusão */}
+      
+
       <Modal
         visible={isConfirmModalVisible}
         animationType="slide"
-        onRequestClose={ () => setIsConfirmModalVisible(false)}
+        onRequestClose={() => setIsConfirmModalVisible(false)}
         transparent={true}
       >
         <View style={styles.fullScreenModal}>
@@ -90,7 +113,7 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
               Tem certeza que deseja apagar esta Conta? Todas as movimentações associadas também serão excluídas.
             </Text>
             <View style={styles.buttonContainer}>
-              <Button title="Cancelar" onPress={ () => setIsConfirmModalVisible(false)} />
+              <Button title="Cancelar" onPress={() => setIsConfirmModalVisible(false)} />
               <Button title="Excluir" onPress={confirmRemoveAccount} color="red" />
             </View>
           </View>

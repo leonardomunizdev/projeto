@@ -10,7 +10,6 @@ export const TransactionProvider = ({ children }) => {
   const [transactions, setTransactions] = useState([]);
   const [attachments, setAttachments] = useState([]);
 
-  console.log(transactions);
   useEffect(() => {
     const loadTransactions = async () => {
       try {
@@ -44,7 +43,9 @@ export const TransactionProvider = ({ children }) => {
     setTransactions(transactions.map(transaction =>
       transaction.id === updatedTransaction.id ? updatedTransaction : transaction
     ));
+    console.log(`Recurrence Count: ${updatedTransaction.recurrenceCount}`); // Acessando recurrenceCount aqui
   };
+  
   
   // Dentro do TransactionContext.js
   const editTransaction = (updatedTransaction) => {
@@ -63,6 +64,7 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(prevTransactions => [...prevTransactions, transaction]);
     }
   };
+  
 
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
@@ -87,25 +89,26 @@ export const TransactionProvider = ({ children }) => {
   const generateRecurringTransactions = (baseTransaction, recurrence) => {
     const transactions = [];
     let nextDate = moment(baseTransaction.date);
-
+  
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...baseTransaction,
         date: nextDate.format('YYYY-MM-DD'),
-        id: `${baseTransaction.id}-${i}`, // Adiciona um identificador único para cada transação
-        recurringId: baseTransaction.id,  // Adiciona um identificador recorrente comum
+        id: `${baseTransaction.id}-${i}`,
+        recurringId: baseTransaction.id,
+        recurrenceCount: recurrence.count, // Adiciona o recurrenceCount à transação
       });
-
-      // Incrementa a data com base na unidade de recorrência
+  
       if (recurrence.unit === 'month') {
         nextDate = nextDate.add(1, 'month');
       } else if (recurrence.unit === 'week') {
         nextDate = nextDate.add(1, 'week');
       }
     }
-
+  
     return transactions;
   };
+  
 
   // Atualiza uma transação existente com novos anexos
   const updateTransactionAttachments = (id, attachments) => {

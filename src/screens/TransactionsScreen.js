@@ -19,8 +19,8 @@ import { useCategories } from "../context/CategoryContext";
 import { styles } from "../styles/screens/TransactionsScreenStyles";
 import moment from "moment";
 import "moment/locale/pt-br";
-import EditTransactionModal from "../components/modals/Transcations/EditTransactionModal";
-import TransactionDetailsModal from "../components/modals/Transcations/TransactionDetailsModal";
+import EditTransactionModal from "../components/modals/Transactions/EditTransactionModal";
+import TransactionDetailsModal from "../components/modals/Transactions/TransactionDetailsModal";
 import { Alert } from "react-native";
 
 // FORMATA OS VALORES PARA REAIS(BRL)
@@ -124,28 +124,6 @@ const TransactionsScreen = () => {
   };
 
   // FUNÇÃO PARA CONTAGEM DE PARECLAS
-  const getCurrentInstallment = (transaction) => {
-    if (
-      !transaction.isRecurring ||
-      !transaction.date ||
-      !transaction.totalInstallments
-    ) {
-      return console.log(
-        transaction.date,
-        transaction.description,
-        transaction.isRecurring
-      );
-    }
-
-    const startDate = moment(transaction.startDate, "YYYY-MM-DD");
-    const transactionDate = moment(transaction.date, "YYYY-MM-DD");
-    const totalInstallments = transaction.totalInstallments;
-
-    const monthsDifference = transactionDate.diff(startDate, "months") + 1;
-    const installmentNumber = Math.min(monthsDifference, totalInstallments);
-
-    return `Parcela ${installmentNumber} de ${totalInstallments}`;
-  };
   //////////////////////////////////////////////////
 
   // FUNÇÕES PARA DELETAR TRANSAÇÕES
@@ -305,12 +283,38 @@ const TransactionsScreen = () => {
   };
   //////////////////////////////////////////////////
 
+  const getCurrentInstallment = (transaction) => {
+    if (
+      !transaction.isRecurring ||
+      !transaction.startDate ||
+      !transaction.date ||
+      !transaction.recorrenceCount
+    ) {
+      return '';
+    }
+  
+    const startDate = moment(transaction.startDate, "YYYY-MM-DD");
+    const transactionDate = moment(transaction.date, "YYYY-MM-DD");
+    const totalInstallments = transaction.recorrenceCount;
+  
+    // Calcula a diferença em meses entre a data da transação e a data de início
+    const monthsDifference = transactionDate.diff(startDate, "months") + 1;
+    
+    // A parcela atual é determinada pela diferença de meses mais 1
+    const installmentNumber = Math.min(monthsDifference, totalInstallments);
+    
+    return `Parcela ${installmentNumber} de ${totalInstallments}`;
+  };
+  
   // RENDERIZAÇÃO DAS TRANSAÇÕES
   const renderItem = ({ item, index }) => {
     const dayOfWeek = formatDayOfWeek(item.date);
     const previousDate =
       index > 0 ? filteredTransactions[index - 1].date : null;
     const isNewDay = previousDate !== item.date;
+  
+    const recurrenceInfo = getCurrentInstallment(item);
+  
     return (
       <View>
         {isNewDay && <Text style={styles.dateHeader}>{dayOfWeek}</Text>}
@@ -330,20 +334,18 @@ const TransactionsScreen = () => {
             </View>
             <View style={styles.row}>
               <Text style={styles.category}>
-                {getCategoryName(item.categoryId)} |{" "}
-                {getAccountName(item.accountId)}
+                {getCategoryName(item.categoryId)} | {getAccountName(item.accountId)}
               </Text>
             </View>
             {item.isRecurring && (
-              <Text style={styles.installment}>
-                {getCurrentInstallment(item)}
-              </Text>
+              <Text style={styles.installment}>{recurrenceInfo}</Text>
             )}
           </View>
         </TouchableOpacity>
       </View>
     );
   };
+  
   {
     /*/////////////////////////////////////////////////////////////////////////////////////////// */
   }

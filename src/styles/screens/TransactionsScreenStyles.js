@@ -154,7 +154,9 @@ export const styles = StyleSheet.create({
     resizeMode: 'contain', // Ajusta a imagem dentro do contêiner mantendo a proporção
     marginBottom: 10, // Espaçamento inferior
   },
-  
+  installment: {
+    color: 'black',
+  }
   
 });
 

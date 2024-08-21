@@ -53,9 +53,14 @@ export const CategoryProvider = ({ children }) => {
     const updatedCategories = categories.filter((category) => category.id !== categoryId);
     setCategories(updatedCategories);
   };
-
+  const updateCategory = (id, newName) => {
+    const updatedCategories = categories.map(category => 
+      category.id === id ? { ...category, name: newName } : category
+    );
+    setCategories(updatedCategories);
+  };
   return (
-    <CategoryContext.Provider value={{ categories, addCategory, removeCategory }}>
+    <CategoryContext.Provider value={{ categories, addCategory, removeCategory, updateCategory }}>
       {children}
     </CategoryContext.Provider>
   );

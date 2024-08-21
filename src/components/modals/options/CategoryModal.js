@@ -1,12 +1,14 @@
- import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Modal, View, TextInput, Button, TouchableOpacity, Text, FlatList } from 'react-native';
 import styles from '../../../styles/screens/OptionsScreenStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../../../context/CategoryContext';
+import EditCategoryModal from './EditCatetgoryModal'; // Importa o novo componente
 
-const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName, selectedCategoryType, setSelectedCategoryType }) => {
-  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false); // Estado para o modal de confirmação
-  const { categories, addCategory, removeCategory } = useCategories();
+const CategoryModal = ({ visible, onClose, newCategoryName, setNewCategoryName, selectedCategoryType, setSelectedCategoryType }) => {
+  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false); // Estado para o modal de edição
+  const { categories, addCategory, removeCategory, updateCategory } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const handleAddCategory = () => {
@@ -19,7 +21,11 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
   };
 
   const filteredCategories = categories.filter(category => category.type === selectedCategoryType);
-  
+
+  const handleEditCategory = (category) => {
+    setSelectedCategory(category);
+    setIsEditModalVisible(true);
+  };
 
   const handleRemoveCategory = (id) => {
     setSelectedCategory(id);
@@ -34,13 +40,12 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
     }
   };
 
-  
   return (
     <View style={styles.container}>
       <Modal
         visible={visible}
         animationType="slide"
-        onRequestClose={() => onClose}
+        onRequestClose={onClose}
         transparent={true}
       >
         <View style={styles.fullScreenModal}>
@@ -89,11 +94,16 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
               data={filteredCategories}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <View style={styles.categoryItem}>
-                  <Text style={styles.categoryName}>{item.name}</Text>
-                  <TouchableOpacity onPress={() => handleRemoveCategory(item.id)}>
-                    <Text style={styles.removeButton}>Remover</Text>
-                  </TouchableOpacity>
+                <View style={styles.accountItem}>
+                  <Text style={styles.accountName}>{item.name}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => handleEditCategory(item)}>
+                      <Ionicons name="create" size={24} color="black" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleRemoveCategory(item.id)} style={{ marginLeft: 10 }}>
+                      <Ionicons name="trash" size={24} color="red" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             />
@@ -101,7 +111,16 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
         </View>
       </Modal>
 
-      {/* Modal de Confirmação de Exclusão */}
+      {/* Modal de Edição */}
+      {selectedCategory && (
+        <EditCategoryModal
+          visible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          category={selectedCategory}
+          updateCategory={updateCategory}
+        />
+      )}
+
       {/* Modal de Confirmação de Exclusão */}
       <Modal
         visible={isConfirmModalVisible}
@@ -113,7 +132,7 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
           <View style={styles.confirmModalContent}>
             <Text style={styles.confirmTitle}>Confirmar Exclusão</Text>
             <Text style={styles.confirmText}>
-              Tem certeza que deseja apagar esta categoria ? Todas as movimentações associadas também serão excluídas.
+              Tem certeza que deseja apagar esta categoria? Todas as movimentações associadas também serão excluídas.
             </Text>
             <View style={styles.buttonContainer}>
               <Button title="Cancelar" onPress={() => setIsConfirmModalVisible(false)} />
@@ -125,5 +144,5 @@ const CategoryModal = ({ visible, onClose,  newCategoryName, setNewCategoryName,
     </View>
   );
 };
-
+  
 export default CategoryModal;

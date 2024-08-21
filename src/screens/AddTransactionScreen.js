@@ -63,7 +63,9 @@ const AddTransactionScreen = () => {
   const generateRecurringTransactions = (transaction, recurrenceId) => {
     const transactions = [];
     let nextDate = new Date(date);
-
+  
+    console.log(`Quantidade de repetições: ${recurrence.count}`); // Exibe a quantidade de repetições
+  
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...transaction,
@@ -72,16 +74,19 @@ const AddTransactionScreen = () => {
         date: format(nextDate, "yyyy-MM-dd", { locale: ptBR }),
         isRecurring,
       });
-
+  
       if (recurrence.unit === "month") {
         nextDate = addMonths(nextDate, 1);
       } else if (recurrence.unit === "week") {
         nextDate = addWeeks(nextDate, 1);
       }
     }
-
+  
+    console.log(`Quantidade de transações geradas: ${transactions.length}`); // Exibe a quantidade de transações geradas
+  
     return transactions;
   };
+  
 
   const handleSave = () => {
     if (isNaN(recurrence.count) || recurrence.count <= 0) {
@@ -107,7 +112,7 @@ const AddTransactionScreen = () => {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
       return;
     }
-  
+    
     const recurrenceId = UUID.v4();
     const baseTransaction = {
       id: UUID.v4(),
@@ -124,6 +129,7 @@ const AddTransactionScreen = () => {
       isRecurring,
       recurrenceId,
       attachments,
+      recorrenceCount: isRecurring ? recurrence.count : null,
     };
   
     const transactions = isRecurring
@@ -177,6 +183,7 @@ const AddTransactionScreen = () => {
       setRecurrence((prevRecurrence) => ({ ...prevRecurrence, count: "" }));
     }
   };
+  
 
   const handleTransactionTypeChange = (type) => {
     setTransactionType(type);

@@ -54,8 +54,15 @@ export const AccountProvider = ({ children }) => {
     setAccounts(updatedAccounts);
   };
 
+  const updateAccount = (accountId, newName) => {
+    const updatedAccounts = accounts.map(account =>
+      account.id === accountId ? { ...account, name: newName } : account
+    );
+    setAccounts(updatedAccounts);
+  };
+  
   return (
-    <AccountContext.Provider value={{ accounts, addAccount, removeAccount }}>
+    <AccountContext.Provider value={{ accounts, addAccount, removeAccount, updateAccount }}>
       {children}
     </AccountContext.Provider>
   );
