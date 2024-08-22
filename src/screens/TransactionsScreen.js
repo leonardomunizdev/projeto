@@ -56,6 +56,7 @@ const TransactionsScreen = () => {
   const [transactionDetailsModalVisible, setTransactionDetailsModalVisible] =
     useState(false);
 
+
   const handleEdit = (transaction) => {
     setTransactionToEdit(transaction);
     setEditModalVisible(true);
@@ -118,10 +119,7 @@ const TransactionsScreen = () => {
     setSelectedMonth((prevMonth) => prevMonth.clone().add(direction, "month"));
   };
   //////////////////////////////////////////////////
-  const handleTransactionPress = (transaction) => {
-    setCurrentTransaction(transaction);
-    setTransactionDetailsModalVisible(true);
-  };
+  
 
   // FUNÇÃO PARA CONTAGEM DE PARECLAS
   //////////////////////////////////////////////////
@@ -297,14 +295,38 @@ const TransactionsScreen = () => {
     const transactionDate = moment(transaction.date, "YYYY-MM-DD");
     const totalInstallments = transaction.recorrenceCount;
   
-    // Calcula a diferença em meses entre a data da transação e a data de início
-    const monthsDifference = transactionDate.diff(startDate, "months") + 1;
-    
-    // A parcela atual é determinada pela diferença de meses mais 1
-    const installmentNumber = Math.min(monthsDifference, totalInstallments);
-    
+    // Calcula a diferença em meses entre a data de início e a data da transação
+    let monthsDifference = transactionDate.diff(startDate, "months");
+  
+    // Lógica para calcular o número da parcela
+    let installmentNumber;
+  
+    if (transactionDate.isSame(startDate, "month")) {
+      installmentNumber = monthsDifference + 1; // Subtrai 1 se for o mesmo mês da startDate
+    } else {
+      installmentNumber = monthsDifference + 2; // Soma 2 caso contrário
+    }
+  
+    // Garante que o número da parcela não exceda o total de parcelas
+    if (installmentNumber > totalInstallments) {
+      installmentNumber = totalInstallments;
+    }
+  
     return `Parcela ${installmentNumber} de ${totalInstallments}`;
   };
+  
+  
+
+
+const handleTransactionPress = (transaction) => {
+
+  
+  setCurrentTransaction(transaction);
+  setTransactionDetailsModalVisible(true);
+};
+  
+  
+  
   
   // RENDERIZAÇÃO DAS TRANSAÇÕES
   const renderItem = ({ item, index }) => {

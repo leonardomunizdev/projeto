@@ -116,6 +116,10 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
               <td>Data</td>
               <td>${formatDate(transaction.date)}</td>
             </tr>
+            <tr>
+              <td>Parcela</td>
+              <td>${getCurrentInstallment(transaction)}</td>
+            </tr>
           </table>
           ${
             attachmentsBase64.length > 0
@@ -189,8 +193,43 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
   if (!transaction) {
     return null; // Ou você pode renderizar algum conteúdo alternativo se transaction for nulo
   }
+  const getCurrentInstallment = (transaction) => {
+    if (
+      !transaction.isRecurring ||
+      !transaction.startDate ||
+      !transaction.date ||
+      !transaction.recorrenceCount
+    ) {
+      return '';
+    }
+  
+    const startDate = moment(transaction.startDate, "YYYY-MM-DD");
+    const transactionDate = moment(transaction.date, "YYYY-MM-DD");
+    const totalInstallments = transaction.recorrenceCount;
+  
+    // Calcula a diferença em meses entre a data de início e a data da transação
+    let monthsDifference = transactionDate.diff(startDate, "months");
+  
+    // Lógica para calcular o número da parcela
+    let installmentNumber;
+  
+    if (transactionDate.isSame(startDate, "month")) {
+      installmentNumber = monthsDifference + 1; // Subtrai 1 se for o mesmo mês da startDate
+    } else {
+      installmentNumber = monthsDifference + 2; // Soma 2 caso contrário
+    }
+  
+    // Garante que o número da parcela não exceda o total de parcelas
+    if (installmentNumber > totalInstallments) {
+      installmentNumber = totalInstallments;
+    }
+  
+    return ` ${installmentNumber} de ${totalInstallments}`;
+  };
+
 
   return (
+    
     <Modal
       visible={visible}
       transparent={true}
@@ -235,6 +274,21 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
                   {formatDate(transaction.date)}
                 </Text>
               </View>
+
+              {transaction.isRecurring && (
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeader}>Parcela</Text>
+                  <Text style={styles.tableCell}>
+                    
+                    {
+                    
+                    getCurrentInstallment(transaction)
+                    
+                    
+                    }
+                  </Text>
+                </View>
+              )}
             </View>
             {attachmentsBase64.length > 0 && (
               <View style={styles.detailContainer}>
@@ -340,15 +394,15 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: "row",
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 15,
     paddingHorizontal: 50,
   },
   pdfButton: {
     backgroundColor: "#007BFF",
     paddingVertical: 12, // Altura do botão
-    paddingHorizontal: '10%', // Aumentado para maior largura
+    paddingHorizontal: "10%", // Aumentado para maior largura
     borderRadius: 5,
     marginHorizontal: 10, // Adicionado para espaçamento entre os botões
   },

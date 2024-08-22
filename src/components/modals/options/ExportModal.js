@@ -1,40 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import { TextInput, TouchableOpacity, Modal, View, Text } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useCategories } from '../../../context/CategoryContext';
-import { useTransactions } from '../../../context/TransactionContext';
-import { useAccounts } from '../../../context/AccountContext';
-import { Ionicons } from '@expo/vector-icons';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import styles from '../../../styles/screens/StatisticsScreenStyles';
+import React, { useState, useEffect } from "react";
+import { TextInput, TouchableOpacity, Modal, View, Text } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useCategories } from "../../../context/CategoryContext";
+import { useTransactions } from "../../../context/TransactionContext";
+import { useAccounts } from "../../../context/AccountContext";
+import { Ionicons } from "@expo/vector-icons";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import styles from "../../../styles/screens/StatisticsScreenStyles";
+import moment from "moment";
 
 const ExportModal = ({ visible, onClose }) => {
-
   const { categories } = useCategories();
   const { transactions } = useTransactions();
   const { accounts } = useAccounts();
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedAccount, setSelectedAccount] = useState('all');
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedAccount, setSelectedAccount] = useState("all");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [filteredBalance, setFilteredBalance] = useState(0);
 
+  const getCurrentInstallment = (transaction) => {
+    if (
+      !transaction.isRecurring ||
+      !transaction.startDate ||
+      !transaction.date ||
+      !transaction.recorrenceCount
+    ) {
+      return "";
+    }
+
+    const startDate = moment(transaction.startDate, "YYYY-MM-DD");
+    const transactionDate = moment(transaction.date, "YYYY-MM-DD");
+    const totalInstallments = transaction.recorrenceCount;
+
+    // Calcula a diferença em meses entre a data de início e a data da transação
+    let monthsDifference = transactionDate.diff(startDate, "months");
+
+    // Lógica para calcular o número da parcela
+    let installmentNumber;
+
+    if (transactionDate.isSame(startDate, "month")) {
+      installmentNumber = monthsDifference + 1; // Subtrai 1 se for o mesmo mês da startDate
+    } else {
+      installmentNumber = monthsDifference + 2; // Soma 2 caso contrário
+    }
+
+    // Garante que o número da parcela não exceda o total de parcelas
+    if (installmentNumber > totalInstallments) {
+      installmentNumber = totalInstallments;
+    }
+
+    return ` ${installmentNumber} de ${totalInstallments}`;
+  };
   const clearFilters = () => {
-    setSelectedCategory('all');
-    setSelectedAccount('all');
-    setSelectedType('all');
+    setSelectedCategory("all");
+    setSelectedAccount("all");
+    setSelectedType("all");
     setStartDate(null);
     setEndDate(null);
   };
   const formatDateToBrazilian = (dateString) => {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Lembre-se que os meses são indexados a partir de 0
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Lembre-se que os meses são indexados a partir de 0
     const year = date.getFullYear();
 
     return `${day}/${month}/${year}`;
@@ -48,14 +81,25 @@ const ExportModal = ({ visible, onClose }) => {
 
   const applyFilters = () => {
     return transactions.filter((transaction) => {
-      const matchCategory = selectedCategory === 'all' || transaction.categoryId === selectedCategory;
-      const matchAccount = selectedAccount === 'all' || transaction.accountId === selectedAccount;
-      const matchType = selectedType === 'all' || transaction.type === selectedType;
+      const matchCategory =
+        selectedCategory === "all" ||
+        transaction.categoryId === selectedCategory;
+      const matchAccount =
+        selectedAccount === "all" || transaction.accountId === selectedAccount;
+      const matchType =
+        selectedType === "all" || transaction.type === selectedType;
 
-      const matchStartDate = !startDate || new Date(transaction.date) >= startDate;
+      const matchStartDate =
+        !startDate || new Date(transaction.date) >= startDate;
       const matchEndDate = !endDate || new Date(transaction.date) <= endDate;
 
-      return matchCategory && matchAccount && matchType && matchStartDate && matchEndDate;
+      return (
+        matchCategory &&
+        matchAccount &&
+        matchType &&
+        matchStartDate &&
+        matchEndDate
+      );
     });
   };
 
@@ -65,56 +109,85 @@ const ExportModal = ({ visible, onClose }) => {
   // Calcular saldo filtrado
   useEffect(() => {
     const balance = filteredTransactions.reduce((total, transaction) => {
-      return transaction.type === 'income' ? total + transaction.amount : total - transaction.amount;
+      return transaction.type === "income"
+        ? total + transaction.amount
+        : total - transaction.amount;
     }, 0);
     setFilteredBalance(balance);
   }, [filteredTransactions]);
 
   const totalRevenues = filteredTransactions
-    .filter(transaction => transaction.type === 'income')
+    .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   const totalExpenses = filteredTransactions
-    .filter(transaction => transaction.type === 'expense')
+    .filter((transaction) => transaction.type === "expense")
     .reduce((total, transaction) => total + transaction.amount, 0);
 
-  const quantityRevenues = filteredTransactions.filter(transaction => transaction.type === 'income').length;
-  const quantityExpenses = filteredTransactions.filter(transaction => transaction.type === 'expense').length;
+  const quantityRevenues = filteredTransactions.filter(
+    (transaction) => transaction.type === "income"
+  ).length;
+  const quantityExpenses = filteredTransactions.filter(
+    (transaction) => transaction.type === "expense"
+  ).length;
 
   // Função para calcular o número de dias únicos entre as transações filtradas
   const calculateUniqueDays = (transactions) => {
-    const uniqueDays = new Set(transactions.map(transaction => formatDateToBrazilian(transaction.date)));
+    const uniqueDays = new Set(
+      transactions.map((transaction) => formatDateToBrazilian(transaction.date))
+    );
     return uniqueDays.size;
   };
 
   // Calcular média diária com base nos dias únicos
-  const avgRevenuePerDay = totalRevenues > 0 ? totalRevenues / calculateUniqueDays(filteredTransactions.filter(transaction => transaction.type === 'income')) : 0;
-  const avgExpensePerDay = totalExpenses > 0 ? totalExpenses / calculateUniqueDays(filteredTransactions.filter(transaction => transaction.type === 'expense')) : 0;
-
+  const avgRevenuePerDay =
+    totalRevenues > 0
+      ? totalRevenues /
+        calculateUniqueDays(
+          filteredTransactions.filter(
+            (transaction) => transaction.type === "income"
+          )
+        )
+      : 0;
+  const avgExpensePerDay =
+    totalExpenses > 0
+      ? totalExpenses /
+        calculateUniqueDays(
+          filteredTransactions.filter(
+            (transaction) => transaction.type === "expense"
+          )
+        )
+      : 0;
 
   const calculateCategoryTotals = (type) => {
     return categories
-      .filter(cat => cat.type === type)
-      .map(cat => {
+      .filter((cat) => cat.type === type)
+      .map((cat) => {
         const totalForCategory = filteredTransactions
-          .filter(transaction => transaction.categoryId === cat.id && transaction.type === type)
+          .filter(
+            (transaction) =>
+              transaction.categoryId === cat.id && transaction.type === type
+          )
           .reduce((total, transaction) => total + transaction.amount, 0);
 
         return {
           ...cat,
           total: totalForCategory,
-          percentage: (totalForCategory / (type === 'expense' ? totalExpenses : totalRevenues)) * 100,
+          percentage:
+            (totalForCategory /
+              (type === "expense" ? totalExpenses : totalRevenues)) *
+            100,
         };
       })
-      .filter(cat => cat.total > 0);
+      .filter((cat) => cat.total > 0);
   };
 
-  const expenseCategories = calculateCategoryTotals('expense');
-  const incomeCategories = calculateCategoryTotals('income');
-
+  const expenseCategories = calculateCategoryTotals("expense");
+  const incomeCategories = calculateCategoryTotals("income");
 
   const generatePDF = async () => {
-    const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatCurrency = (value) =>
+      value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
     const formatCategory = (categories, title) => {
       return `
@@ -130,13 +203,20 @@ const ExportModal = ({ visible, onClose }) => {
             </tr>
           </thead>
           <tbody>
-            ${categories.map(cat => `
+            ${categories
+              .map(
+                (cat) => `
               <tr>
                 <td>${cat.name}</td>
-                <td>${cat.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td>${cat.total.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })}</td>
                 <td>${cat.percentage.toFixed(2)}%</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join("")}
           </tbody>
         </table>
       `;
@@ -157,14 +237,23 @@ const ExportModal = ({ visible, onClose }) => {
             </tr>
           </thead>
           <tbody>
-            ${transactions.map(transaction => `
+            ${transactions
+              .map((transaction) => {
+                const installmentInfo = transaction.isRecurring
+                  ? ` (${getCurrentInstallment(transaction)})`
+                  : "";
+                  return `
               <tr>
-                <td>${new Date(transaction.date).toLocaleDateString('pt-BR')}</td>
+                <td>${new Date(transaction.date).toLocaleDateString(
+                  "pt-BR"
+                )}</td>
                 <td>${transaction.categoryName}</td>
                 <td>${transaction.accountName}</td>
-                <td>${formatCurrency(transaction.amount)}</td>
+                <td>${formatCurrency(transaction.amount)} ${installmentInfo}</td>
               </tr>
-            `).join('')}
+            `;
+              })
+              .join("")}
           </tbody>
         </table>
       `;
@@ -189,16 +278,22 @@ const ExportModal = ({ visible, onClose }) => {
         <body>
           <h1>Relatório Financeiro</h1>
           <div class="section">
-            ${formatCategory(incomeCategories, 'Receitas por Categoria')}
+            ${formatCategory(incomeCategories, "Receitas por Categoria")}
           </div>
           <div class="section">
-            ${formatCategory(expenseCategories, 'Despesas por Categoria')}
+            ${formatCategory(expenseCategories, "Despesas por Categoria")}
           </div>
           <div class="section">
-            ${formatTransactions(filteredTransactions.filter(t => t.type === 'income'), 'Receitas')}
+            ${formatTransactions(
+              filteredTransactions.filter((t) => t.type === "income"),
+              "Receitas"
+            )}
           </div>
           <div class="section">
-            ${formatTransactions(filteredTransactions.filter(t => t.type === 'expense'), 'Despesas')}
+            ${formatTransactions(
+              filteredTransactions.filter((t) => t.type === "expense"),
+              "Despesas"
+            )}
           </div>
           <div class="section">
             <table class="table">
@@ -233,7 +328,9 @@ const ExportModal = ({ visible, onClose }) => {
                 </tr>
                 <tr>
                   <td>Fluxo de Caixa</td>
-                  <td class="${filteredBalance > 0 ? 'positive' : 'negative'}">${formatCurrency(filteredBalance)}</td>
+                  <td class="${
+                    filteredBalance > 0 ? "positive" : "negative"
+                  }">${formatCurrency(filteredBalance)}</td>
                 </tr>
               </tbody>
             </table>
@@ -246,13 +343,9 @@ const ExportModal = ({ visible, onClose }) => {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
       await Sharing.shareAsync(uri);
     } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
+      console.error("Erro ao gerar PDF:", error);
     }
   };
-
-
-
-
 
   return (
     <Modal
@@ -263,10 +356,7 @@ const ExportModal = ({ visible, onClose }) => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onClose}
-          >
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>Exportar Relátorio</Text>
@@ -289,8 +379,12 @@ const ExportModal = ({ visible, onClose }) => {
             onValueChange={(itemValue) => setSelectedCategory(itemValue)}
           >
             <Picker.Item label="Todas" value="all" />
-            {categories.map(category => (
-              <Picker.Item key={category.id} label={category.name} value={category.id} />
+            {categories.map((category) => (
+              <Picker.Item
+                key={category.id}
+                label={category.name}
+                value={category.id}
+              />
             ))}
           </Picker>
 
@@ -301,8 +395,12 @@ const ExportModal = ({ visible, onClose }) => {
             onValueChange={(itemValue) => setSelectedAccount(itemValue)}
           >
             <Picker.Item label="Todas" value="all" />
-            {accounts.map(account => (
-              <Picker.Item key={account.id} label={account.name} value={account.id} />
+            {accounts.map((account) => (
+              <Picker.Item
+                key={account.id}
+                label={account.name}
+                value={account.id}
+              />
             ))}
           </Picker>
 
@@ -310,7 +408,7 @@ const ExportModal = ({ visible, onClose }) => {
           <TouchableOpacity onPress={showStartDatePicker}>
             <TextInput
               style={styles.dateInput}
-              value={startDate ? startDate.toLocaleDateString() : ''}
+              value={startDate ? startDate.toLocaleDateString() : ""}
               placeholder="Selecionar Data de Início"
               editable={false}
             />
@@ -331,7 +429,7 @@ const ExportModal = ({ visible, onClose }) => {
           <TouchableOpacity onPress={showEndDatePicker}>
             <TextInput
               style={styles.dateInput}
-              value={endDate ? endDate.toLocaleDateString() : ''}
+              value={endDate ? endDate.toLocaleDateString() : ""}
               placeholder="Selecionar Data de Fim"
               editable={false}
             />
@@ -356,13 +454,11 @@ const ExportModal = ({ visible, onClose }) => {
             <TouchableOpacity onPress={clearFilters} style={styles.modalButton}>
               <Text style={styles.modalButtonText}>Limpar Filtros</Text>
             </TouchableOpacity>
-
           </View>
         </View>
       </View>
     </Modal>
   );
 };
-
 
 export default ExportModal;
