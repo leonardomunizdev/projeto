@@ -12,6 +12,8 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     paddingLeft: 10,
     marginBottom: 10,
+    marginTop: 20,
+
     fontSize: 16,
   },
   listContent: {

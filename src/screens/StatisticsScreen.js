@@ -226,6 +226,7 @@ const DashboardScreen = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Relatório</Text>
+        
         <TouchableOpacity onPress={openModal} style={styles.iconButton}>
           <Icon name="menu" size={24} color="#000" />
         </TouchableOpacity>

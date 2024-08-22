@@ -271,6 +271,7 @@ const AddTransactionScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.formContainer}>
+            
             <Text style={styles.title}>Adicionar Transação</Text>
 
             <View style={styles.transactionTypeContainer}>

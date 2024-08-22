@@ -12,9 +12,11 @@ export const styles = StyleSheet.create({
       flex: 1,
     },
     title: {
-      fontSize: 24,
-      marginBottom: 16,
+      fontSize: 30,
+      marginBottom: 30,
+      marginTop: 35,
       fontWeight: "bold",
+      textAlign: 'center',
     },
     input: {
       height: 40,

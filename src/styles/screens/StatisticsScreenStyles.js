@@ -14,13 +14,14 @@ export const styles = StyleSheet.create({
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 16,
+      
+      
     },
     header: {
       paddingTop: 25,
       fontSize: 35,
       fontWeight: 'bold',
-      textAlign: 'center',
-      justifyContent: 'center'
+      
     },
     iconButton: {
       padding: 8,
