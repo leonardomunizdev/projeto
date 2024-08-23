@@ -32,13 +32,54 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const filteredCategories = categories.filter(
     (category) => category.type === type
   );
+  const formatValue = (value) => {
+    // Remove caracteres não numéricos
+    value = value.replace(/\D/g, '');
+    
+    // Certifica-se de que o valor tenha pelo menos dois dígitos
+    // Adiciona pontos e vírgulas conforme necessário
+    const integerPart = value.slice(0, -2);
+    const decimalPart = value.slice(-2);
 
+    // Adiciona zeros à esquerda, se necessário
+    value = value.padStart(3, '0');
+     
+    // Adiciona pontos de milhar
+    const formattedInteger = integerPart
+      .split('')
+      .reverse()
+      .reduce((acc, digit, index) => {
+        return digit + (index && index % 3 === 0 ? '.' : '') + acc;
+      }, '');
+  
+    // Combina a parte inteira e a parte decimal
+    return `${formattedInteger},${decimalPart}`;
+  };
+  
+  const handleChange = (text) => {
+    setAmount(formatValue(text));
+    
+  };
+  const convertToAmerican = (value) => {
+    // Remove caracteres não numéricos
+    value = value.replace(/\D/g, '');
+
+    // Adiciona zeros à esquerda, se necessário
+    value = value.padStart(3, '0');
+
+    // Adiciona pontos e vírgulas conforme necessário
+    const integerPart = value.slice(0, -2); // Parte inteira
+    const decimalPart = value.slice(-2);   // Parte decimal
+
+    // Combina a parte inteira e a parte decimal para o formato americano
+    return `${integerPart}.${decimalPart}`;
+};
   const handleSave = () => {
     const updatedTransaction = {
       ...transaction,
       type,
       description,
-      amount: parseFloat(amount),
+      amount: parseFloat(convertToAmerican(amount)),
       categoryId,
       accountId,
       attachments, // Inclua os anexos
@@ -54,7 +95,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             ...trans,
             type,
             description,
-            amount: parseFloat(amount),
+            amount: parseFloat(convertToAmerican(amount)),
             categoryId,
             accountId,
             attachments, // Inclua os anexos
@@ -139,7 +180,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             placeholder="Valor"
             keyboardType="numeric"
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={handleChange}
           />
 
           <Picker

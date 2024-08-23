@@ -20,7 +20,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { format, addMonths, addWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Switch } from "react-native-elements";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
@@ -53,7 +53,15 @@ const AddTransactionScreen = () => {
   const [attachments, setAttachments] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
 
+
+  const route = useRoute();
   
+  useEffect(() => {
+    // Verifica se o parâmetro imageUri está presente e o usa
+    if (route.params?.imageUri) {
+      setAttachments([route.params.imageUri]);
+    }
+  }, [route.params?.imageUri]);
   
   
   useEffect(() => {
@@ -86,23 +94,10 @@ const AddTransactionScreen = () => {
   
     return transactions;
   };
-  
+ 
 
-  const handleSave = () => {
-    if (isNaN(recurrence.count) || recurrence.count <= 0) {
-      Alert.alert(
-        "Erro",
-        "Quantidade de períodos deve ser um número positivo."
-      );
-      return;
-    }
 
-    const unitText = recurrence.unit === "month" ? "meses" : "semanas";
-    setRecurrenceInfo(`Repetir por ${recurrence.count} ${unitText}`);
-    setShowRecurrenceModal(false);
-  };
-
-  const handleSaveAndNavigate = () => {
+   const handleSaveAndNavigate = () => {
     if (!description || !amount || !selectedAccount) {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
@@ -113,12 +108,13 @@ const AddTransactionScreen = () => {
       return;
     }
     
+    
     const recurrenceId = UUID.v4();
     const baseTransaction = {
       id: UUID.v4(),
       type: transactionType,
       description,
-      amount: parseFloat(amount),
+      amount: parseFloat(convertToAmerican(amount)),
       date: format(date, "yyyy-MM-dd", { locale: ptBR }),
       startDate: date,
       accountId: selectedAccount,
@@ -265,7 +261,49 @@ const AddTransactionScreen = () => {
       </View>
     ));
   };
+  const formatValue = (value) => {
+    // Remove caracteres não numéricos
+    value = value.replace(/\D/g, '');
+    
+    // Certifica-se de que o valor tenha pelo menos dois dígitos
+    // Adiciona pontos e vírgulas conforme necessário
+    const integerPart = value.slice(0, -2);
+    const decimalPart = value.slice(-2);
 
+    // Adiciona zeros à esquerda, se necessário
+    value = value.padStart(3, '0');
+     
+    // Adiciona pontos de milhar
+    const formattedInteger = integerPart
+      .split('')
+      .reverse()
+      .reduce((acc, digit, index) => {
+        return digit + (index && index % 3 === 0 ? '.' : '') + acc;
+      }, '');
+  
+    // Combina a parte inteira e a parte decimal
+    return `${formattedInteger},${decimalPart}`;
+  };
+  
+  const handleChange = (text) => {
+    setAmount(formatValue(text));
+    
+  };
+  const convertToAmerican = (value) => {
+    // Remove caracteres não numéricos
+    value = value.replace(/\D/g, '');
+
+    // Adiciona zeros à esquerda, se necessário
+    value = value.padStart(3, '0');
+
+    // Adiciona pontos e vírgulas conforme necessário
+    const integerPart = value.slice(0, -2); // Parte inteira
+    const decimalPart = value.slice(-2);   // Parte decimal
+
+    // Combina a parte inteira e a parte decimal para o formato americano
+    return `${integerPart}.${decimalPart}`;
+};
+  
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -300,7 +338,7 @@ const AddTransactionScreen = () => {
               placeholder="Valor"
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={handleChange}
             />
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}

@@ -75,77 +75,6 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
     );
   };
 
-  const generatePdf = async () => {
-    if (!transaction) return;
-
-    const html = `
-      <html>
-      <head>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .title { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th, td { padding: 10px; text-align: left; border: 1px solid #ddd; }
-          th { background-color: #f4f4f4; }
-          .attachment-image { width: 100%; height: auto; max-height: 600px; margin-top: 10px; border: 1px solid #ddd; }
-        </style>
-      </head>
-      <body>
-        <div>
-          <table>
-            <tr>
-              <th colspan="2"><center>Detalhes da Transação</center></th>
-            </tr>
-            <tr>
-              <td>Descrição</td>
-              <td>${transaction.description || "N/A"}</td>
-            </tr>
-            <tr>
-              <td>Valor</td>
-              <td>${formatCurrency(transaction.amount)}</td>
-            </tr>
-            <tr>
-              <td>Categoria</td>
-              <td>${transaction.categoryName || "N/A"}</td>
-            </tr>
-            <tr>
-              <td>Conta</td>
-              <td>${transaction.accountName || "N/A"}</td>
-            </tr>
-            <tr>
-              <td>Data</td>
-              <td>${formatDate(transaction.date)}</td>
-            </tr>
-            <tr>
-              <td>Parcela</td>
-              <td>${getCurrentInstallment(transaction)}</td>
-            </tr>
-          </table>
-          ${
-            attachmentsBase64.length > 0
-              ? attachmentsBase64
-                  .map(
-                    (attachment, index) => `
-            <div>
-              <img src="${attachment}" class="attachment-image"/>
-            </div>
-          `
-                  )
-                  .join("")
-              : "<p>Nenhum anexo disponível</p>"
-          }
-        </div>
-      </body>
-      </html>
-    `;
-
-    try {
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri);
-    } catch (error) {
-      console.error("Failed to generate or share PDF:", error);
-    }
-  };
 
   const generateImagesPdf = async () => {
     if (attachmentsBase64.length === 0) {
@@ -316,9 +245,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
             )}
           </ScrollView>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity onPress={generatePdf} style={styles.pdfButton}>
-              <Text style={styles.pdfButtonText}>Gerar PDF</Text>
-            </TouchableOpacity>
+            
             <TouchableOpacity
               onPress={generateImagesPdf}
               style={[styles.pdfButton, { backgroundColor: "#28a745" }]} // Cor verde para o novo botão

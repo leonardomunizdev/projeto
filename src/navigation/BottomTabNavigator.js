@@ -10,7 +10,7 @@ import StatisticsScreen from '../screens/StatisticsScreen';
 import PlusButton from '../components/PlusButton';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
-
+import MainScreen from './MainScreen';
 const Tab = createBottomTabNavigator();
 
 const TransactionsTabButton = (props) => {
@@ -47,7 +47,7 @@ const BottomTabNavigator = () => {
         },
         tabBarLabelStyle: { fontSize: 14 },
       })}
-    >
+    > 
       <Tab.Screen
         name="Home"
         component={HomeScreen}

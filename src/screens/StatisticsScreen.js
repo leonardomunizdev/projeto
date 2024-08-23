@@ -372,20 +372,20 @@ const DashboardScreen = () => {
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Total</Text>
-          <Text style={styles.tableCell}>{totalRevenues.toFixed(2)}</Text>
-          <Text style={styles.tableCell}>{totalExpenses.toFixed(2)}</Text>
+          <Text style={styles.tableCell}>{formatNumberBR(totalRevenues.toFixed(2))}</Text>
+          <Text style={styles.tableCell}>{formatNumberBR(totalExpenses.toFixed(2))}</Text>
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Média por Dia</Text>
-          <Text style={styles.tableCell}>{avgRevenuePerDay.toFixed(2)}</Text>
-          <Text style={styles.tableCell}>{avgExpensePerDay.toFixed(2)}</Text>
+          <Text style={styles.tableCell}>{formatNumberBR(avgRevenuePerDay.toFixed(2))}</Text>
+          <Text style={styles.tableCell}>{formatNumberBR(avgExpensePerDay.toFixed(2))}</Text>
         </View>
         <View style={styles.balanceRow}>
           <Text style={[styles.tableCell, styles.balanceLabel]}>
             Fluxo de caixa
           </Text>
           <Text style={[styles.tableCell, balanceColor]}>
-            {filteredBalance.toFixed(2)}
+            R$ {formatNumberBR(filteredBalance.toFixed(2))}
           </Text>
         </View>
       </View>

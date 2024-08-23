@@ -27,6 +27,13 @@ const ChartsModal = ({ visible, onClose }) => {
     const newDate = new Date(selectedMonth.setMonth(selectedMonth.getMonth() + increment));
     setSelectedMonth(newDate);
   };
+  const formatToBRL = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
 
   const months = Array.from({ length: 12 }, (_, i) => ({
     label: new Date(0, i).toLocaleDateString('pt-BR', { month: 'long' }),
@@ -188,7 +195,7 @@ const ChartsModal = ({ visible, onClose }) => {
               return (
                 <View key={index} style={[styles.listItem, { borderLeftColor: item.color }]}>
                   <View style={[styles.colorIndicator]} />
-                  <Text style={styles.itemText}>{item.name}: R$ {item.total.toFixed(2)} ({percentage}%)</Text>
+                  <Text style={styles.itemText}>{item.name}: {formatToBRL(item.total.toFixed(2))} ({percentage}%)</Text>
                 </View>
               );
             })}

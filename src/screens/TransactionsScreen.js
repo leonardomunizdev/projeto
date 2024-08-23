@@ -336,8 +336,9 @@ const handleTransactionPress = (transaction) => {
     const isNewDay = previousDate !== item.date;
   
     const recurrenceInfo = getCurrentInstallment(item);
-  
+    console.log(item.amount);
     return (
+      
       <View>
         {isNewDay && <Text style={styles.dateHeader}>{dayOfWeek}</Text>}
         <TouchableOpacity

@@ -15,7 +15,9 @@ import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { styles } from "../styles/screens/HomeScreenStyles";
-
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as Linking from 'expo-linking';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -35,6 +37,47 @@ const HomeScreen = () => {
   const [selectedCalculationType, setSelectedCalculationType] =
     useState("category"); // Default to 'category'
 
+
+
+    useEffect(() => {
+      const handleOpenURL = async (event) => {
+        const { url } = event;
+  
+        if (url) {
+          // Verifique se a URL é válida e se é uma imagem
+          if (url.startsWith('http') && url.match(/\.(jpeg|jpg|gif|png)$/)) {
+            console.log('Image URL:', url);
+            // Navegue para a tela de adição de transações e passe a URL da imagem
+            navigation.navigate('AddTransactionScreen', { imageUrl: url });
+          } else {
+            console.log('URL não é uma imagem válida:', url);
+          }
+        } else {
+          console.log('Nenhuma URL recebida.');
+        }
+      };
+  
+      // Adicione o listener para URLs compartilhadas
+      const subscription = Linking.addEventListener('url', handleOpenURL);
+  
+      // Verifique se há uma URL inicial quando o aplicativo é iniciado
+      const getInitialURL = async () => {
+        const initialURL = await Linking.getInitialURL();
+        if (initialURL) {
+          handleOpenURL({ url: initialURL });
+        }
+      };
+  
+      getInitialURL();
+  
+      return () => {
+        // Remova o listener quando o componente for desmontado
+        subscription.remove();
+      };
+    }, [navigation]);
+  
+  
+    
 
   const formatToBRL = (value) => {
     return new Intl.NumberFormat('pt-BR', {
