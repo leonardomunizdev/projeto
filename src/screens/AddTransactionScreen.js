@@ -36,7 +36,7 @@ const AddTransactionScreen = () => {
   const { categories } = useCategories();
 
   const [transactionType, setTransactionType] = useState("income");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("0,00");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
   const [expenseCategory, setExpenseCategory] = useState("");
@@ -52,7 +52,6 @@ const AddTransactionScreen = () => {
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
-
 
   const route = useRoute();
   
@@ -103,8 +102,10 @@ const AddTransactionScreen = () => {
       return;
     }
   
-    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+    if (isNaN(parseFloat(convertToAmerican(amount))) || parseFloat(convertToAmerican(amount)) <= 0) {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
+    console.log(amount);
+
       return;
     }
     
@@ -150,7 +151,7 @@ const AddTransactionScreen = () => {
     setRecurrence({ count: "", unit: "month" });
     setRecurrenceInfo("");
     setAttachments([]);
-  
+
   };
   
 
@@ -261,19 +262,19 @@ const AddTransactionScreen = () => {
       </View>
     ));
   };
+
   const formatValue = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-    
-    // Certifica-se de que o valor tenha pelo menos dois dígitos
-    // Adiciona pontos e vírgulas conforme necessário
+  
+    // Certifique-se de que o valor tenha no mínimo 3 dígitos
+    value = value.padStart(3, '0');
+  
+    // Separa a parte inteira da parte decimal
     const integerPart = value.slice(0, -2);
     const decimalPart = value.slice(-2);
-
-    // Adiciona zeros à esquerda, se necessário
-    value = value.padStart(3, '0');
-     
-    // Adiciona pontos de milhar
+  
+    // Formata a parte inteira com pontos de milhar
     const formattedInteger = integerPart
       .split('')
       .reverse()
@@ -285,24 +286,31 @@ const AddTransactionScreen = () => {
     return `${formattedInteger},${decimalPart}`;
   };
   
+ 
+  
+  
   const handleChange = (text) => {
-    setAmount(formatValue(text));
+    const formattedValue = formatValue(text);
+    const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
+    setAmount(cleanedValue);
     
   };
+
   const convertToAmerican = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-
+  
     // Adiciona zeros à esquerda, se necessário
     value = value.padStart(3, '0');
-
+  
     // Adiciona pontos e vírgulas conforme necessário
     const integerPart = value.slice(0, -2); // Parte inteira
     const decimalPart = value.slice(-2);   // Parte decimal
-
+  
     // Combina a parte inteira e a parte decimal para o formato americano
     return `${integerPart}.${decimalPart}`;
-};
+  };
+  
   
   return (
     <KeyboardAvoidingView style={styles.container}>

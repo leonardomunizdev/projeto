@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GestorFinanceiroV2",
-    "slug": "GestorFinanceiroV2",
+    "name": "GestorFinanceiroV3",
+    "slug": "GestorFinanceiroV3",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,19 +25,31 @@
           "data": {
             "mimeType": "image/*"
           },
-          "category": ["DEFAULT", "BROWSABLE"]
+          "category": [
+            "DEFAULT",
+            "BROWSABLE"
+          ]
         },
         {
           "action": "SEND_MULTIPLE",
           "data": {
             "mimeType": "image/*"
           },
-          "category": ["DEFAULT", "BROWSABLE"]
+          "category": [
+            "DEFAULT",
+            "BROWSABLE"
+          ]
         }
-      ]
+      ],
+      "package": "com.munizleo123.GestorFinanceiroV3"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "27fe3be5-b2b2-414a-a69e-f16bbd026bb3"
+      }
     }
   }
 }

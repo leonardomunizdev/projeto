@@ -35,16 +35,15 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const formatValue = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-    
-    // Certifica-se de que o valor tenha pelo menos dois dígitos
-    // Adiciona pontos e vírgulas conforme necessário
+  
+    // Certifique-se de que o valor tenha no mínimo 3 dígitos
+    value = value.padStart(3, '0');
+  
+    // Separa a parte inteira da parte decimal
     const integerPart = value.slice(0, -2);
     const decimalPart = value.slice(-2);
-
-    // Adiciona zeros à esquerda, se necessário
-    value = value.padStart(3, '0');
-     
-    // Adiciona pontos de milhar
+  
+    // Formata a parte inteira com pontos de milhar
     const formattedInteger = integerPart
       .split('')
       .reverse()
@@ -57,23 +56,25 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   };
   
   const handleChange = (text) => {
-    setAmount(formatValue(text));
+    const formattedValue = formatValue(text);
+    const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
+    setAmount(cleanedValue);
     
   };
   const convertToAmerican = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-
+  
     // Adiciona zeros à esquerda, se necessário
     value = value.padStart(3, '0');
-
+  
     // Adiciona pontos e vírgulas conforme necessário
     const integerPart = value.slice(0, -2); // Parte inteira
     const decimalPart = value.slice(-2);   // Parte decimal
-
+  
     // Combina a parte inteira e a parte decimal para o formato americano
     return `${integerPart}.${decimalPart}`;
-};
+  };
   const handleSave = () => {
     const updatedTransaction = {
       ...transaction,
@@ -179,7 +180,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             style={styles.input}
             placeholder="Valor"
             keyboardType="numeric"
-            value={amount}
+            value={formatValue(amount)}
             onChangeText={handleChange}
           />
 
