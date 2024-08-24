@@ -142,11 +142,7 @@
               ) : (
                 <>
                   <Text style={styles.modalText}>Deseja importar um arquivo CSV?</Text>
-                  <Image
-                    source={require('../../../../assets/test.png')}
-                    style={localStyles.image}
-                    resizeMode="contain"
-                  />
+                 
                   <Button title="Selecionar CSV" onPress={pickCsvFile} />
                   <Button color="red" title="Cancelar" onPress={onClose} />
                 </>
