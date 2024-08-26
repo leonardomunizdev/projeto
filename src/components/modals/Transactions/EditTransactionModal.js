@@ -23,7 +23,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const { transactions } = useTransactions();
   const [type, setType] = useState(transaction.type);
   const [description, setDescription] = useState(transaction.description);
-  const [amount, setAmount] = useState(transaction.amount.toString());
+  const [amount, setAmount] = useState(transaction.amount.toFixed(2).toString());
   const [categoryId, setCategoryId] = useState(transaction.categoryId);
   const [accountId, setAccountId] = useState(transaction.accountId);
   const [attachments, setAttachments] = useState(transaction.attachments || []);
@@ -32,17 +32,18 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const filteredCategories = categories.filter(
     (category) => category.type === type
   );
+
   const formatValue = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-  
+
     // Certifique-se de que o valor tenha no mínimo 3 dígitos
     value = value.padStart(3, '0');
-  
+
     // Separa a parte inteira da parte decimal
     const integerPart = value.slice(0, -2);
     const decimalPart = value.slice(-2);
-  
+
     // Formata a parte inteira com pontos de milhar
     const formattedInteger = integerPart
       .split('')
@@ -50,31 +51,30 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
       .reduce((acc, digit, index) => {
         return digit + (index && index % 3 === 0 ? '.' : '') + acc;
       }, '');
-  
+
     // Combina a parte inteira e a parte decimal
     return `${formattedInteger},${decimalPart}`;
   };
-  
-  const handleChange = (text) => {
-    const formattedValue = formatValue(text);
-    const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
-    setAmount(cleanedValue);
-    
-  };
+
   const convertToAmerican = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-  
-    // Adiciona zeros à esquerda, se necessário
-    value = value.padStart(3, '0');
-  
+
     // Adiciona pontos e vírgulas conforme necessário
     const integerPart = value.slice(0, -2); // Parte inteira
     const decimalPart = value.slice(-2);   // Parte decimal
-  
+
     // Combina a parte inteira e a parte decimal para o formato americano
     return `${integerPart}.${decimalPart}`;
   };
+
+  const handleChange = (text) => {
+    // Remove caracteres não numéricos e formata o valor
+    const formattedValue = formatValue(text);
+    const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
+    setAmount(cleanedValue);
+  };
+
   const handleSave = () => {
     const updatedTransaction = {
       ...transaction,
@@ -123,7 +123,6 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
       setAttachments([...attachments, result.assets[0].uri]);
     }
   };
-  
 
   const removeAttachment = (uri) => {
     setAttachments(attachments.filter((item) => item !== uri));
@@ -132,7 +131,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   useEffect(() => {
     setType(transaction.type);
     setDescription(transaction.description);
-    setAmount(transaction.amount.toString());
+    setAmount(formatValue(transaction.amount.toFixed(2).toString()));
     setCategoryId(transaction.categoryId);
     setAccountId(transaction.accountId);
     setAttachments(transaction.attachments || []);
@@ -180,7 +179,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             style={styles.input}
             placeholder="Valor"
             keyboardType="numeric"
-            value={formatValue(amount)}
+            value={amount}
             onChangeText={handleChange}
           />
 
@@ -222,7 +221,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             renderItem={({ item }) => (
               <View style={styles.attachmentContainer}>
                 <Image source={{ uri: item }} style={styles.attachment} />
-                <TouchableOpacity onPress={() => removeAttachment(item)} style={styles.removeButton}>
+                <TouchableOpacity onPress={() => removeAttachment(item)} >
                   <Ionicons name="trash-bin-outline" size={24} color="red" />
                 </TouchableOpacity>
               </View>
@@ -291,58 +290,62 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   input: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-    marginBottom: 15,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
     padding: 10,
+    marginBottom: 15,
   },
   picker: {
+    height: 50,
+    width: "100%",
     marginBottom: 15,
   },
-  modalButtons: {
-    paddingTop: 50,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  saveButton: {
+  addButton: {
     backgroundColor: "#007bff",
-    padding: 10,
+    padding: 15,
     borderRadius: 8,
     alignItems: "center",
-    flex: 1,
-    marginRight: 5,
-  },
-  cancelButton: {
-    backgroundColor: "#d9534f",
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    flex: 1,
-    marginLeft: 5,
+    marginBottom: 15,
   },
   buttonText: {
     color: "white",
     fontWeight: "bold",
   },
-  addButton: {
-    backgroundColor: "#28a745",
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    marginVertical: 10,
-  },
   attachmentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
     marginRight: 10,
   },
   attachment: {
     width: 100,
     height: 100,
     borderRadius: 8,
+    marginRight: 10,
   },
   removeButton: {
-    marginLeft: 10,
+    position: "absolute",
+    top: 5,
+    right: 5,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  saveButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+    marginRight: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#d9534f",
+    padding: 15,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: "center",
+    marginLeft: 5,
   },
 });
 

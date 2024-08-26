@@ -165,7 +165,17 @@ export const styles = StyleSheet.create({
       color: 'red',
       fontWeight: 'bold',
     },
-
+    loaderContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)', // Leve fundo branco para destacar o carregamento
+    },
+    loaderText: {
+      marginTop: 10,
+      fontSize: RFValue(16),
+    },
+    
 });
 
 export default styles;

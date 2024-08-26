@@ -17,6 +17,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import styles from "../styles/screens/StatisticsScreenStyles";
 import moment from "moment";
+import { Ionicons } from "@expo/vector-icons";
+import ExportModal from "../components/modals/options/ExportModal";
 
 const DashboardScreen = () => {
   const { categories } = useCategories();
@@ -33,6 +35,7 @@ const DashboardScreen = () => {
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [filteredBalance, setFilteredBalance] = useState(0); // Novo estado para o saldo filtrado
+  const [isExportModalVisible, setIsExportModalVisible] = useState(false);
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
@@ -173,20 +176,20 @@ const DashboardScreen = () => {
   const avgRevenuePerDay =
     totalRevenues > 0
       ? totalRevenues /
-        calculateUniqueDays(
-          filteredTransactions.filter(
-            (transaction) => transaction.type === "income"
-          )
+      calculateUniqueDays(
+        filteredTransactions.filter(
+          (transaction) => transaction.type === "income"
         )
+      )
       : 0;
   const avgExpensePerDay =
     totalExpenses > 0
       ? totalExpenses /
-        calculateUniqueDays(
-          filteredTransactions.filter(
-            (transaction) => transaction.type === "expense"
-          )
+      calculateUniqueDays(
+        filteredTransactions.filter(
+          (transaction) => transaction.type === "expense"
         )
+      )
       : 0;
 
   const calculateCategoryTotals = (type) => {
@@ -219,17 +222,24 @@ const DashboardScreen = () => {
     filteredBalance > 0
       ? styles.balancePositive
       : filteredBalance < 0
-      ? styles.balanceNegative
-      : styles.balanceZero;
+        ? styles.balanceNegative
+        : styles.balanceZero;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Relatório</Text>
-        
-        <TouchableOpacity onPress={openModal} style={styles.iconButton}>
-          <Icon name="menu" size={24} color="#000" />
-        </TouchableOpacity>
+
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={openModal} style={styles.iconButton}>
+            <Icon name="filter-list" size={24} color="#000" />
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setIsExportModalVisible(true)} style={styles.iconButton}>
+            <Icon name="download" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+
       </View>
 
       {selectedType === "all" || selectedType === "income" ? (
@@ -305,7 +315,7 @@ const DashboardScreen = () => {
                   <View style={styles.tableRow}>
                     <Text style={styles.tableCell}>{item.accountName}</Text>
                     <Text style={styles.tableCell}>
-                      {formatNumberBR(item.amount)} 
+                      {formatNumberBR(item.amount)}
                       {item.isRecurring && <Text>{getCurrentInstallment(item)}</Text>}
                     </Text>
                     <Text style={styles.tableCell}>{item.categoryName}</Text>
@@ -399,7 +409,12 @@ const DashboardScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Filtros</Text>
-
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={closeModal}
+            >
+              <Ionicons name="close" size={24} color="black" />
+            </TouchableOpacity>
             <Text style={styles.filterLabel}>Tipo de Transação</Text>
             <Picker
               selectedValue={selectedType}
@@ -486,19 +501,23 @@ const DashboardScreen = () => {
             )}
 
             <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity onPress={closeModal} style={styles.modalButton}>
+                <Text style={styles.modalButtonText}>Aplicar Filtros </Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={clearFilters}
                 style={styles.modalButton}
               >
                 <Text style={styles.modalButtonText}>Limpar Filtros</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={closeModal} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>Fechar </Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+      <ExportModal
+        visible={isExportModalVisible}
+        onClose={() => setIsExportModalVisible(false)}
+      />
     </ScrollView>
   );
 };

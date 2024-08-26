@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Modal,
+   // Importa AsyncStorage
 } from "react-native";
 import { Card } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
@@ -18,6 +19,9 @@ import { styles } from "../styles/screens/HomeScreenStyles";
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as Linking from 'expo-linking';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import HelpModal from '../components/modals/options/HelpModal';
+
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -36,48 +40,69 @@ const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCalculationType, setSelectedCalculationType] =
     useState("category"); // Default to 'category'
+  const [showModal, setShowModal] = useState(true);
+  const [helpModalVisible, setHelpModalVisible] = useState(false);
 
-
-
-    useEffect(() => {
-      const handleOpenURL = async (event) => {
-        const { url } = event;
   
-        if (url) {
-          // Verifique se a URL é válida e se é uma imagem
-          if (url.startsWith('http') && url.match(/\.(jpeg|jpg|gif|png)$/)) {
-            console.log('Image URL:', url);
-            // Navegue para a tela de adição de transações e passe a URL da imagem
-            navigation.navigate('AddTransactionScreen', { imageUrl: url });
-          } else {
-            console.log('URL não é uma imagem válida:', url);
-          }
+  
+  useEffect(() => {
+    console.log('Modal visibility:', modalVisible); // Adicione este log
+  }, [modalVisible]);
+  
+  useEffect(() => {
+    console.log('Checking first visit...');
+    const checkFirstVisit = async () => {
+      try {
+        const hasVisited = await AsyncStorage.getItem('hasVisitedHomeScreen');
+        if (hasVisited === null) {
+          // Usuário está visitando pela primeira vez
+          setHelpModalVisible(true);
+          await AsyncStorage.setItem('hasVisitedHomeScreen', 'true');
+        }
+      } catch (error) {
+        console.error('Erro ao acessar o AsyncStorage', error);
+      }
+    };
+  
+    checkFirstVisit();
+  }, []);
+  
+  useEffect(() => {
+    const handleOpenURL = async (event) => {
+      const { url } = event;
+
+      if (url) {
+        // Verifique se a URL é válida e se é uma imagem
+        if (url.startsWith('http') && url.match(/\.(jpeg|jpg|gif|png)$/)) {
+          console.log('Image URL:', url);
+          // Navegue para a tela de adição de transações e passe a URL da imagem
+          navigation.navigate('AddTransactionScreen', { imageUrl: url });
         } else {
-          console.log('Nenhuma URL recebida.');
+          console.log('URL não é uma imagem válida:', url);
         }
-      };
-  
-      // Adicione o listener para URLs compartilhadas
-      const subscription = Linking.addEventListener('url', handleOpenURL);
-  
-      // Verifique se há uma URL inicial quando o aplicativo é iniciado
-      const getInitialURL = async () => {
-        const initialURL = await Linking.getInitialURL();
-        if (initialURL) {
-          handleOpenURL({ url: initialURL });
-        }
-      };
-  
-      getInitialURL();
-  
-      return () => {
-        // Remova o listener quando o componente for desmontado
-        subscription.remove();
-      };
-    }, [navigation]);
-  
-  
-    
+      } else {
+        console.log('Nenhuma URL recebida.');
+      }
+    };
+
+    // Adicione o listener para URLs compartilhadas
+    const subscription = Linking.addEventListener('url', handleOpenURL);
+
+    // Verifique se há uma URL inicial quando o aplicativo é iniciado
+    const getInitialURL = async () => {
+      const initialURL = await Linking.getInitialURL();
+      if (initialURL) {
+        handleOpenURL({ url: initialURL });
+      }
+    };
+
+    getInitialURL();
+
+    return () => {
+      // Remova o listener quando o componente for desmontado
+      subscription.remove();
+    };
+  }, [navigation]);
 
   const formatToBRL = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -86,7 +111,6 @@ const HomeScreen = () => {
       minimumFractionDigits: 2,
     }).format(value);
   };
-
 
   const incomeCategories = categories.filter(
     (category) => category.type === "income"
@@ -264,6 +288,7 @@ const HomeScreen = () => {
       totalSum: totalSum.toFixed(2).replace(".", ","),
     };
   };
+
   const getAccountTotals = (type) => {
     const totals = accounts.map((account) => {
       const total = transactions
@@ -305,6 +330,7 @@ const HomeScreen = () => {
   useEffect(() => {
     setBalanceColor(balance > 0 ? "blue" : "red");
   }, [balance]);
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -316,7 +342,6 @@ const HomeScreen = () => {
             </Text>
           </View>
         </View>
-
 
         <View style={styles.summaryContainer}>
           <Card
@@ -354,7 +379,6 @@ const HomeScreen = () => {
                     { color: getAccountColor(accountValues[account.id] || 0) },
                   ]}
                 >
-
                   {formatToBRL(parseFloat((accountValues[account.id] || 0)
                     .toFixed(2)
                     .replace(".", ",")))}
@@ -374,7 +398,6 @@ const HomeScreen = () => {
                   },
                 ]}
               >
-
                 {formatToBRL(parseFloat(Object.values(accountValues)
                   .reduce((a, b) => a + b, 0)
                   .toFixed(2)
@@ -450,14 +473,11 @@ const HomeScreen = () => {
               <ScrollView>
                 {selectedCalculationType === "category" ? (
                   <View>
-
-
                     <View style={styles.balanceContainer}>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Receitas</Text>
                         <Text style={styles.movementTextIncome}>
                           {formatToBRL(parseFloat(getCategoryTotals("income").totalSum))}
-
                         </Text>
                         {getCategoryTotals("income").totals.map((category) => (
                           <Text key={category.id}>
@@ -465,7 +485,6 @@ const HomeScreen = () => {
                             {"\n"}
                             <Text style={styles.incomeTotal}>
                               {formatToBRL(parseFloat(category.total))}
-
                             </Text>
                           </Text>
                         ))}
@@ -474,14 +493,13 @@ const HomeScreen = () => {
                         <Text style={styles.modalSectionTitle}>Despesas</Text>
                         <Text style={styles.movementTextExpense}>
                           {formatToBRL(parseFloat(getCategoryTotals("expense").totalSum))}
-
                         </Text>
                         {getCategoryTotals("expense").totals.map((category) => (
                           <Text key={category.id}>
                             {category.name}
                             {"\n"}
                             <Text style={styles.expenseTotal}>
-                              R$ {category.total}
+                              {formatToBRL(parseFloat(category.total))}
                             </Text>
                           </Text>
                         ))}
@@ -490,13 +508,11 @@ const HomeScreen = () => {
                   </View>
                 ) : (
                   <View>
-
                     <View style={styles.balanceContainer}>
                       <View style={styles.column}>
                         <Text style={styles.modalSectionTitle}>Receitas</Text>
                         <Text style={styles.movementTextIncome}>
                           {formatToBRL(parseFloat(getAccountTotals("income").totalSum))}
-
                         </Text>
                         {getAccountTotals("income").totals.map((account) => (
                           <Text key={account.id}>
@@ -504,7 +520,6 @@ const HomeScreen = () => {
                             {"\n"}
                             <Text style={styles.incomeTotal}>
                               {formatToBRL(parseFloat(account.total))}
-
                             </Text>
                           </Text>
                         ))}
@@ -521,7 +536,6 @@ const HomeScreen = () => {
                             <Text style={styles.expenseTotal}>
                               {formatToBRL(parseFloat(account.total))}
                             </Text>
-
                           </Text>
                         ))}
                       </View>
@@ -532,7 +546,6 @@ const HomeScreen = () => {
               <View style={styles.balanceRow}>
                 <Text style={styles.modalTitle}>Balanço</Text>
                 <Text style={styles.modalBalanceTotal}>
-
                   {formatToBRL(parseFloat(getCategoryTotals("income").totalSum) -
                     parseFloat(getCategoryTotals("expense").totalSum))}
                 </Text>
@@ -560,6 +573,10 @@ const HomeScreen = () => {
           </View>
         </View>
       </Modal>
+      <HelpModal
+              visible={helpModalVisible}
+              onClose={() => setHelpModalVisible(false)}
+            />
     </View>
   );
 };

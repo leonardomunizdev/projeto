@@ -28,6 +28,8 @@ import UUID from "react-native-uuid";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import styles from "../styles/screens/addTransactionsScreenStyles";
+import AccountModal from "../components/modals/options/AccountModal";
+import CategoryModal from "../components/modals/options/CategoryModal";
 
 const AddTransactionScreen = () => {
   const navigation = useNavigation();
@@ -52,17 +54,21 @@ const AddTransactionScreen = () => {
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
-
+  const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [newAccountName, setNewAccountName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [selectedCategoryType, setSelectedCategoryType] = useState('income');
   const route = useRoute();
-  
+
   useEffect(() => {
     // Verifica se o parâmetro imageUri está presente e o usa
     if (route.params?.imageUri) {
       setAttachments([route.params.imageUri]);
     }
   }, [route.params?.imageUri]);
-  
-  
+
+
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
   }, [isRecurring]);
@@ -70,9 +76,9 @@ const AddTransactionScreen = () => {
   const generateRecurringTransactions = (transaction, recurrenceId) => {
     const transactions = [];
     let nextDate = new Date(date);
-  
+
     console.log(`Quantidade de repetições: ${recurrence.count}`); // Exibe a quantidade de repetições
-  
+
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...transaction,
@@ -81,35 +87,35 @@ const AddTransactionScreen = () => {
         date: format(nextDate, "yyyy-MM-dd", { locale: ptBR }),
         isRecurring,
       });
-  
+
       if (recurrence.unit === "month") {
         nextDate = addMonths(nextDate, 1);
       } else if (recurrence.unit === "week") {
         nextDate = addWeeks(nextDate, 1);
       }
     }
-  
+
     console.log(`Quantidade de transações geradas: ${transactions.length}`); // Exibe a quantidade de transações geradas
-  
+
     return transactions;
   };
- 
 
 
-   const handleSaveAndNavigate = () => {
-    if (!description || !amount || !selectedAccount) {
+
+  const handleSaveAndNavigate = () => {
+    if (!description || !amount || !selectedAccount || !selectedCategory) {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
     }
-  
+
     if (isNaN(parseFloat(convertToAmerican(amount))) || parseFloat(convertToAmerican(amount)) <= 0) {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
-    console.log(amount);
+      console.log(amount);
 
       return;
     }
-    
-    
+
+
     const recurrenceId = UUID.v4();
     const baseTransaction = {
       id: UUID.v4(),
@@ -128,15 +134,15 @@ const AddTransactionScreen = () => {
       attachments,
       recorrenceCount: isRecurring ? recurrence.count : null,
     };
-  
+
     const transactions = isRecurring
       ? generateRecurringTransactions(baseTransaction, recurrenceId)
       : [baseTransaction];
-  
+
     transactions.forEach((transaction) => {
       addTransaction(transaction);
     });
-  
+
     // Resetar todos os campos
     setTransactionType("income");
     setAmount("");
@@ -153,7 +159,7 @@ const AddTransactionScreen = () => {
     setAttachments([]);
 
   };
-  
+
 
   const handleIncrement = () => {
     setRecurrence((prevRecurrence) => ({
@@ -180,7 +186,7 @@ const AddTransactionScreen = () => {
       setRecurrence((prevRecurrence) => ({ ...prevRecurrence, count: "" }));
     }
   };
-  
+
 
   const handleTransactionTypeChange = (type) => {
     setTransactionType(type);
@@ -266,14 +272,14 @@ const AddTransactionScreen = () => {
   const formatValue = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-  
+
     // Certifique-se de que o valor tenha no mínimo 3 dígitos
     value = value.padStart(3, '0');
-  
+
     // Separa a parte inteira da parte decimal
     const integerPart = value.slice(0, -2);
     const decimalPart = value.slice(-2);
-  
+
     // Formata a parte inteira com pontos de milhar
     const formattedInteger = integerPart
       .split('')
@@ -281,43 +287,43 @@ const AddTransactionScreen = () => {
       .reduce((acc, digit, index) => {
         return digit + (index && index % 3 === 0 ? '.' : '') + acc;
       }, '');
-  
+
     // Combina a parte inteira e a parte decimal
     return `${formattedInteger},${decimalPart}`;
   };
-  
- 
-  
-  
+
+
+
+
   const handleChange = (text) => {
     const formattedValue = formatValue(text);
     const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
     setAmount(cleanedValue);
-    
+
   };
 
   const convertToAmerican = (value) => {
     // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-  
+
     // Adiciona zeros à esquerda, se necessário
     value = value.padStart(3, '0');
-  
+
     // Adiciona pontos e vírgulas conforme necessário
     const integerPart = value.slice(0, -2); // Parte inteira
     const decimalPart = value.slice(-2);   // Parte decimal
-  
+
     // Combina a parte inteira e a parte decimal para o formato americano
     return `${integerPart}.${decimalPart}`;
   };
-  
-  
+
+
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.formContainer}>
-            
+
             <Text style={styles.title}>Adicionar Transação</Text>
 
             <View style={styles.transactionTypeContainer}>
@@ -369,35 +375,46 @@ const AddTransactionScreen = () => {
                 onChange={onChange}
               />
             )}
-            <Picker
-              selectedValue={selectedAccount}
-              onValueChange={handleAccountChange}
-              style={styles.picker}
-            >
-              <Picker.Item label="Selecione uma conta" value="" />
-              {accounts.map((account) => (
-                <Picker.Item
-                  key={account.id}
-                  label={account.name}
-                  value={account.id}
-                />
-              ))}
-            </Picker>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={handleValueChange}
-              style={styles.picker}
-            >
-              <Picker.Item label="Selecione uma categoria" value="" />
-              {filteredCategories.map((category) => (
-                <Picker.Item
-                  key={category.id}
-                  label={category.name}
-                  value={category.id}
-                />
-              ))}
-            </Picker>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedAccount}
+                onValueChange={handleAccountChange}
+                style={styles.picker}
+              >
+                <Picker.Item label="Selecione uma conta" value="" />
+                {accounts.map((account) => (
+                  <Picker.Item
+                    key={account.id}
+                    label={account.name}
+                    value={account.id}
+                  />
+                ))}
+              </Picker>
+              <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={styles.addButton}>
+                <MaterialIcons name="add" size={24} color="blue" />
+              </TouchableOpacity>
+            </View>
 
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedCategory}
+                onValueChange={handleValueChange}
+                style={styles.picker}
+              >
+                <Picker.Item label="Selecione uma categoria" value="" />
+                {filteredCategories.map((category) => (
+                  <Picker.Item
+                    key={category.id}
+                    label={category.name}
+                    value={category.id}
+                  />
+                ))}
+              </Picker>
+              <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={styles.addButton}>
+                <MaterialIcons name="add" size={24} color="blue" />
+              </TouchableOpacity>
+
+            </View>
             <View style={styles.switchContainer}>
               <Text style={styles.switchText}>Repetir</Text>
               <Switch
@@ -453,7 +470,9 @@ const AddTransactionScreen = () => {
                     <Picker.Item label="Semanal" value="week" />
                   </Picker>
                 </View>
+
               </View>
+
             )}
 
             <View style={styles.attachmentContainer}>
@@ -465,15 +484,30 @@ const AddTransactionScreen = () => {
               </TouchableOpacity>
               <View style={styles.attachmentList}>{renderAttachments()}</View>
             </View>
-            
+
           </View>
         </TouchableWithoutFeedback>
         <View>
-        <Button title="Salvar" onPress={handleSaveAndNavigate} />
-      </View>
+          <AccountModal
+            visible={isAccountModalVisible}
+            onClose={() => setIsAccountModalVisible(false)}
+            newAccountName={newAccountName}
+            setNewAccountName={setNewAccountName}
+          />
+          <CategoryModal
+            visible={isCategoryModalVisible}
+            onClose={() => setIsCategoryModalVisible(false)}
+            newCategoryName={newCategoryName}
+            setNewCategoryName={setNewCategoryName}
+            selectedCategoryType={selectedCategoryType}
+            setSelectedCategoryType={setSelectedCategoryType}
+          />
+          <Button title="Salvar" onPress={handleSaveAndNavigate} />
+        </View>
+
       </ScrollView>
-      
-      </KeyboardAvoidingView>
+    </KeyboardAvoidingView>
+
   );
 };
 

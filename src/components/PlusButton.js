@@ -24,9 +24,9 @@ const PlusButton = () => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        bottom: 20, // Ajuste a posição conforme necessário
+        bottom: 10, // Ajuste a posição conforme necessário
         right: 10,
-        height: 10 ,
+        height: '5%' ,
         width: '70%',
         borderRadius: 20,
         backgroundColor: 'purple',

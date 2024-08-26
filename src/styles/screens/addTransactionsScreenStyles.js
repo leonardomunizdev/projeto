@@ -118,7 +118,10 @@ export const styles = StyleSheet.create({
       textAlign: "center",
     },
     attachmentList: {
-      marginTop: 10,
+      marginTop: 20,
+      flexDirection: 'row',       // Alinha as imagens horizontalmente
+      flexWrap: 'wrap',           // Permite que as imagens se movam para a linha seguinte se não houver espaço suficiente
+      justifyContent: 'flex-start', // Alinha as imagens à esquerda
     },
     attachmentItem: {
       flexDirection: "row",
@@ -139,6 +142,23 @@ export const styles = StyleSheet.create({
       marginTop: 'auto',
   
     },
-  });
-
+  
+    pickerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 10,
+    },
+    picker: {
+      flex: 1,
+      height: 50,
+    },
+    addButton: {
+      marginLeft: 10,
+      justifyContent: 'center',
+    },
+    addButtonText: {
+      fontSize: 24,
+      color: 'blue',
+    },
+});
   export default styles;

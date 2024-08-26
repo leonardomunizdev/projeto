@@ -27,6 +27,7 @@ export const styles = StyleSheet.create({
       padding: 8,
       backgroundColor: 'silver',
       borderRadius: 100,
+      marginHorizontal: 8,
     },
     sectionContainer: {
       marginBottom: 16,

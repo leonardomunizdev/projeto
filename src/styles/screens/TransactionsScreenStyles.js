@@ -70,6 +70,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
+    width: '100%'
   },
   footerTitle: {
     fontSize: 18,
