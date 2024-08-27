@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 10, // Ajuste a posição conforme necessário
         right: 10,
-        height: '5%' ,
+        height: '70%' ,
         width: '70%',
         borderRadius: 20,
         backgroundColor: 'purple',

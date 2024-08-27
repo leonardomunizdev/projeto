@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     paddingLeft: 10,
     marginBottom: 10,
-    marginTop: 20,
+    marginTop: 10,
 
     fontSize: 16,
   },
@@ -65,12 +65,10 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingTop: 10,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#e0e0e0",
-    width: '100%'
   },
   footerTitle: {
     fontSize: 18,

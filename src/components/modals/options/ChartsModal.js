@@ -167,7 +167,6 @@ const ChartsModal = ({ visible, onClose }) => {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.sectionTitle}>Gráfico de {selectedOption}</Text>
           <View style={styles.chartContainer}>
             <PieChart
               data={chartData}

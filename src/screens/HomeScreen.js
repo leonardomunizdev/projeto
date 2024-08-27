@@ -436,6 +436,36 @@ const HomeScreen = () => {
             </View>
           </Card.Content>
         </Card>
+        <Card style={styles.monthlyBalanceCard} onPress={openModal}>
+          <Card.Content>
+            <Text style={styles.monthlyBalanceTitle}>Balanço Mensal</Text>
+            <View style={styles.monthlyBalanceContent}>
+              <View style={styles.monthlyBalanceItem}>
+                <Text style={styles.monthlyBalanceLabel}>Receitas:</Text>
+                <Text style={styles.monthlyBalanceValue}>
+                  {formatToBRL(parseFloat(monthlyIncome.toFixed(2).replace(".", ",")))}
+                </Text>
+              </View>
+              <View style={styles.monthlyBalanceItem}>
+                <Text style={styles.monthlyBalanceLabel}>Despesas:</Text>
+                <Text style={styles.monthlyBalanceValue}>
+                  {formatToBRL(parseFloat(monthlyExpense.toFixed(2).replace(".", ",")))}
+                </Text>
+              </View>
+              <View style={styles.monthlyBalanceItem}>
+                <Text style={styles.monthlyBalanceLabel}>Balanço:</Text>
+                <Text
+                  style={[
+                    styles.monthlyBalanceValue,
+                    { color: monthlyBalance < 0 ? "red" : "green" },
+                  ]}
+                >
+                  {formatToBRL(parseFloat(monthlyBalance.toFixed(2).replace(".", ",")))}
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
       </ScrollView>
 
       {/* Modal */}

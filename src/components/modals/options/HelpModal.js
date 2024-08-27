@@ -142,9 +142,10 @@ const HelpModal = ({ visible, onClose }) => {
                             <Text style={styles.modalSectionText}>
                                 A Tela de Opções permite acessar várias configurações e funcionalidades adicionais do aplicativo.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Gerir Contas</Text>
+                            <Text style={styles.modalSectionSubtitle}>1. Gerir Contas Bancarias</Text>
                             <Text style={styles.modalSectionText}>
-                                Permite adicionar novas contas ou gerenciar as contas existentes.
+                                Permite adicionar novas contas ou gerenciar as contas existentes. Você poderá criar quaisquer tipo de "conta" aqui,
+                                "Banco do Brasil", "Cartão de Credito", "NuBank", etc.
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>2. Gerir Categorias</Text>
                             <Text style={styles.modalSectionText}>
@@ -152,7 +153,7 @@ const HelpModal = ({ visible, onClose }) => {
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>3. Baixar Notas Fiscais</Text>
                             <Text style={styles.modalSectionText}>
-                                Baixe suas notas fiscais e armazene-as localmente.
+                                Baixe suas notas fiscais e armazene-as localmente em formato PDF.
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>4. Importar CSV</Text>
                             <Text style={styles.modalSectionText}>
@@ -164,11 +165,11 @@ const HelpModal = ({ visible, onClose }) => {
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>6. Fazer Backup de Dados</Text>
                             <Text style={styles.modalSectionText}>
-                                Crie um backup dos seus dados em um arquivo JSON.
+                                Crie um backup dos seus dados em um arquivo Zip contendo todos os dados e Notas Fiscais Salvas.
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>7. Importar Backup de Dados</Text>
                             <Text style={styles.modalSectionText}>
-                                Importe dados a partir de um arquivo JSON. Toque no botão para escolher o arquivo e iniciar o processo de importação. Após a importação, o aplicativo será fechado e deverá ser reaberto.
+                                Importe dados a partir de um arquivo Zip. Após a importação, o aplicativo será fechado e deverá ser reaberto.
                             </Text>
                             <Text style={styles.modalSectionSubtitle}>8. Ajuda</Text>
                             <Text style={styles.modalSectionText}>

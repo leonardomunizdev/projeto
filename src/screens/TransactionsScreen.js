@@ -374,21 +374,8 @@ const handleTransactionPress = (transaction) => {
   }
 
   return (
+    
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Pesquisar por descrição, Conta ou Categoria"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
-
-      <FlatList
-        data={filteredTransactions}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-      />
-
       <View style={styles.footer}>
         <TouchableOpacity
           onPress={() => changeMonth(-1)}
@@ -406,6 +393,21 @@ const handleTransactionPress = (transaction) => {
           <Text style={styles.navButtonText}>Próximo</Text>
         </TouchableOpacity>
       </View>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Pesquisar por descrição, Conta ou Categoria"
+        value={searchText}
+        onChangeText={setSearchText}
+      />
+
+      <FlatList
+        data={filteredTransactions}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContent}
+      />
+
+      
 
       {/*  MODAL DE EXCLUSÃO DE TRANSAÇÕES  */}
       <Modal

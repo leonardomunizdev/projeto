@@ -216,7 +216,32 @@ export const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: 'bold',
     },
-  
+    categoryCard: {
+      marginVertical: 10,
+      padding: 10,
+    },
+    categoryCardTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    categoryItem: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginVertical: 5,
+    },
+    categoryTitle: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginTop: 10,
+    },
+    categoryName: {
+      fontSize: 14,
+    },
+    categoryValue: {
+      fontSize: 14,
+      color: "blue",
+    },
   
   
   });
