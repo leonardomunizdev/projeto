@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import { RFPercentage, RFValue } from 'react-native-responsive-fontsize';
 
-export const styles = StyleSheet.create({
+export const optionsStyles = StyleSheet.create({
     container: {
       flexGrow: 1,
       padding: 16,
@@ -178,4 +178,4 @@ export const styles = StyleSheet.create({
     
 });
 
-export default styles;
+export default optionsStyles;

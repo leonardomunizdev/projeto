@@ -1,8 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
 import { Ionicons } from "@expo/vector-icons";
+import HomeStyles from "../../../styles/screens/HomeScreenStyles";
+import { Card } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons";
+import optionsStyles from "../../../styles/screens/OptionsScreenStyles";
+
 const HelpModal = ({ visible, onClose }) => {
+    const [goalColor, setGoalColor] = useState("blue");
+    const [amountLeft, setAmountLeft] = useState(0);
+
+    const renderProgressBar = () => {
+        const spendingGoalValue = parseFloat(savedGoal) || 0;
+        const percentage = (monthlyExpense / spendingGoalValue) * 100;
+        const barColor = calculateBarColor(percentage);
+
+        return (
+            <View style={HomeStyles.progressBarContainer}>
+                <View style={[HomeStyles.progressBar, { width: `${percentage}%`, backgroundColor: barColor }]} />
+            </View>
+        );
+    };
     return (
         <Modal
             animationType="slide"
@@ -23,19 +41,124 @@ const HelpModal = ({ visible, onClose }) => {
 
                         <View style={styles.modalSection}>
                             <Text style={styles.modalSectionTitle}>Tela Inicial</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <View style={HomeStyles.balanceContainer}>
+                                <View style={HomeStyles.textContainer}>
+                                    <Text style={HomeStyles.balanceText}>Saldo</Text>
+                                    <Text style={[HomeStyles.balanceAmount,]}>
+                                        R$ 9.999,99
+
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={HomeStyles.summaryContainer}>
+                                <Card
+                                    style={HomeStyles.card}
+                                >
+                                    <Card.Content>
+                                        <Text style={HomeStyles.cardTitle}>Receitas</Text>
+                                        <Text style={HomeStyles.cardAmountIncome}>
+                                            R$ 9.999,99
+                                        </Text>
+                                    </Card.Content>
+                                </Card>
+                                <Card
+                                    style={HomeStyles.card}
+                                >
+                                    <Card.Content>
+                                        <Text style={HomeStyles.cardTitle}>Despesas</Text>
+                                        <Text style={HomeStyles.cardAmountExpense}>
+                                            R$ 9.999,99
+                                        </Text>
+                                    </Card.Content>
+                                </Card>
+                            </View>
                             <Text style={styles.modalSectionText}>
-                                A Tela Principal fornece uma visão geral das suas finanças. Aqui está um resumo das funcionalidades:
+                                Aqui você poderá ver os resumos de suas finanças.
+                                Toque em "Receitas" ou "Despesas" para ver todas as receitas/despesas separadamente.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Saldo</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <Card style={HomeStyles.accountsCard} >
+                                <Card.Content>
+                                    <Text style={HomeStyles.cardTitle}>Meta de Gastos Mensais</Text>
+
+                                    <View style={HomeStyles.monthlyBalanceItem}>
+
+                                        <Text style={{ fontSize: 16 }}>
+                                            Meta:
+                                        </Text>
+
+                                        <Text>R$ 9.999,99</Text>
+                                    </View>
+                                    <View style={HomeStyles.monthlyBalanceItem}>
+
+                                        <Text style={{ fontSize: 16 }}>
+                                            Gasto Mensal:
+                                        </Text>
+                                        <Text style={{ color: 'red' }}>R$ 9.999,99</Text>
+                                    </View>
+                                    {renderProgressBar}
+                                    <Text style={{ color: goalColor, fontSize: 16 }}>
+                                        Falta R$ 9.999,99 para alcançar a meta
+                                    </Text>
+
+                                </Card.Content>
+                            </Card>
                             <Text style={styles.modalSectionText}>
-                                O saldo total é exibido no topo da tela. Ele mostra o saldo disponível na sua conta principal. O saldo é colorido em azul se positivo e em vermelho se negativo.
+                                Aqui você poderá definir um limite de gastos mensais.
+                                Toque no card para abrir o menu de configuração de meta.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>2. Resumo Financeiro</Text>
-                            <Text style={styles.modalSectionText}>
-                                Mostra o total das receitas registradas. Toque para ver todas as transações de receita.
-                                Mostra o total das despesas registradas. Toque para ver todas as transações de despesa.
-                            </Text>
-                            <Text style={styles.modalSectionSubtitle}>3. Contas</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <Card style={HomeStyles.accountsCard}>
+                                <Card.Content>
+                                    <Text style={HomeStyles.accountsTitle}>Contas</Text>
+                                        <View key={account.id} style={HomeStyles.accountItem}>
+
+                                            <Text style={HomeStyles.accountName}>Banco do Brasil{'\n'}
+
+                                                <Text
+                                                    style={[
+                                                        HomeStyles.accountAmount,
+                                                    ]}
+                                                >
+
+                                                    Teste
+                                                   
+
+
+                                                </Text>
+                                            </Text>
+
+
+                                            <TouchableOpacity onPress={() => navigateToAddTransactionsAccount(account.id)} style={HomeStyles.addButton}>
+                                                <MaterialIcons name="add" size={30} color="blue" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    <View style={HomeStyles.accountDivider} />
+                                    <View style={HomeStyles.totalContainer}>
+                                        <Text style={HomeStyles.totalText}>Total:</Text>
+                                        <Text
+                                            style={[
+                                                HomeStyles.totalAmount,
+                                                {
+                                                    
+                                                },
+                                            ]}
+                                        >
+                                            {formatToBRL(parseFloat(Object.values(accountValues)
+                                                .reduce((a, b) => a + b, 0)
+                                                .toFixed(2)
+                                                .replace(".", ",")))}
+                                        </Text>
+                                    </View>
+                                </Card.Content>
+                            </Card>
+
+
                             <Text style={styles.modalSectionText}>
                                 Exibe uma lista das suas contas com o saldo atual de cada uma. Contas com saldo negativo são exibidas em vermelho, e contas com saldo positivo em azul.
                             </Text>
@@ -180,7 +303,7 @@ const HelpModal = ({ visible, onClose }) => {
                                 Limpa todos os dados do aplicativo. Após a confirmação, todos os dados serão apagados.
                             </Text>
 
-                            
+
                         </View>
                     </ScrollView>
                 </View>
@@ -239,7 +362,7 @@ const styles = StyleSheet.create({
         top: 10,
         right: 10,
         zIndex: 1,
-      },
+    },
     closeButtonText: {
         color: '#fff',
         fontSize: 16,

@@ -67,8 +67,19 @@ const AddTransactionScreen = () => {
       setAttachments([route.params.imageUri]);
     }
   }, [route.params?.imageUri]);
+    
 
-
+  useEffect(() => {
+    if (route.params?.accountId) {
+      const selectedAccountId = route.params.accountId;
+      const account = accounts.find((acc) => acc.id === selectedAccountId);
+      if (account) {
+        setSelectedAccount(account.id);
+        setAccountName(account.name);
+      }
+    }
+  }, [route.params?.accountId, accounts]);
+  
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
   }, [isRecurring]);
@@ -99,7 +110,7 @@ const AddTransactionScreen = () => {
 
     return transactions;
   };
-
+  
 
 
   const handleSaveAndNavigate = () => {

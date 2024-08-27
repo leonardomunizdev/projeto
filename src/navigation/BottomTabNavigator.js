@@ -24,6 +24,13 @@ const TransactionsTabButton = (props) => {
   );
 };
 
+const Animation = (teste) => {
+  return(
+    <TouchableOpacity
+      {...teste}
+    />
+  );
+}
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
@@ -50,7 +57,10 @@ const BottomTabNavigator = () => {
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false,
+          tabBarButton: (teste) =>  < Animation {...teste} />,
+
+         }}
       />
       <Tab.Screen
         name="Transações"
@@ -69,12 +79,17 @@ const BottomTabNavigator = () => {
       <Tab.Screen
         name="Relatório"
         component={StatisticsScreen}
-        options={{ headerShown: false }}
+        options={{ 
+          tabBarButton: (teste) =>  < Animation {...teste} />,
+          headerShown: false }}
       />
       <Tab.Screen
         name="Opções"
         component={OptionsScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false,  
+          tabBarButton: (teste) =>  < Animation {...teste} />,
+
+        }}
       />
     </Tab.Navigator>
   );

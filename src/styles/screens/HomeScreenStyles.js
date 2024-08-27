@@ -1,6 +1,6 @@
 import {StyleSheet} from 'react-native';
 
-export const styles = StyleSheet.create({
+export const HomeStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
@@ -23,8 +23,8 @@ export const styles = StyleSheet.create({
     marginTop: 8,
   },
   textContainer: {
-    width: "100%", // Garante que cada View ocupe 100% da largura disponível
-    alignItems: "center", // Centraliza o conteúdo horizontalmente
+    width: "100%", 
+    alignItems: "center",
   },
     balanceAmountNegative: {
       color: "red",
@@ -33,6 +33,7 @@ export const styles = StyleSheet.create({
       flexDirection: "row",
       justifyContent: "space-between",
       marginVertical: 20,
+      width: '100%'
     },
     card: {
       flex: 1,
@@ -65,6 +66,7 @@ export const styles = StyleSheet.create({
     },
     accountName: {
       fontSize: 16,
+      paddingBottom: 10
     },
     accountAmount: {
       fontSize: 16,
@@ -242,8 +244,87 @@ export const styles = StyleSheet.create({
       fontSize: 14,
       color: "blue",
     },
-  
-  
+    progressBarContainer: {
+      height: 20,
+      width: '100%',
+      backgroundColor: '#e0e0df',
+      borderRadius: 5,
+      overflow: 'hidden',
+    },
+    progressBar: {
+      height: '100%',
+      borderRadius: 5,
+    },
+    ModalGoalsContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fundo semitransparente para o modal
+    },
+    // Estilo para o conteúdo do modal
+    ModalGoalsContent: {
+      width: '90%',
+      padding: 20,
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    // Estilo para o título do modal
+    ModalGoalsTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 15,
+      textAlign: 'center',
+      color: '#333',
+    },
+    // Estilo para o campo de entrada de texto
+    ModalGoalsInput: {
+      height: 40,
+      borderColor: '#ddd',
+      borderWidth: 1,
+      borderRadius: 5,
+      paddingHorizontal: 10,
+      marginBottom: 20,
+    },
+    // Estilo para o contêiner dos botões do modal
+    ModalGoalsButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    // Estilo para o botão de salvar
+    ModalGoalsSaveButton: {
+      flex: 1,
+      backgroundColor: '#4CAF50',
+      padding: 12,
+      borderRadius: 5,
+      alignItems: 'center',
+      marginRight: 10,
+    },
+    // Estilo para o texto do botão de salvar
+    ModalGoalsSaveButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    // Estilo para o botão de cancelar
+    ModalGoalsCancelButton: {
+      flex: 1,
+      backgroundColor: '#FF4C4C',
+      padding: 12,
+      borderRadius: 5,
+      alignItems: 'center',
+      marginLeft: 10,
+    },
+    // Estilo para o texto do botão de cancelar
+    ModalGoalsCancelButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
   });
 
-  export default styles;
+  export default HomeStyles;

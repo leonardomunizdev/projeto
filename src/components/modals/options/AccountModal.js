@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, TextInput, Button, TouchableOpacity, Alert, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import styles from '../../../styles/screens/OptionsScreenStyles'; // Assumindo que você tem um arquivo de estilos separado.
+import optionsStyles from '../../../styles/screens/OptionsScreenStyles'; 
 import { useAccounts } from '../../../context/AccountContext';
-import EditAccountModal from './EditAccountModal'; // Importa o novo componente
+import EditAccountModal from './EditAccountModal'; 
 
 
 
@@ -11,7 +11,6 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [accountToEdit, setAccountToEdit] = useState(null);
   const [accountToRemove, setAccountToRemove] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
@@ -45,24 +44,25 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
   };
 
   return (
-    <View style={styles.container}>
+    
+    <View style={optionsStyles.container}>
       <Modal
         visible={visible}
         animationType="slide"
         onRequestClose={onClose}
         transparent={true}
       >
-        <View style={styles.fullScreenModal}>
-          <View style={styles.modalContent}>
+        <View style={optionsStyles.fullScreenModal}>
+          <View style={optionsStyles.modalContent}>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={optionsStyles.closeButton}
               onPress={onClose}
             >
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Gerir Contas</Text>
+            <Text style={optionsStyles.modalTitle}>Gerir Contas</Text>
             <TextInput
-              style={styles.input}
+              style={optionsStyles.input}
               value={newAccountName}
               onChangeText={setNewAccountName}
               placeholder="Nome da nova conta"
@@ -72,8 +72,8 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
               data={accounts}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <View style={styles.accountItem}>
-                  <Text style={styles.accountName}>{item.name}</Text>
+                <View style={optionsStyles.accountItem}>
+                  <Text style={optionsStyles.accountName}>{item.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TouchableOpacity onPress={() => openEditModal(item)}>
                       <Ionicons name="create" size={24} color="black" />
@@ -106,13 +106,13 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
         onRequestClose={() => setIsConfirmModalVisible(false)}
         transparent={true}
       >
-        <View style={styles.fullScreenModal}>
-          <View style={styles.confirmModalContent}>
-            <Text style={styles.confirmTitle}>Confirmar Exclusão</Text>
-            <Text style={styles.confirmText}>
+        <View style={optionsStyles.fullScreenModal}>
+          <View style={optionsStyles.confirmModalContent}>
+            <Text style={optionsStyles.confirmTitle}>Confirmar Exclusão</Text>
+            <Text style={optionsStyles.confirmText}>
               Tem certeza que deseja apagar esta Conta? Todas as movimentações associadas também serão excluídas.
             </Text>
-            <View style={styles.buttonContainer}>
+            <View style={optionsStyles.buttonContainer}>
               <Button title="Cancelar" onPress={() => setIsConfirmModalVisible(false)} />
               <Button title="Excluir" onPress={confirmRemoveAccount} color="red" />
             </View>
