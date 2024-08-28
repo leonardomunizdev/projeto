@@ -7,6 +7,7 @@ import { CategoryProvider } from './src/context/CategoryContext';
 
 const App = () => {
   return (
+    
     <NavigationContainer>
       <TransactionProvider>
         <CategoryProvider>

@@ -1,26 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import HomeStyles from "../../../styles/screens/HomeScreenStyles";
 import { Card } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import optionsStyles from "../../../styles/screens/OptionsScreenStyles";
+import addTransactionsStyles from "../../../styles/screens/addTransactionsScreenStyles";
+import { Picker } from "@react-native-picker/picker";
+import { Switch } from "react-native-elements";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import statisticsStyles from "../../../styles/screens/StatisticsScreenStyles";
+import TransactionsStyles from "../../../styles/screens/TransactionsScreenStyles";
 
 const HelpModal = ({ visible, onClose }) => {
-    const [goalColor, setGoalColor] = useState("blue");
-    const [amountLeft, setAmountLeft] = useState(0);
 
-    const renderProgressBar = () => {
-        const spendingGoalValue = parseFloat(savedGoal) || 0;
-        const percentage = (monthlyExpense / spendingGoalValue) * 100;
-        const barColor = calculateBarColor(percentage);
 
-        return (
-            <View style={HomeStyles.progressBarContainer}>
-                <View style={[HomeStyles.progressBar, { width: `${percentage}%`, backgroundColor: barColor }]} />
-            </View>
-        );
-    };
+
+
     return (
         <Modal
             animationType="slide"
@@ -37,10 +33,17 @@ const HelpModal = ({ visible, onClose }) => {
                         <Ionicons name="close" size={24} color="black" />
                     </TouchableOpacity>
                     <ScrollView contentContainerStyle={styles.scrollContainer}>
-                        <Text style={styles.modalTitle}>Ajuda - Visão Geral</Text>
+                        <Text style={styles.modalTitle}>Bem Vindo!</Text>
+                        <View style={HomeStyles.accountDivider} />
+                            <Text style={styles.modalSectionText}> Este é o meu de ajuda que irá te guiar em seus passos iniciais no 
+                                aplicativo, caso surja duvidas novamente no futuro, vá para a tela de opções que ele estará lá!</Text>
+                        <View style={HomeStyles.accountDivider} />
 
                         <View style={styles.modalSection}>
                             <Text style={styles.modalSectionTitle}>Tela Inicial</Text>
+                            <Text style={styles.modalSectionText}>
+                                Esta tela dará um visão geral das finanças do usuario.
+                            </Text>
                             <View style={HomeStyles.accountDivider} />
 
                             <View style={HomeStyles.balanceContainer}>
@@ -83,12 +86,12 @@ const HelpModal = ({ visible, onClose }) => {
 
                             <Card style={HomeStyles.accountsCard} >
                                 <Card.Content>
-                                    <Text style={HomeStyles.cardTitle}>Meta de Gastos Mensais</Text>
+                                    <Text style={HomeStyles.cardTitle}>limite de Gastos Mensais</Text>
 
                                     <View style={HomeStyles.monthlyBalanceItem}>
 
                                         <Text style={{ fontSize: 16 }}>
-                                            Meta:
+                                            limite:
                                         </Text>
 
                                         <Text>R$ 9.999,99</Text>
@@ -100,59 +103,40 @@ const HelpModal = ({ visible, onClose }) => {
                                         </Text>
                                         <Text style={{ color: 'red' }}>R$ 9.999,99</Text>
                                     </View>
-                                    {renderProgressBar}
-                                    <Text style={{ color: goalColor, fontSize: 16 }}>
-                                        Falta R$ 9.999,99 para alcançar a meta
+                                    <Text style={{ color: 'red', fontSize: 16 }}>
+                                        Falta R$ 9.999,99 para alcançar o Limite
                                     </Text>
 
                                 </Card.Content>
                             </Card>
                             <Text style={styles.modalSectionText}>
                                 Aqui você poderá definir um limite de gastos mensais.
-                                Toque no card para abrir o menu de configuração de meta.
+                                Toque no card para abrir o menu de configuração de limite.
                             </Text>
                             <View style={HomeStyles.accountDivider} />
 
                             <Card style={HomeStyles.accountsCard}>
                                 <Card.Content>
                                     <Text style={HomeStyles.accountsTitle}>Contas</Text>
-                                        <View key={account.id} style={HomeStyles.accountItem}>
-
-                                            <Text style={HomeStyles.accountName}>Banco do Brasil{'\n'}
-
-                                                <Text
-                                                    style={[
-                                                        HomeStyles.accountAmount,
-                                                    ]}
-                                                >
-
-                                                    Teste
-                                                   
-
-
-                                                </Text>
-                                            </Text>
-
-
-                                            <TouchableOpacity onPress={() => navigateToAddTransactionsAccount(account.id)} style={HomeStyles.addButton}>
-                                                <MaterialIcons name="add" size={30} color="blue" />
-                                            </TouchableOpacity>
-                                        </View>
+                                    <View style={HomeStyles.accountItem}>
+                                        <Text style={HomeStyles.accountName}>Banco do Brasil{'\n'}
+                                            <Text style={[HomeStyles.accountAmount, { color: "blue" }]}> R$ 9.999,99 </Text>
+                                        </Text>
+                                        <MaterialIcons name="add" size={30} color="blue" />
+                                    </View>
+                                    <View style={HomeStyles.accountItem}>
+                                        <Text style={HomeStyles.accountName}>Conta Corrente{'\n'}
+                                            <Text style={[HomeStyles.accountAmount, { color: "red" }]}> R$ 9.999,99 </Text>
+                                        </Text>
+                                        <MaterialIcons name="add" size={30} color="blue" />
+                                    </View>
                                     <View style={HomeStyles.accountDivider} />
                                     <View style={HomeStyles.totalContainer}>
-                                        <Text style={HomeStyles.totalText}>Total:</Text>
-                                        <Text
-                                            style={[
-                                                HomeStyles.totalAmount,
-                                                {
-                                                    
-                                                },
-                                            ]}
-                                        >
-                                            {formatToBRL(parseFloat(Object.values(accountValues)
-                                                .reduce((a, b) => a + b, 0)
-                                                .toFixed(2)
-                                                .replace(".", ",")))}
+                                        <Text style={HomeStyles.totalText}>
+                                            Total:
+                                        </Text>
+                                        <Text style={[HomeStyles.totalAmount, { color: "blue" }]}>
+                                            R$ 9.999,99
                                         </Text>
                                     </View>
                                 </Card.Content>
@@ -161,144 +145,365 @@ const HelpModal = ({ visible, onClose }) => {
 
                             <Text style={styles.modalSectionText}>
                                 Exibe uma lista das suas contas com o saldo atual de cada uma. Contas com saldo negativo são exibidas em vermelho, e contas com saldo positivo em azul.
+                                toque no botão " + " Para adicionar uma nova transação a conta.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>4. Balanço Mensal</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+
+                            <Card style={HomeStyles.monthlyBalanceCard} >
+                                <Card.Content>
+                                    <Text style={HomeStyles.monthlyBalanceTitle}>Balanço Mensal</Text>
+                                    <View style={HomeStyles.monthlyBalanceContent}>
+                                        <View style={HomeStyles.monthlyBalanceItem}>
+                                            <Text style={HomeStyles.monthlyBalanceLabel}>Receitas:</Text>
+                                            <Text style={[HomeStyles.monthlyBalanceValue, { color: "blue" }]}>
+
+                                                R$ 9.999,99
+
+                                            </Text>
+                                        </View>
+                                        <View style={HomeStyles.monthlyBalanceItem}>
+                                            <Text style={HomeStyles.monthlyBalanceLabel}>Despesas:</Text>
+                                            <Text style={[HomeStyles.monthlyBalanceValue, { color: "red" }]}>
+                                                R$ 9.999,99
+
+                                            </Text>
+                                        </View>
+                                        <View style={HomeStyles.accountDivider} />
+
+                                        <View style={HomeStyles.monthlyBalanceItem}>
+                                            <Text style={HomeStyles.monthlyBalanceLabel}>Balanço:</Text>
+                                            <Text
+                                                style={[
+                                                    HomeStyles.monthlyBalanceValue,
+                                                    { color: "red" },
+                                                ]}
+                                            >
+                                                R$ 9.999,99
+
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </Card.Content>
+                            </Card>
                             <Text style={styles.modalSectionText}>
                                 O balanço mensal mostra receitas, despesas e saldo do mês atual. Toque no card para abrir um modal com detalhes mais específicos.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>5. Navegação e Funcionalidades Adicionais</Text>
-                            <Text style={styles.modalSectionText}>
-                                Toque em "Receitas" ou "Despesas" para ver uma lista filtrada de transações.
-                                O modal exibido quando você toca em "Balanço Mensal" permite que você visualize os totais por categoria ou conta.
-                                Navegue entre os meses usando as setas no modal para ver os dados de meses anteriores ou futuros.
-                            </Text>
+                            <View style={HomeStyles.accountDivider} />
+
 
                             <Text style={styles.modalSectionTitle}>Adicionar Transação </Text>
                             <Text style={styles.modalSectionText}>
                                 A Tela de Adicionar Transação permite que você registre novas transações financeiras. Aqui está um resumo das funcionalidades:
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Tipo de Transação</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <View style={addTransactionsStyles.transactionTypeContainer}>
+
+                                <TouchableOpacity disabled={true} style={[addTransactionsStyles.transactionButton, { backgroundColor: "red" }]}
+                                >
+                                    <Text style={[addTransactionsStyles.transactionButtonText,]}>Receita</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity disabled={true} style={[addTransactionsStyles.transactionButton, { backgroundColor: "blue" }]}
+
+                                >
+                                    <Text style={addTransactionsStyles.transactionButtonText}>Despesa</Text>
+                                </TouchableOpacity>
+                            </View>
                             <Text style={styles.modalSectionText}>
                                 Escolha entre "Receita" ou "Despesa". O botão selecionado será destacado em azul (receita) ou vermelho (despesa).
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>2. Descrição e Valor</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TextInput
+                                style={addTransactionsStyles.input}
+                                placeholder="Descrição"
+                                editable={false}
+                            />
+                            <TextInput
+                                style={addTransactionsStyles.input}
+                                placeholder="Valor"
+                                editable={false}
+                            />
                             <Text style={styles.modalSectionText}>
-                                Informe a descrição da transação.
-                                Insira o valor da transação, formatado com separadores de milhar e decimal.
+                                Informe a descrição da transação e o valor da mesma. Lembre-se que não há necessidade de colocar sinais (+ ou -).
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>3. Data da Transação</Text>
+                            <View style={HomeStyles.accountDivider} />
+                            <TouchableOpacity
+                                style={{ color: "white", backgroundColor: "blue", padding: 10, borderRadius: 5 }}
+
+                                disabled={true}
+                            >
+                                <TextInput
+                                    style={addTransactionsStyles.datePickerInput}
+                                    placeholder="Data"
+                                    value={"30/12/2024"}
+                                    editable={false}
+                                    pointerEvents="none"
+                                />
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Escolha a data da transação usando um seletor de data.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>4. Conta e Categoria</Text>
+                            <View style={HomeStyles.accountDivider} />
+                            <View style={addTransactionsStyles.pickerContainer}>
+                                <Picker
+                                    style={addTransactionsStyles.picker}
+                                    enabled={false}
+                                >
+                                    <Picker.Item label="Selecione uma categoria" value="" />
+
+                                </Picker>
+                                <TouchableOpacity disabled={true} style={addTransactionsStyles.addButton}>
+                                    <MaterialIcons name="add" size={24} color="blue" />
+                                </TouchableOpacity>
+
+                            </View>
+                            <View style={addTransactionsStyles.pickerContainer}>
+                                <Picker
+                                    style={addTransactionsStyles.picker}
+                                    enabled={false}
+                                >
+                                    <Picker.Item label="Selecione uma conta" value="" />
+
+                                </Picker>
+                                <TouchableOpacity disabled={true} style={addTransactionsStyles.addButton}>
+                                    <MaterialIcons name="add" size={24} color="blue" />
+                                </TouchableOpacity>
+
+                            </View>
                             <Text style={styles.modalSectionText}>
-                                Selecione uma conta existente ou adicione uma nova conta.
-                                Selecione uma categoria existente ou adicione uma nova categoria. As categorias são filtradas conforme o tipo de transação.
+                                Selecione uma conta ou categoria existente ou adicione novas.
+                                As categorias são filtradas conforme o tipo de transação.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>5. Repetição de Transação</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <View style={addTransactionsStyles.switchContainer}>
+                                <Text style={addTransactionsStyles.switchText}>Repetir</Text>
+                                <Switch
+                                    disabled={true}
+                                    thumbColor={"grey"}
+                                />
+                            </View>
                             <Text style={styles.modalSectionText}>
                                 Habilite a opção para tornar a transação recorrente. Configure a quantidade de repetições e o período (semanal ou mensal).
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>6. Anexos</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity
+                                disabled={true} style={{ color: "white", backgroundColor: "blue", padding: 10, borderRadius: 5 }}
+                            >
+                                <Text style={addTransactionsStyles.addAttachmentButtonText}>Adicionar Anexo</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Adicione imagens relacionadas à transação e visualize ou remova os anexos existentes.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>7. Botão de Salvar</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity
+                                disabled={true} style={{ color: "white", backgroundColor: "blue", padding: 10, borderRadius: 5 }}
+                            >
+                                <Text style={addTransactionsStyles.addAttachmentButtonText}>Salvar</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
-                                Salva a transação e retorna à tela anterior.
+                                Salva a transação e a registra na tela de transações.
                             </Text>
+                            <View style={HomeStyles.accountDivider} />
+
 
                             <Text style={styles.modalSectionTitle}>Relatório</Text>
                             <Text style={styles.modalSectionText}>
-                                A Tela de Estatísticas oferece uma visão detalhada das suas receitas e despesas filtradas. Aqui está um resumo das funcionalidades:
-                            </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Filtros</Text>
-                            <Text style={styles.modalSectionText}>
-                                Selecione entre "Todas", "Receitas" ou "Despesas" para filtrar as transações exibidas.
-                                Escolha uma categoria específica para ver apenas transações dessa categoria ou selecione "Todas".
-                                Filtre transações por conta, podendo escolher uma conta específica ou "Todas".
-                                Defina um intervalo de datas para visualizar transações dentro desse período.
-                            </Text>
-                            <Text style={styles.modalSectionSubtitle}>2. Visão Geral</Text>
-                            <Text style={styles.modalSectionText}>
-                                Mostra a distribuição de receitas e despesas entre categorias selecionadas. Exibe percentual e valor total por categoria.
+                                Esta tela Mostra a distribuição de receitas e despesas entre categorias selecionadas. Exibe percentual e valor total por categoria.
                                 Lista detalhada de transações filtradas, incluindo conta, valor, categoria e data.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>3. Estatísticas</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <View style={{ justifyContent: 'center', flexDirection: 'row', paddingTop: 20, paddingBottom: 20 }}>
+                                <TouchableOpacity disabled={true} style={statisticsStyles.iconButton}>
+                                    <Icon name="filter-list" size={24} color="#000" />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity disabled={true} style={statisticsStyles.iconButton}>
+                                    <Icon name="download" size={24} color="#000" />
+                                </TouchableOpacity>
+                            </View>
+
                             <Text style={styles.modalSectionText}>
-                                Exibe o saldo total considerando apenas as transações filtradas.
-                                Mostra a quantidade de receitas e despesas, o total de cada um e a média diária de receitas e despesas.
+                                Filtros e Downloands. Ao tocar na opção de filtros, você poderá definir filtros para a vizualização do seu relatório.
+                                Ao tocar na opção de download você poderá exportar o relatório de acordo com os seus padrões.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>4. Exportação</Text>
-                            <Text style={styles.modalSectionText}>
-                                Permite exportar os dados filtrados para análise externa.
-                            </Text>
+                            <View style={HomeStyles.accountDivider} />
+
 
                             <Text style={styles.modalSectionTitle}> Transações</Text>
                             <Text style={styles.modalSectionText}>
                                 A Tela de Transações mostra uma lista detalhada de todas as suas transações. Aqui está um resumo das funcionalidades:
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Filtros e Pesquisa</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TextInput
+                                editable={false}
+                                style={TransactionsStyles.searchInput}
+                                placeholder="Pesquisar por descrição, Conta ou Categoria"
+                            />
                             <Text style={styles.modalSectionText}>
-                                Filtro opcional para "Receitas" ou "Despesas".
                                 Pesquise transações por descrição, conta ou categoria.
                                 Visualize transações do mês atual ou navegue entre os meses anteriores e futuros.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>2. Listagem de Transações</Text>
+                            <View style={HomeStyles.accountDivider} />
+                            <TouchableOpacity
+                                style={[
+                                    TransactionsStyles.item, TransactionsStyles.incomeItem
+                                ]}
+                                disabled={true}
+                            >
+                                <View>
+                                    <View style={TransactionsStyles.row}>
+                                        <Text style={[TransactionsStyles.description]}>Recebimento de Salario</Text>
+                                        <Text style={TransactionsStyles.amount}>R$ 9.999,99</Text>
+                                    </View>
+                                    <View style={TransactionsStyles.row}>
+                                        <Text style={TransactionsStyles.category}>
+                                            Salario | Banco do Brasil
+                                        </Text>
+                                    </View>
+
+                                    <Text style={TransactionsStyles.installment}>Parcela (1/3)</Text>
+
+                                </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                disabled={true}
+                                style={[
+                                    TransactionsStyles.item, TransactionsStyles.expenseItem
+                                ]}
+
+                            >
+                                <View>
+                                    <View style={TransactionsStyles.row}>
+                                        <Text style={[TransactionsStyles.description]}>Lanches</Text>
+                                        <Text style={TransactionsStyles.amount}>R$ 9.999,99</Text>
+                                    </View>
+                                    <View style={TransactionsStyles.row}>
+                                        <Text style={TransactionsStyles.category}>
+                                            Alimentação | Banco do Brasil
+                                        </Text>
+                                    </View>
+                                </View>
+
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Mostra uma lista das transações. Cada transação exibe descrição, valor, categoria e conta.
-                                Se a transação for recorrente, o número da parcela e o total de parcelas são exibidos.
+                                Se a transação for recorrente, o número da parcela e o total de parcelas são exibidos.{'\n'}
+                                --Toque em uma transação para vizualizar seus detalhes.{'\n'}
+                                --Toque e mantenha pressionado em uma transação para gerenciar a transação.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>3. Ações sobre Transações</Text>
-                            <Text style={styles.modalSectionText}>
-                                Toque em uma transação para vizualizar seus detalhes.
-                            </Text>
-                            <Text style={styles.modalSectionText}>
-                                Toque e mantenha pressionado em uma transação para gerenciar a transação.
-                            </Text>
-                            <Text style={styles.modalSectionSubtitle}>4. Navegação</Text>
+
+                            <View style={TransactionsStyles.footer}>
+                                <TouchableOpacity
+                                    disabled={true}
+                                    style={TransactionsStyles.navButton}
+                                >
+                                    <Text style={TransactionsStyles.navButtonText}>Anterior</Text>
+                                </TouchableOpacity>
+                                <Text style={TransactionsStyles.footerTitle}>
+                                    Agosto 2024
+                                </Text>
+                                <TouchableOpacity
+                                    disabled={true}
+                                    style={TransactionsStyles.navButton}
+                                >
+                                    <Text style={TransactionsStyles.navButtonText}>Próximo</Text>
+                                </TouchableOpacity>
+                            </View>
                             <Text style={styles.modalSectionText}>
                                 Use os botões de navegação para visualizar transações em meses diferentes.
                             </Text>
+                            <View style={HomeStyles.accountDivider} />
 
                             <Text style={styles.modalSectionTitle}>Opções</Text>
                             <Text style={styles.modalSectionText}>
                                 A Tela de Opções permite acessar várias configurações e funcionalidades adicionais do aplicativo.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>1. Gerir Contas Bancarias</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton}>
+                                <Ionicons name="wallet" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Gerir Contas Bancarias</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Permite adicionar novas contas ou gerenciar as contas existentes. Você poderá criar quaisquer tipo de "conta" aqui,
                                 "Banco do Brasil", "Cartão de Credito", "NuBank", etc.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>2. Gerir Categorias</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton}>
+                                <Ionicons name="list" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Gerir Categorias</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Adicione novas categorias ou edite as existentes.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>3. Baixar Notas Fiscais</Text>
+                            <View style={HomeStyles.accountDivider} />
+                            <TouchableOpacity  disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="download" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Baixar Notas Fiscais</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Baixe suas notas fiscais e armazene-as localmente em formato PDF.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>4. Importar CSV</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="folder-open" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Importar CSV</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Importe dados financeiros de um arquivo CSV.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>5. Gráficos</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="stats-chart" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Gráficos</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Vizualize gráficos detalhados das suas finanças.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>6. Fazer Backup de Dados</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="cloud-upload" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Fazer Backup de dados</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Crie um backup dos seus dados em um arquivo Zip contendo todos os dados e Notas Fiscais Salvas.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>7. Importar Backup de Dados</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton}>
+                                <Ionicons name="cloud-download" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Importar Backup de dados</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Importe dados a partir de um arquivo Zip. Após a importação, o aplicativo será fechado e deverá ser reaberto.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>8. Ajuda</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="help-circle-outline" size={24} color="black" />
+                                <Text style={optionsStyles.optionText}>Ajuda</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Exibe este modal de ajuda, onde você pode encontrar uma visão geral detalhada das funcionalidades do aplicativo e orientações sobre como usá-lo.
                             </Text>
-                            <Text style={styles.modalSectionSubtitle}>9. Limpar Todos os Dados</Text>
+                            <View style={HomeStyles.accountDivider} />
+
+                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
+                                <Ionicons name="trash" size={24} color="red" />
+                                <Text style={optionsStyles.optionText}>Limpar Todos os Dados</Text>
+                            </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
                                 Limpa todos os dados do aplicativo. Após a confirmação, todos os dados serão apagados.
                             </Text>
@@ -307,8 +512,8 @@ const HelpModal = ({ visible, onClose }) => {
                         </View>
                     </ScrollView>
                 </View>
-            </View>
-        </Modal>
+            </View >
+        </Modal >
     );
 };
 

@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export const styles = StyleSheet.create({
+export const TransactionsStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
   },
   searchInput: {
     height: 40,
-    backgroundColor: "#fff",
+    backgroundColor: "silver",
     borderRadius: 8,
     paddingLeft: 10,
     marginBottom: 10,
@@ -161,4 +161,4 @@ export const styles = StyleSheet.create({
   
 });
 
-export default styles;
+export default TransactionsStyles;

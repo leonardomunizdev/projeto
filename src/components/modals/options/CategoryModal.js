@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, Modal, View, TextInput, Button, TouchableOpacity, Text, FlatList } from 'react-native';
-import styles from '../../../styles/screens/OptionsScreenStyles';
+import optionsStyles from '../../../styles/screens/OptionsScreenStyles';
 import { Ionicons } from '@expo/vector-icons';
 import { useCategories } from '../../../context/CategoryContext';
 import EditCategoryModal from './EditCatetgoryModal'; // Importa o novo componente
@@ -41,50 +41,50 @@ const CategoryModal = ({ visible, onClose, newCategoryName, setNewCategoryName, 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={optionsStyles.container}>
       <Modal
         visible={visible}
         animationType="slide"
         onRequestClose={onClose}
         transparent={true}
       >
-        <View style={styles.fullScreenModal}>
-          <View style={styles.modalContent}>
+        <View style={optionsStyles.fullScreenModal}>
+          <View style={optionsStyles.modalContent}>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={optionsStyles.closeButton}
               onPress={onClose}
             >
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Gerir Categorias</Text>
-            <View style={styles.categoryButtonContainer}>
+            <Text style={optionsStyles.modalTitle}>Gerir Categorias</Text>
+            <View style={optionsStyles.categoryButtonContainer}>
               <TouchableOpacity
                 style={[
-                  styles.categoryButton,
-                  selectedCategoryType === 'income' && styles.incomeButton,
+                  optionsStyles.categoryButton,
+                  selectedCategoryType === 'income' && optionsStyles.incomeButton,
                 ]}
                 onPress={() => setSelectedCategoryType('income')}
               >
                 <Text style={[
-                  styles.categoryButtonText,
-                  selectedCategoryType === 'income' && styles.incomeButtonText,
+                  optionsStyles.categoryButtonText,
+                  selectedCategoryType === 'income' && optionsStyles.incomeButtonText,
                 ]}>Receita</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  styles.categoryButton,
-                  selectedCategoryType === 'expense' && styles.expenseButton,
+                  optionsStyles.categoryButton,
+                  selectedCategoryType === 'expense' && optionsStyles.expenseButton,
                 ]}
                 onPress={() => setSelectedCategoryType('expense')}
               >
                 <Text style={[
-                  styles.categoryButtonText,
-                  selectedCategoryType === 'expense' && styles.expenseButtonText,
+                  optionsStyles.categoryButtonText,
+                  selectedCategoryType === 'expense' && optionsStyles.expenseButtonText,
                 ]}>Despesa</Text>
               </TouchableOpacity>
             </View>
             <TextInput
-              style={styles.input}
+              style={optionsStyles.input}
               value={newCategoryName}
               onChangeText={setNewCategoryName}
               placeholder="Nome da nova categoria"
@@ -94,8 +94,8 @@ const CategoryModal = ({ visible, onClose, newCategoryName, setNewCategoryName, 
               data={filteredCategories}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <View style={styles.accountItem}>
-                  <Text style={styles.accountName}>{item.name}</Text>
+                <View style={optionsStyles.accountItem}>
+                  <Text style={optionsStyles.accountName}>{item.name}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TouchableOpacity onPress={() => handleEditCategory(item)}>
                       <Ionicons name="create" size={24} color="black" />
@@ -128,13 +128,13 @@ const CategoryModal = ({ visible, onClose, newCategoryName, setNewCategoryName, 
         onRequestClose={() => setIsConfirmModalVisible(false)}
         transparent={true}
       >
-        <View style={styles.fullScreenModal}>
-          <View style={styles.confirmModalContent}>
-            <Text style={styles.confirmTitle}>Confirmar Exclusão</Text>
-            <Text style={styles.confirmText}>
+        <View style={optionsStyles.fullScreenModal}>
+          <View style={optionsStyles.confirmModalContent}>
+            <Text style={optionsStyles.confirmTitle}>Confirmar Exclusão</Text>
+            <Text style={optionsStyles.confirmText}>
               Tem certeza que deseja apagar esta categoria? Todas as movimentações associadas também serão excluídas.
             </Text>
-            <View style={styles.buttonContainer}>
+            <View style={optionsStyles.buttonContainer}>
               <Button title="Cancelar" onPress={() => setIsConfirmModalVisible(false)} />
               <Button title="Excluir" onPress={confirmRemoveCategory} color="red" />
             </View>

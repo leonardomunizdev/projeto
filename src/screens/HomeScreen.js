@@ -18,6 +18,7 @@ import { HomeStyles } from "../styles/screens/HomeScreenStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import HelpModal from '../components/modals/options/HelpModal';
 import { MaterialIcons } from "@expo/vector-icons";
+import { Linking, Image } from 'react-native';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -41,6 +42,34 @@ const HomeScreen = () => {
   const [savedGoal, setSavedGoal] = useState(0);
   const [goalColor, setGoalColor] = useState("blue");
   const [amountLeft, setAmountLeft] = useState(0);
+
+
+
+  
+  useEffect(() => {
+    const handleSharedImage = async (event) => {
+        // Se for chamado na inicialização, use Linking.getInitialURL()
+        const url = event?.url || await Linking.getInitialURL();
+
+        if (url) {
+            // Extraia a URI da imagem do URL recebido
+            const imageUri = url.replace('yourapp://', '');
+            navigation.navigate('AddTransactionScreen', { imageUri });
+        }
+    };
+
+    // Chama a função uma vez na montagem para lidar com URLs iniciais
+    handleSharedImage();
+
+    // Adiciona o ouvinte para capturar URLs enquanto o app está rodando
+    const linkingListener = Linking.addEventListener('url', handleSharedImage);
+
+    // Remove o ouvinte ao desmontar o componente
+    return () => {
+        linkingListener.remove();
+    };
+}, []);
+
 
   useEffect(() => {
     const loadGoal = async () => {
@@ -130,14 +159,6 @@ const HomeScreen = () => {
     checkFirstVisit();
   }, []);
 
-
-
-  // Exemplo de código na tela inicial
-  const navigateToAddTransaction = (imageUri) => {
-    navigation.navigate("AddTransactionScreen", { imageUri });
-  };
-
-  // Chame essa função quando precisar navegar, passando a URI da imagem
 
   const formatToBRL = (value) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -251,11 +272,11 @@ const HomeScreen = () => {
 
   const calculateBarColor = (percentage) => {
     if (percentage < 50) {
-      return "blue"; // Começa azul
+      return "blue";
     } else if (percentage < 75) {
-      return "orange"; // Vai mudando para laranja
+      return "orange"; 
     } else {
-      return "red"; // Fica vermelho ao se aproximar da meta
+      return "red"; 
     }
   };
   const renderProgressBar = () => {
@@ -471,12 +492,12 @@ const HomeScreen = () => {
           
           <Card style={HomeStyles.accountsCard} onPress={() => setGoalModalVisible(true)}>
             <Card.Content>
-              <Text style={HomeStyles.cardTitle}>Meta de Gastos Mensais</Text>
+              <Text style={HomeStyles.cardTitle}>Limite de Gastos Mensais</Text>
 
               <View style={HomeStyles.monthlyBalanceItem}>
 
                 <Text style={{ fontSize: 16 }}>
-                  Meta:
+                limite:
                 </Text>
 
                 <Text>{formatToBRL(parseFloat(savedGoal))}</Text>
@@ -492,8 +513,8 @@ const HomeScreen = () => {
 
               <Text style={{ color: goalColor, fontSize: 16 }}>
                 {amountLeft < 0
-                  ? `A meta foir Excedida em ${formatToBRL(Math.abs(amountLeft))}`
-                  : `Falta ${formatToBRL(amountLeft)} para alcançar a meta`}
+                  ? `O limite foir Excedido em ${formatToBRL(Math.abs(amountLeft))}`
+                  : `Falta ${formatToBRL(amountLeft)} para alcançar o limite`}
               </Text>
 
             </Card.Content>
@@ -555,13 +576,15 @@ const HomeScreen = () => {
               <View style={HomeStyles.monthlyBalanceContent}>
                 <View style={HomeStyles.monthlyBalanceItem}>
                   <Text style={HomeStyles.monthlyBalanceLabel}>Receitas:</Text>
-                  <Text style={HomeStyles.monthlyBalanceValue}>
+                  <Text style={[HomeStyles.monthlyBalanceValue,  { color:  "blue" }]}>
+
                     {formatToBRL(parseFloat(monthlyIncome.toFixed(2).replace(".", ",")))}
                   </Text>
                 </View>
                 <View style={HomeStyles.monthlyBalanceItem}>
                   <Text style={HomeStyles.monthlyBalanceLabel}>Despesas:</Text>
-                  <Text style={HomeStyles.monthlyBalanceValue}>
+                  <Text style={[HomeStyles.monthlyBalanceValue,  { color:  "red" }]}>
+
                     {formatToBRL(parseFloat(monthlyExpense.toFixed(2).replace(".", ",")))}
                   </Text>
                 </View>
@@ -572,7 +595,7 @@ const HomeScreen = () => {
                   <Text
                     style={[
                       HomeStyles.monthlyBalanceValue,
-                      { color: monthlyBalance < 0 ? "red" : "green" },
+                      { color: monthlyBalance < 0 ? "red" : "blue" },
                     ]}
                   >
                     {formatToBRL(parseFloat(monthlyBalance.toFixed(2).replace(".", ",")))}
@@ -591,10 +614,10 @@ const HomeScreen = () => {
         >
           <View style={HomeStyles.ModalGoalsContainer}>
             <View style={HomeStyles.ModalGoalsContent}>
-              <Text style={HomeStyles.ModalGoalsTitle}>Configurar Meta de Gastos</Text>
+              <Text style={HomeStyles.ModalGoalsTitle}>Configurar Limite de Gastos</Text>
               <TextInput
                 style={HomeStyles.ModalGoalsInput}
-                placeholder="Digite a meta de gastos"
+                placeholder="Digite o limite de gastos"
                 keyboardType="numeric"
                 value={spendingGoal}
                 onChangeText={handleChange}

@@ -67,7 +67,7 @@ const DownloadInvoicesModal = ({ visible, onClose }) => {
 
     for (const transaction of filteredTransactions) {
       htmlContent += `
-        <h3>${transaction.description} - ${transaction.date}</h3>`
+        <h3>${transaction.description} - ${transaction.date} - ${transaction.amount} - ${transaction.isRecurring ? transaction.recorrenceCount : ''} </h3>`
 
       if (transaction.attachments && transaction.attachments.length > 0) {
         htmlContent += `<p>Anexos:</p><ul>`;

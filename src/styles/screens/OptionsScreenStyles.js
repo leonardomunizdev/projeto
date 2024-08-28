@@ -11,7 +11,7 @@ export const optionsStyles = StyleSheet.create({
       fontSize: RFPercentage(4), // Ajusta o tamanho da fonte com base no tamanho da tela
       fontWeight: 'bold',
       marginBottom: 45,
-      marginTop: 35,
+      marginTop: 50,
       color: '#333',
       textAlign: 'center',
     },

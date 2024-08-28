@@ -1,7 +1,7 @@
 import { StyleSheet } from "react-native";
 
 
-export const styles = StyleSheet.create({
+export const statisticsStyles = StyleSheet.create({
 
     
     container: {
@@ -185,4 +185,4 @@ export const styles = StyleSheet.create({
     },
   });
 
-  export default styles;
+  export default statisticsStyles;

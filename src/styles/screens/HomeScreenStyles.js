@@ -33,7 +33,8 @@ export const HomeStyles = StyleSheet.create({
       flexDirection: "row",
       justifyContent: "space-between",
       marginVertical: 20,
-      width: '100%'
+      marginHorizontal: '0.0001%'
+
     },
     card: {
       flex: 1,
@@ -50,9 +51,11 @@ export const HomeStyles = StyleSheet.create({
     cardAmountExpense: {
       fontSize: 16,
       color: 'red',
+      
     },
     accountsCard: {
       marginBottom: 16,
+      marginHorizontal: '3%'
     },
     accountsTitle: {
       fontSize: 18,
@@ -91,6 +94,8 @@ export const HomeStyles = StyleSheet.create({
     },
     monthlyBalanceCard: {
       marginBottom: 16,
+      marginHorizontal: '3%'
+
     },
     monthlyBalanceTitle: {
       fontSize: 18,
@@ -164,7 +169,7 @@ export const HomeStyles = StyleSheet.create({
     modalBalanceTotal: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: 'green', // ou 'red', dependendo do valor do balanço
+      color: 'blue', // ou 'red', dependendo do valor do balanço
     },
     modalSectionTitle: {
       fontSize: 20,
@@ -298,7 +303,7 @@ export const HomeStyles = StyleSheet.create({
     // Estilo para o botão de salvar
     ModalGoalsSaveButton: {
       flex: 1,
-      backgroundColor: '#4CAF50',
+      backgroundColor: 'blue',
       padding: 12,
       borderRadius: 5,
       alignItems: 'center',
@@ -324,6 +329,14 @@ export const HomeStyles = StyleSheet.create({
       color: '#fff',
       fontSize: 16,
       fontWeight: 'bold',
+    },
+    addButton: {
+      marginLeft: 10,
+      justifyContent: 'center',
+    },
+    addButtonText: {
+      fontSize: 24,
+      color: 'blue',
     },
   });
 

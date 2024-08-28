@@ -15,7 +15,7 @@ import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
-import styles from "../styles/screens/StatisticsScreenStyles";
+import statisticsStyles from "../styles/screens/StatisticsScreenStyles";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import ExportModal from "../components/modals/options/ExportModal";
@@ -220,22 +220,22 @@ const DashboardScreen = () => {
 
   const balanceColor =
     filteredBalance > 0
-      ? styles.balancePositive
+      ? statisticsStyles.balancePositive
       : filteredBalance < 0
-        ? styles.balanceNegative
-        : styles.balanceZero;
+        ? statisticsStyles.balanceNegative
+        : statisticsStyles.balanceZero;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>Relatório</Text>
+    <ScrollView contentContainerStyle={statisticsStyles.container}>
+      <View style={statisticsStyles.headerContainer}>
+        <Text style={statisticsStyles.header}>Relatório</Text>
 
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity onPress={openModal} style={styles.iconButton}>
+        <View style={{ flexDirection: 'row', paddingTop: 20 }}>
+          <TouchableOpacity onPress={openModal} style={statisticsStyles.iconButton}>
             <Icon name="filter-list" size={24} color="#000" />
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setIsExportModalVisible(true)} style={styles.iconButton}>
+          <TouchableOpacity onPress={() => setIsExportModalVisible(true)} style={statisticsStyles.iconButton}>
             <Icon name="download" size={24} color="#000" />
           </TouchableOpacity>
         </View>
@@ -243,66 +243,66 @@ const DashboardScreen = () => {
       </View>
 
       {selectedType === "all" || selectedType === "income" ? (
-        <View style={[styles.sectionContainer, styles.table]}>
-          <Text style={styles.sectionHeader}>Receitas por Categoria</Text>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Categoria</Text>
-            <Text style={styles.tableHeader}>Percentual</Text>
-            <Text style={styles.tableHeader}>Valor(R$)</Text>
+        <View style={[statisticsStyles.sectionContainer, statisticsStyles.table]}>
+          <Text style={statisticsStyles.sectionHeader}>Receitas por Categoria</Text>
+          <View style={statisticsStyles.tableRow}>
+            <Text style={statisticsStyles.tableHeader}>Categoria</Text>
+            <Text style={statisticsStyles.tableHeader}>Percentual</Text>
+            <Text style={statisticsStyles.tableHeader}>Valor(R$)</Text>
           </View>
           {incomeCategories.length > 0 ? (
             incomeCategories.map((item) => (
-              <View style={styles.tableRow} key={item.id}>
-                <Text style={styles.tableCell}>{item.name}</Text>
-                <Text style={styles.tableCell}>
+              <View style={statisticsStyles.tableRow} key={item.id}>
+                <Text style={statisticsStyles.tableCell}>{item.name}</Text>
+                <Text style={statisticsStyles.tableCell}>
                   ({item.percentage.toFixed(2)}%)
                 </Text>
-                <Text style={styles.tableCell}>
+                <Text style={statisticsStyles.tableCell}>
                   {formatNumberBR(item.total)}
                 </Text>
               </View>
             ))
           ) : (
-            <Text style={styles.noData}>Nenhuma receita por categoria.</Text>
+            <Text style={statisticsStyles.noData}>Nenhuma receita por categoria.</Text>
           )}
         </View>
       ) : null}
 
       {selectedType === "all" || selectedType === "expense" ? (
-        <View style={[styles.sectionContainer, styles.table]}>
-          <Text style={styles.sectionHeader}>Despesas por Categoria</Text>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Categoria</Text>
-            <Text style={styles.tableHeader}>Percentual</Text>
-            <Text style={styles.tableHeader}>Valor(R$)</Text>
+        <View style={[statisticsStyles.sectionContainer, statisticsStyles.table]}>
+          <Text style={statisticsStyles.sectionHeader}>Despesas por Categoria</Text>
+          <View style={statisticsStyles.tableRow}>
+            <Text style={statisticsStyles.tableHeader}>Categoria</Text>
+            <Text style={statisticsStyles.tableHeader}>Percentual</Text>
+            <Text style={statisticsStyles.tableHeader}>Valor(R$)</Text>
           </View>
           {expenseCategories.length > 0 ? (
             expenseCategories.map((item) => (
-              <View style={styles.tableRow} key={item.id}>
-                <Text style={styles.tableCell}>{item.name}</Text>
-                <Text style={styles.tableCell}>
+              <View style={statisticsStyles.tableRow} key={item.id}>
+                <Text style={statisticsStyles.tableCell}>{item.name}</Text>
+                <Text style={statisticsStyles.tableCell}>
                   ({item.percentage.toFixed(2)}%)
                 </Text>
-                <Text style={styles.tableCell}>
+                <Text style={statisticsStyles.tableCell}>
                   {formatNumberBR(item.total)}
                 </Text>
               </View>
             ))
           ) : (
-            <Text style={styles.noData}>Nenhuma despesa por categoria.</Text>
+            <Text style={statisticsStyles.noData}>Nenhuma despesa por categoria.</Text>
           )}
         </View>
       ) : null}
 
       {selectedType === "all" || selectedType === "income" ? (
-        <View style={[styles.sectionContainer, styles.table]}>
-          <Text style={styles.sectionHeader}>Receitas</Text>
+        <View style={[statisticsStyles.sectionContainer, statisticsStyles.table]}>
+          <Text style={statisticsStyles.sectionHeader}>Receitas</Text>
 
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Conta</Text>
-            <Text style={styles.tableHeader}>Valor(R$)</Text>
-            <Text style={styles.tableHeader}>Categoria</Text>
-            <Text style={styles.tableHeader}>Data</Text>
+          <View style={statisticsStyles.tableRow}>
+            <Text style={statisticsStyles.tableHeader}>Conta</Text>
+            <Text style={statisticsStyles.tableHeader}>Valor(R$)</Text>
+            <Text style={statisticsStyles.tableHeader}>Categoria</Text>
+            <Text style={statisticsStyles.tableHeader}>Data</Text>
           </View>
 
           {filteredTransactions.filter(
@@ -311,34 +311,34 @@ const DashboardScreen = () => {
             filteredTransactions
               .filter((transaction) => transaction.type === "income")
               .map((item) => (
-                <View style={styles.transactionItemContainer} key={item.id}>
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableCell}>{item.accountName}</Text>
-                    <Text style={styles.tableCell}>
+                <View style={statisticsStyles.transactionItemContainer} key={item.id}>
+                  <View style={statisticsStyles.tableRow}>
+                    <Text style={statisticsStyles.tableCell}>{item.accountName}</Text>
+                    <Text style={statisticsStyles.tableCell}>
                       {formatNumberBR(item.amount)}
                       {item.isRecurring && <Text>{getCurrentInstallment(item)}</Text>}
                     </Text>
-                    <Text style={styles.tableCell}>{item.categoryName}</Text>
-                    <Text style={styles.tableCell}>
+                    <Text style={statisticsStyles.tableCell}>{item.categoryName}</Text>
+                    <Text style={statisticsStyles.tableCell}>
                       {formatDateToBrazilian(item.date)}
                     </Text>
                   </View>
                 </View>
               ))
           ) : (
-            <Text style={styles.noData}>Nenhuma receita encontrada.</Text>
+            <Text style={statisticsStyles.noData}>Nenhuma receita encontrada.</Text>
           )}
         </View>
       ) : null}
 
       {selectedType === "all" || selectedType === "expense" ? (
-        <View style={[styles.sectionContainer, styles.table]}>
-          <Text style={styles.sectionHeader}>Despesas</Text>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableHeader}>Conta</Text>
-            <Text style={styles.tableHeader}>Valor</Text>
-            <Text style={styles.tableHeader}>Categoria</Text>
-            <Text style={styles.tableHeader}>Data</Text>
+        <View style={[statisticsStyles.sectionContainer, statisticsStyles.table]}>
+          <Text style={statisticsStyles.sectionHeader}>Despesas</Text>
+          <View style={statisticsStyles.tableRow}>
+            <Text style={statisticsStyles.tableHeader}>Conta</Text>
+            <Text style={statisticsStyles.tableHeader}>Valor</Text>
+            <Text style={statisticsStyles.tableHeader}>Categoria</Text>
+            <Text style={statisticsStyles.tableHeader}>Data</Text>
           </View>
 
           {filteredTransactions.filter(
@@ -347,54 +347,54 @@ const DashboardScreen = () => {
             filteredTransactions
               .filter((transaction) => transaction.type === "expense")
               .map((item) => (
-                <View style={styles.transactionItemContainer} key={item.id}>
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableCell}>{item.accountName}</Text>
-                    <Text style={styles.tableCell}>
+                <View style={statisticsStyles.transactionItemContainer} key={item.id}>
+                  <View style={statisticsStyles.tableRow}>
+                    <Text style={statisticsStyles.tableCell}>{item.accountName}</Text>
+                    <Text style={statisticsStyles.tableCell}>
                       {formatNumberBR(item.amount)}
                       {item.isRecurring && <Text>{getCurrentInstallment(item)}</Text>}
                     </Text>
-                    <Text style={styles.tableCell}>{item.categoryName}</Text>
-                    <Text style={styles.tableCell}>
+                    <Text style={statisticsStyles.tableCell}>{item.categoryName}</Text>
+                    <Text style={statisticsStyles.tableCell}>
                       {formatDateToBrazilian(item.date)}
                     </Text>
                   </View>
                 </View>
               ))
           ) : (
-            <Text style={styles.noData}>Nenhuma despesa encontrada.</Text>
+            <Text style={statisticsStyles.noData}>Nenhuma despesa encontrada.</Text>
           )}
         </View>
       ) : null}
 
-      <View style={[styles.sectionContainer, styles.table]}>
-        <Text style={styles.sectionHeader}>Visão Geral</Text>
+      <View style={[statisticsStyles.sectionContainer, statisticsStyles.table]}>
+        <Text style={statisticsStyles.sectionHeader}>Visão Geral</Text>
 
-        <View style={styles.tableRow}>
-          <Text style={styles.tableHeader}>Visão geral</Text>
-          <Text style={styles.tableHeader}>Receitas</Text>
-          <Text style={styles.tableHeader}>Despesas</Text>
+        <View style={statisticsStyles.tableRow}>
+          <Text style={statisticsStyles.tableHeader}>Visão geral</Text>
+          <Text style={statisticsStyles.tableHeader}>Receitas</Text>
+          <Text style={statisticsStyles.tableHeader}>Despesas</Text>
         </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Quantidade</Text>
-          <Text style={styles.tableCell}>{quantityRevenues}</Text>
-          <Text style={styles.tableCell}>{quantityExpenses}</Text>
+        <View style={statisticsStyles.tableRow}>
+          <Text style={statisticsStyles.tableCell}>Quantidade</Text>
+          <Text style={statisticsStyles.tableCell}>{quantityRevenues}</Text>
+          <Text style={statisticsStyles.tableCell}>{quantityExpenses}</Text>
         </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Total</Text>
-          <Text style={styles.tableCell}>{formatNumberBR(totalRevenues.toFixed(2))}</Text>
-          <Text style={styles.tableCell}>{formatNumberBR(totalExpenses.toFixed(2))}</Text>
+        <View style={statisticsStyles.tableRow}>
+          <Text style={statisticsStyles.tableCell}>Total</Text>
+          <Text style={statisticsStyles.tableCell}>{formatNumberBR(totalRevenues.toFixed(2))}</Text>
+          <Text style={statisticsStyles.tableCell}>{formatNumberBR(totalExpenses.toFixed(2))}</Text>
         </View>
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Média por Dia</Text>
-          <Text style={styles.tableCell}>{formatNumberBR(avgRevenuePerDay.toFixed(2))}</Text>
-          <Text style={styles.tableCell}>{formatNumberBR(avgExpensePerDay.toFixed(2))}</Text>
+        <View style={statisticsStyles.tableRow}>
+          <Text style={statisticsStyles.tableCell}>Média por Dia</Text>
+          <Text style={statisticsStyles.tableCell}>{formatNumberBR(avgRevenuePerDay.toFixed(2))}</Text>
+          <Text style={statisticsStyles.tableCell}>{formatNumberBR(avgExpensePerDay.toFixed(2))}</Text>
         </View>
-        <View style={styles.balanceRow}>
-          <Text style={[styles.tableCell, styles.balanceLabel]}>
+        <View style={statisticsStyles.balanceRow}>
+          <Text style={[statisticsStyles.tableCell, statisticsStyles.balanceLabel]}>
             Fluxo de caixa
           </Text>
-          <Text style={[styles.tableCell, balanceColor]}>
+          <Text style={[statisticsStyles.tableCell, balanceColor]}>
             R$ {formatNumberBR(filteredBalance.toFixed(2))}
           </Text>
         </View>
@@ -406,19 +406,19 @@ const DashboardScreen = () => {
         visible={modalVisible}
         onRequestClose={closeModal}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Filtros</Text>
+        <View style={statisticsStyles.modalContainer}>
+          <View style={statisticsStyles.modalContent}>
+            <Text style={statisticsStyles.modalTitle}>Filtros</Text>
             <TouchableOpacity
-              style={styles.closeButton}
+              style={statisticsStyles.closeButton}
               onPress={closeModal}
             >
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
-            <Text style={styles.filterLabel}>Tipo de Transação</Text>
+            <Text style={statisticsStyles.filterLabel}>Tipo de Transação</Text>
             <Picker
               selectedValue={selectedType}
-              style={styles.picker}
+              style={statisticsStyles.picker}
               onValueChange={(itemValue) => setSelectedType(itemValue)}
             >
               <Picker.Item label="Todas" value="all" />
@@ -426,10 +426,10 @@ const DashboardScreen = () => {
               <Picker.Item label="Despesas" value="expense" />
             </Picker>
 
-            <Text style={styles.filterLabel}>Categoria</Text>
+            <Text style={statisticsStyles.filterLabel}>Categoria</Text>
             <Picker
               selectedValue={selectedCategory}
-              style={styles.picker}
+              style={statisticsStyles.picker}
               onValueChange={(itemValue) => setSelectedCategory(itemValue)}
             >
               <Picker.Item label="Todas" value="all" />
@@ -442,10 +442,10 @@ const DashboardScreen = () => {
               ))}
             </Picker>
 
-            <Text style={styles.filterLabel}>Conta</Text>
+            <Text style={statisticsStyles.filterLabel}>Conta</Text>
             <Picker
               selectedValue={selectedAccount}
-              style={styles.picker}
+              style={statisticsStyles.picker}
               onValueChange={(itemValue) => setSelectedAccount(itemValue)}
             >
               <Picker.Item label="Todas" value="all" />
@@ -458,10 +458,10 @@ const DashboardScreen = () => {
               ))}
             </Picker>
 
-            <Text style={styles.filterLabel}>Data de Início</Text>
+            <Text style={statisticsStyles.filterLabel}>Data de Início</Text>
             <TouchableOpacity onPress={showStartDatePicker}>
               <TextInput
-                style={styles.dateInput}
+                style={statisticsStyles.dateInput}
                 value={startDate ? startDate.toLocaleDateString() : ""}
                 placeholder="Selecionar Data de Início"
                 editable={false}
@@ -479,10 +479,10 @@ const DashboardScreen = () => {
               />
             )}
 
-            <Text style={styles.filterLabel}>Data de Fim</Text>
+            <Text style={statisticsStyles.filterLabel}>Data de Fim</Text>
             <TouchableOpacity onPress={showEndDatePicker}>
               <TextInput
-                style={styles.dateInput}
+                style={statisticsStyles.dateInput}
                 value={endDate ? endDate.toLocaleDateString() : ""}
                 placeholder="Selecionar Data de Fim"
                 editable={false}
@@ -500,15 +500,15 @@ const DashboardScreen = () => {
               />
             )}
 
-            <View style={styles.modalButtonsContainer}>
-              <TouchableOpacity onPress={closeModal} style={styles.modalButton}>
-                <Text style={styles.modalButtonText}>Aplicar Filtros </Text>
+            <View style={statisticsStyles.modalButtonsContainer}>
+              <TouchableOpacity onPress={closeModal} style={statisticsStyles.modalButton}>
+                <Text style={statisticsStyles.modalButtonText}>Aplicar Filtros </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={clearFilters}
-                style={styles.modalButton}
+                style={statisticsStyles.modalButton}
               >
-                <Text style={styles.modalButtonText}>Limpar Filtros</Text>
+                <Text style={statisticsStyles.modalButtonText}>Limpar Filtros</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -16,7 +16,7 @@ import {
 import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
 import { useCategories } from "../context/CategoryContext";
-import { styles } from "../styles/screens/TransactionsScreenStyles";
+import { TransactionsStyles } from "../styles/screens/TransactionsScreenStyles";
 import moment from "moment";
 import "moment/locale/pt-br";
 import EditTransactionModal from "../components/modals/Transactions/EditTransactionModal";
@@ -286,7 +286,8 @@ const TransactionsScreen = () => {
       !transaction.isRecurring ||
       !transaction.startDate ||
       !transaction.date ||
-      !transaction.recorrenceCount
+      !transaction.recorrenceCount ||
+      !transaction.recurrenceType
     ) {
       return '';
     }
@@ -295,25 +296,31 @@ const TransactionsScreen = () => {
     const transactionDate = moment(transaction.date, "YYYY-MM-DD");
     const totalInstallments = transaction.recorrenceCount;
   
-    // Calcula a diferença em meses entre a data de início e a data da transação
-    let monthsDifference = transactionDate.diff(startDate, "months");
-  
-    // Lógica para calcular o número da parcela
     let installmentNumber;
   
-    if (transactionDate.isSame(startDate, "month")) {
-      installmentNumber = monthsDifference + 1; // Subtrai 1 se for o mesmo mês da startDate
-    } else {
-      installmentNumber = monthsDifference + 2; // Soma 2 caso contrário
+    // Verifica se a recorrência é mensal
+    if (transaction.recurrenceType === 'month') {
+      const monthsDifference = transactionDate.diff(startDate, "months");
+      if (transactionDate.isSame(startDate, "month")) {
+        installmentNumber = monthsDifference + 1;
+      } else {
+        installmentNumber = monthsDifference + 2;
+      }
+  
+      if (installmentNumber > totalInstallments) {
+        installmentNumber = totalInstallments;
+      }
+  
+      return `Parcela ${totalInstallments}`;
+  
+    // Verifica se a recorrência é semanal
+    } else if (transaction.recurrenceType === 'week') {
+      return `Parcela  ${totalInstallments}`;
     }
   
-    // Garante que o número da parcela não exceda o total de parcelas
-    if (installmentNumber > totalInstallments) {
-      installmentNumber = totalInstallments;
-    }
-  
-    return `Parcela ${installmentNumber} de ${totalInstallments}`;
+    return '';
   };
+  
   
   
 
@@ -340,28 +347,28 @@ const handleTransactionPress = (transaction) => {
     return (
       
       <View>
-        {isNewDay && <Text style={styles.dateHeader}>{dayOfWeek}</Text>}
+        {isNewDay && <Text style={TransactionsStyles.dateHeader}>{dayOfWeek}</Text>}
         <TouchableOpacity
           style={[
-            styles.item,
-            item.type === "expense" ? styles.expenseItem : styles.incomeItem,
+            TransactionsStyles.item,
+            item.type === "expense" ? TransactionsStyles.expenseItem : TransactionsStyles.incomeItem,
           ]}
           // Permite edição ao clicar na transação
           onPress={() => handleTransactionPress(item)}
           onLongPress={() => handleDelete(item)}
         >
           <View>
-            <View style={styles.row}>
-              <Text style={[styles.description]}>{item.description}</Text>
-              <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
+            <View style={TransactionsStyles.row}>
+              <Text style={[TransactionsStyles.description]}>{item.description}</Text>
+              <Text style={TransactionsStyles.amount}>{formatCurrency(item.amount)}</Text>
             </View>
-            <View style={styles.row}>
-              <Text style={styles.category}>
+            <View style={TransactionsStyles.row}>
+              <Text style={TransactionsStyles.category}>
                 {getCategoryName(item.categoryId)} | {getAccountName(item.accountId)}
               </Text>
             </View>
             {item.isRecurring && (
-              <Text style={styles.installment}>{recurrenceInfo}</Text>
+              <Text style={TransactionsStyles.installment}>{recurrenceInfo}</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -375,26 +382,26 @@ const handleTransactionPress = (transaction) => {
 
   return (
     
-    <View style={styles.container}>
-      <View style={styles.footer}>
+    <View style={TransactionsStyles.container}>
+      <View style={TransactionsStyles.footer}>
         <TouchableOpacity
           onPress={() => changeMonth(-1)}
-          style={styles.navButton}
+          style={TransactionsStyles.navButton}
         >
-          <Text style={styles.navButtonText}>Anterior</Text>
+          <Text style={TransactionsStyles.navButtonText}>Anterior</Text>
         </TouchableOpacity>
-        <Text style={styles.footerTitle}>
+        <Text style={TransactionsStyles.footerTitle}>
           {selectedMonth.format("MMMM YYYY")}
         </Text>
         <TouchableOpacity
           onPress={() => changeMonth(1)}
-          style={styles.navButton}
+          style={TransactionsStyles.navButton}
         >
-          <Text style={styles.navButtonText}>Próximo</Text>
+          <Text style={TransactionsStyles.navButtonText}>Próximo</Text>
         </TouchableOpacity>
       </View>
       <TextInput
-        style={styles.searchInput}
+        style={TransactionsStyles.searchInput}
         placeholder="Pesquisar por descrição, Conta ou Categoria"
         value={searchText}
         onChangeText={setSearchText}
@@ -404,7 +411,7 @@ const handleTransactionPress = (transaction) => {
         data={filteredTransactions}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={TransactionsStyles.listContent}
       />
 
       
@@ -416,64 +423,64 @@ const handleTransactionPress = (transaction) => {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
+        <View style={TransactionsStyles.modalContainer}>
+          <View style={TransactionsStyles.modalContent}>
             {modalType === "recurring" ? (
               <>
-                <Text style={styles.modalTitle}>
+                <Text style={TransactionsStyles.modalTitle}>
                   Excluir transações recorrentes
                 </Text>
 
                 <TouchableOpacity
                   onPress={confirmRemoveAllRecurringTransactions}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>Todas as parcelas</Text>
+                  <Text style={TransactionsStyles.modalButtonText}>Todas as parcelas</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={confirmRemovePreviousRecurringTransactions}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>
+                  <Text style={TransactionsStyles.modalButtonText}>
                     Parcelas anteriores
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={confirmRemoveFutureRecurringTransactions}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>Parcelas futuras</Text>
+                  <Text style={TransactionsStyles.modalButtonText}>Parcelas futuras</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={confirmRemoveCurrentTransaction}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>Esta parcela</Text>
+                  <Text style={TransactionsStyles.modalButtonText}>Esta parcela</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                <Text style={styles.modalTitle}>Gerir transação</Text>
+                <Text style={TransactionsStyles.modalTitle}>Gerir transação</Text>
 
                 <TouchableOpacity
                   onPress={() => handleEdit(currentTransaction)}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>Editar</Text>
+                  <Text style={TransactionsStyles.modalButtonText}>Editar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={confirmDelete}
-                  style={styles.modalButton}
+                  style={TransactionsStyles.modalButton}
                 >
-                  <Text style={styles.modalButtonText}>Excluir</Text>
+                  <Text style={TransactionsStyles.modalButtonText}>Excluir</Text>
                 </TouchableOpacity>
               </>
             )}
             <TouchableOpacity
               onPress={() => setModalVisible(false)}
-              style={[styles.modalButton, styles.cancelButton]}
+              style={[TransactionsStyles.modalButton, TransactionsStyles.cancelButton]}
             >
-              <Text style={styles.modalButtonText}>Cancelar</Text>
+              <Text style={TransactionsStyles.modalButtonText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>

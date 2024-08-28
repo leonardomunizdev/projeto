@@ -27,9 +27,16 @@ import { useCategories } from "../context/CategoryContext";
 import UUID from "react-native-uuid";
 import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
-import styles from "../styles/screens/addTransactionsScreenStyles";
+import addTransactionsStyles from "../styles/screens/addTransactionsScreenStyles";
 import AccountModal from "../components/modals/options/AccountModal";
 import CategoryModal from "../components/modals/options/CategoryModal";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export const getButtonColor = (type) => {
+  return type === "expense" ? "red" : "blue";
+};
+
 
 const AddTransactionScreen = () => {
   const navigation = useNavigation();
@@ -53,7 +60,6 @@ const AddTransactionScreen = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showRecurrenceModal, setShowRecurrenceModal] = useState(false);
   const [attachments, setAttachments] = useState([]);
-  const [showOptionsModal, setShowOptionsModal] = useState(false); // Novo estado para o modal de opções
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
@@ -62,12 +68,11 @@ const AddTransactionScreen = () => {
   const route = useRoute();
 
   useEffect(() => {
-    // Verifica se o parâmetro imageUri está presente e o usa
     if (route.params?.imageUri) {
       setAttachments([route.params.imageUri]);
     }
   }, [route.params?.imageUri]);
-    
+
 
   useEffect(() => {
     if (route.params?.accountId) {
@@ -79,16 +84,15 @@ const AddTransactionScreen = () => {
       }
     }
   }, [route.params?.accountId, accounts]);
-  
+
   useEffect(() => {
     setShowRecurrenceModal(isRecurring);
   }, [isRecurring]);
 
   const generateRecurringTransactions = (transaction, recurrenceId) => {
     const transactions = [];
-    let nextDate = new Date(date);
-
-    console.log(`Quantidade de repetições: ${recurrence.count}`); // Exibe a quantidade de repetições
+    let nextDate = new Date(date); // Data inicial
+    let currentRecurrenceCount = 1; // Inicia o contador de recorrência
 
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
@@ -97,6 +101,7 @@ const AddTransactionScreen = () => {
         recurrenceId,
         date: format(nextDate, "yyyy-MM-dd", { locale: ptBR }),
         isRecurring,
+        recorrenceCount: `${currentRecurrenceCount} de ${recurrence.count}`,
       });
 
       if (recurrence.unit === "month") {
@@ -104,16 +109,16 @@ const AddTransactionScreen = () => {
       } else if (recurrence.unit === "week") {
         nextDate = addWeeks(nextDate, 1);
       }
-    }
 
-    console.log(`Quantidade de transações geradas: ${transactions.length}`); // Exibe a quantidade de transações geradas
+      currentRecurrenceCount += 1; // Incrementa o contador de recorrência
+    }
 
     return transactions;
   };
-  
 
 
-  const handleSaveAndNavigate = () => {
+
+  const handleSaveAndNavigate = async () => {
     if (!description || !amount || !selectedAccount || !selectedCategory) {
       Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
       return;
@@ -144,6 +149,7 @@ const AddTransactionScreen = () => {
       recurrenceId,
       attachments,
       recorrenceCount: isRecurring ? recurrence.count : null,
+      recurrenceType: isRecurring ? recurrence.unit : null,
     };
 
     const transactions = isRecurring
@@ -154,8 +160,13 @@ const AddTransactionScreen = () => {
       addTransaction(transaction);
     });
 
+    try {
+      await AsyncStorage.setItem("lastTransactionType", transactionType);
+    } catch (error) {
+      console.error("Failed to save last transaction type", error);
+    }
+
     // Resetar todos os campos
-    setTransactionType("income");
     setAmount("");
     setDescription("");
     setDate(new Date());
@@ -171,6 +182,20 @@ const AddTransactionScreen = () => {
 
   };
 
+  useEffect(() => {
+    const loadLastTransactionType = async () => {
+      try {
+        const lastType = await AsyncStorage.getItem("lastTransactionType");
+        if (lastType) {
+          setTransactionType(lastType);
+        }
+      } catch (error) {
+        console.error("Failed to load last transaction type", error);
+      }
+    };
+
+    loadLastTransactionType();
+  }, []);
 
   const handleIncrement = () => {
     setRecurrence((prevRecurrence) => ({
@@ -199,17 +224,21 @@ const AddTransactionScreen = () => {
   };
 
 
-  const handleTransactionTypeChange = (type) => {
+  const handleTransactionTypeChange = async (type) => {
     setTransactionType(type);
     setExpenseCategory("");
     setIncomeCategory("");
+  
+    // Salvar o tipo de transação no AsyncStorage
+    try {
+      await AsyncStorage.setItem("lastTransactionType", type);
+    } catch (error) {
+      console.error("Failed to save last transaction type", error);
+    }
   };
+  
 
-  const getButtonStyle = (type) => ({
-    ...styles.transactionButton,
-    backgroundColor:
-      transactionType === type ? (type === "expense" ? "red" : "blue") : "#ddd",
-  });
+
 
   const onChange = (event, selectedDate) => {
     const currentDate = selectedDate || date;
@@ -260,10 +289,10 @@ const AddTransactionScreen = () => {
 
   const renderAttachments = () => {
     return attachments.map((attachment, index) => (
-      <View key={index} style={styles.attachmentItem}>
+      <View key={index} style={addTransactionsStyles.attachmentItem}>
         <Image
           source={{ uri: attachment }}
-          style={styles.attachmentImage}
+          style={addTransactionsStyles.attachmentImage}
           onError={(error) => console.log("Image failed to load", error)}
         />
         <MaterialIcons
@@ -328,38 +357,64 @@ const AddTransactionScreen = () => {
     return `${integerPart}.${decimalPart}`;
   };
 
+  const getButtonColor = () => {
+    return transactionType === "expense" ? "red" : "blue";
+  };
+  const getButtonStyle = (type) => ({
+    ...addTransactionsStyles.transactionButton,
+    backgroundColor:
+      transactionType === type ? (type === "expense" ? "red" : "blue") : "#ddd",
+  });
+  const getButtonRecurringStyle = (type) => ({
+    ...addTransactionsStyles.transactionButton,
+    backgroundColor:
+      recurrence.unit === type ? getButtonColor() : '#CCCCCC',
+  });
+  const getStyleButtons = () => ({
+    backgroundColor: getButtonColor(),
+    padding: 10,
+    margin: 5,
+    borderRadius: 5,
+    alignItems: "center",
+    flex: 1,
+    marginHorizontal: 5,
+    color: "white",
+    switchThumbColor: 'red',
+
+  });
+
 
   return (
-    <KeyboardAvoidingView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <KeyboardAvoidingView style={addTransactionsStyles.container}>
+      <ScrollView contentContainerStyle={addTransactionsStyles.scrollViewContent}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.formContainer}>
+          <View style={addTransactionsStyles.formContainer}>
 
-            <Text style={styles.title}>Adicionar Transação</Text>
+            <Text style={addTransactionsStyles.title}>Adicionar Transação</Text>
 
-            <View style={styles.transactionTypeContainer}>
+            <View style={addTransactionsStyles.transactionTypeContainer}>
               <TouchableOpacity
                 style={getButtonStyle("income")}
                 onPress={() => handleTransactionTypeChange("income")}
               >
-                <Text style={styles.transactionButtonText}>Receita</Text>
+                <Text style={addTransactionsStyles.transactionButtonText}>Receita</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={getButtonStyle("expense")}
                 onPress={() => handleTransactionTypeChange("expense")}
               >
-                <Text style={styles.transactionButtonText}>Despesa</Text>
+                <Text style={addTransactionsStyles.transactionButtonText}>Despesa</Text>
               </TouchableOpacity>
             </View>
 
             <TextInput
-              style={styles.input}
+              style={addTransactionsStyles.input}
               placeholder="Descrição"
               value={description}
               onChangeText={setDescription}
             />
             <TextInput
-              style={styles.input}
+              style={addTransactionsStyles.input}
               placeholder="Valor"
               keyboardType="numeric"
               value={amount}
@@ -367,10 +422,10 @@ const AddTransactionScreen = () => {
             />
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
-              style={styles.datePickerButton}
             >
               <TextInput
-                style={styles.datePickerInput}
+                style={[getStyleButtons()]}
+
                 placeholder="Data"
                 value={format(date, "dd/MM/yyyy", { locale: ptBR })}
                 editable={false}
@@ -386,11 +441,11 @@ const AddTransactionScreen = () => {
                 onChange={onChange}
               />
             )}
-            <View style={styles.pickerContainer}>
+            <View style={addTransactionsStyles.pickerContainer}>
               <Picker
                 selectedValue={selectedAccount}
                 onValueChange={handleAccountChange}
-                style={styles.picker}
+                style={addTransactionsStyles.picker}
               >
                 <Picker.Item label="Selecione uma conta" value="" />
                 {accounts.map((account) => (
@@ -401,16 +456,16 @@ const AddTransactionScreen = () => {
                   />
                 ))}
               </Picker>
-              <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={styles.addButton}>
-                <MaterialIcons name="add" size={24} color="blue" />
+              <TouchableOpacity onPress={() => setIsAccountModalVisible(true)} style={addTransactionsStyles.addButton}>
+                <MaterialIcons name="add" size={24} style={{ color: getButtonColor() }} />
               </TouchableOpacity>
             </View>
 
-            <View style={styles.pickerContainer}>
+            <View style={addTransactionsStyles.pickerContainer}>
               <Picker
                 selectedValue={selectedCategory}
                 onValueChange={handleValueChange}
-                style={styles.picker}
+                style={addTransactionsStyles.picker}
               >
                 <Picker.Item label="Selecione uma categoria" value="" />
                 {filteredCategories.map((category) => (
@@ -421,35 +476,36 @@ const AddTransactionScreen = () => {
                   />
                 ))}
               </Picker>
-              <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={styles.addButton}>
-                <MaterialIcons name="add" size={24} color="blue" />
+              <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={addTransactionsStyles.addButton}>
+                <MaterialIcons name="add" size={24} style={{ color: getButtonColor() }} />
               </TouchableOpacity>
 
             </View>
-            <View style={styles.switchContainer}>
-              <Text style={styles.switchText}>Repetir</Text>
+
+            <View style={addTransactionsStyles.switchContainer}>
+              <Text style={addTransactionsStyles.switchText}>Repetir</Text>
               <Switch
                 value={isRecurring}
                 onValueChange={(value) => setIsRecurring(value)}
-                thumbColor={isRecurring ? "#4caf50" : "#f44336"}
-                trackColor={{ false: "#ddd", true: "#b2dfdb" }}
+                trackColor={{ false: 'silver', true: getButtonColor() }}
+                thumbColor={isRecurring ? getButtonColor() : 'silver'}
               />
             </View>
 
             {isRecurring && (
-              <View style={styles.recurrenceContainer}>
-                <View style={styles.recurrenceLabelContainer}>
-                  <Text style={styles.recurrenceLabel}>Quantidade</Text>
-                  <View style={styles.recurrenceControls}>
+              <View style={addTransactionsStyles.recurrenceContainer}>
+                <View style={addTransactionsStyles.recurrenceLabelContainer}>
+                  <View style={addTransactionsStyles.recurrenceControls}>
                     <TouchableOpacity
-                      style={styles.recurrenceButton}
+                      style={addTransactionsStyles.recurrenceButton}
                       onPress={handleDecrement}
                     >
-                      <Text style={styles.recurrenceButtonText}>-</Text>
+                      <Ionicons name={"chevron-down-outline"} />
+
                     </TouchableOpacity>
 
                     <TextInput
-                      style={styles.recurrenceInput}
+                      style={addTransactionsStyles.recurrenceInput}
                       placeholder="0"
                       value={recurrence.count.toString()}
                       keyboardType="numeric"
@@ -457,43 +513,54 @@ const AddTransactionScreen = () => {
                     />
 
                     <TouchableOpacity
-                      style={styles.recurrenceButton}
+                      style={addTransactionsStyles.recurrenceButton}
                       onPress={handleIncrement}
                     >
-                      <Text style={styles.recurrenceButtonText}>+</Text>
+                      <Ionicons name={"chevron-up-outline"} />
                     </TouchableOpacity>
                   </View>
                 </View>
 
-                <View style={styles.periodContainer}>
-                  <Text style={styles.recurrenceLabel}>Período</Text>
-                  <Picker
-                    selectedValue={recurrence.unit}
-                    onValueChange={(itemValue) =>
+                <View style={addTransactionsStyles.recurrenceButtonContainer}>
+                  <TouchableOpacity
+                    style={[getButtonRecurringStyle("month")]}
+
+                    onPress={() =>
                       setRecurrence((prevRecurrence) => ({
                         ...prevRecurrence,
-                        unit: itemValue,
+                        unit: "month",
                       }))
                     }
-                    style={styles.recurrencePicker}
                   >
-                    <Picker.Item label="Mensal" value="month" />
-                    <Picker.Item label="Semanal" value="week" />
-                  </Picker>
+                    <Text style={addTransactionsStyles.recurrenceButtonText}>Mensal</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[getButtonRecurringStyle("week")]}
+
+                    onPress={() =>
+                      setRecurrence((prevRecurrence) => ({
+                        ...prevRecurrence,
+                        unit: "week",
+                      }))
+                    }
+                  >
+                    <Text style={addTransactionsStyles.recurrenceButtonText}>Semanal</Text>
+                  </TouchableOpacity>
                 </View>
 
               </View>
 
             )}
 
-            <View style={styles.attachmentContainer}>
+            <View style={addTransactionsStyles.attachmentContainer}>
               <TouchableOpacity
                 onPress={pickImage}
-                style={styles.addAttachmentButton}
+                style={[getStyleButtons()]}
               >
-                <Text style={styles.addAttachmentButtonText}>Adicionar Anexo</Text>
+                <Text style={addTransactionsStyles.addAttachmentButtonText}>Adicionar Anexo</Text>
               </TouchableOpacity>
-              <View style={styles.attachmentList}>{renderAttachments()}</View>
+              <View style={addTransactionsStyles.attachmentList}>{renderAttachments()}</View>
             </View>
 
           </View>
@@ -513,7 +580,9 @@ const AddTransactionScreen = () => {
             selectedCategoryType={selectedCategoryType}
             setSelectedCategoryType={setSelectedCategoryType}
           />
-          <Button title="Salvar" onPress={handleSaveAndNavigate} />
+          <TouchableOpacity style={[getStyleButtons()]} onPress={handleSaveAndNavigate}>
+            <Text style={{ color: "white" }}>Salvar</Text>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>

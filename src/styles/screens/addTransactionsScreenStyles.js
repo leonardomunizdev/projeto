@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-export const styles = StyleSheet.create({
+export const addTransactionsStyles = StyleSheet.create({
     container: {
       flex: 1,
       padding: 16,
@@ -86,6 +86,13 @@ export const styles = StyleSheet.create({
       borderRadius: 5,
       marginHorizontal: 5,
     },
+    recurrenceButtonType: {
+      flex: 1,
+      padding: 10,
+      marginHorizontal: 5,
+      borderRadius: 5,
+      alignItems: "center",
+    },
     recurrenceButtonText: {
       fontSize: 20,
       fontWeight: "bold",
@@ -119,9 +126,9 @@ export const styles = StyleSheet.create({
     },
     attachmentList: {
       marginTop: 20,
-      flexDirection: 'row',       // Alinha as imagens horizontalmente
-      flexWrap: 'wrap',           // Permite que as imagens se movam para a linha seguinte se não houver espaço suficiente
-      justifyContent: 'flex-start', // Alinha as imagens à esquerda
+      flexDirection: 'row',       
+      flexWrap: 'wrap',          
+      justifyContent: 'flex-start', 
     },
     attachmentItem: {
       flexDirection: "row",
@@ -160,5 +167,22 @@ export const styles = StyleSheet.create({
       fontSize: 24,
       color: 'blue',
     },
+    periodContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    recurrenceLabel: {
+      fontSize: 16,
+      marginBottom: 10,
+    },
+    recurrenceButtonContainer: {
+      flexDirection: 'row',
+    },
+   
+    recurrenceButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+    },
 });
-  export default styles;
+  export default addTransactionsStyles;
