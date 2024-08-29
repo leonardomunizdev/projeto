@@ -19,6 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import HelpModal from '../components/modals/options/HelpModal';
 import { MaterialIcons } from "@expo/vector-icons";
 import { Linking, Image } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -35,27 +37,44 @@ const HomeScreen = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedCalculationType, setSelectedCalculationType] = useState("category"); 
+  const [selectedCalculationType, setSelectedCalculationType] = useState("category");
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [goalModalVisible, setGoalModalVisible] = useState(false);
   const [spendingGoal, setSpendingGoal] = useState("");
   const [savedGoal, setSavedGoal] = useState(0);
   const [goalColor, setGoalColor] = useState("blue");
   const [amountLeft, setAmountLeft] = useState(0);
-
-
-
+  const [modalMonth, setModalMonth] = useState(new Date().getMonth());
+const [modalYear, setModalYear] = useState(new Date().getFullYear());
+const [accumulatedBalance, setAccumulatedBalance] = useState(0);
+const changeModalMonth = (direction) => {
+  if (direction === "prev") {
+    if (modalMonth === 0) {
+      setModalMonth(11);
+      setModalYear(modalYear - 1);
+    } else {
+      setModalMonth(modalMonth - 1);
+    }
+  } else if (direction === "next") {
+    if (modalMonth === 11) {
+      setModalMonth(0);
+      setModalYear(modalYear + 1);
+    } else {
+      setModalMonth(modalMonth + 1);
+    }
+  }
+};
   
   useEffect(() => {
     const handleSharedImage = async (event) => {
-        // Se for chamado na inicialização, use Linking.getInitialURL()
-        const url = event?.url || await Linking.getInitialURL();
+      // Se for chamado na inicialização, use Linking.getInitialURL()
+      const url = event?.url || await Linking.getInitialURL();
 
-        if (url) {
-            // Extraia a URI da imagem do URL recebido
-            const imageUri = url.replace('yourapp://', '');
-            navigation.navigate('AddTransactionScreen', { imageUri });
-        }
+      if (url) {
+        // Extraia a URI da imagem do URL recebido
+        const imageUri = url.replace('yourapp://', '');
+        navigation.navigate('AddTransactionScreen', { imageUri });
+      }
     };
 
     // Chama a função uma vez na montagem para lidar com URLs iniciais
@@ -66,15 +85,16 @@ const HomeScreen = () => {
 
     // Remove o ouvinte ao desmontar o componente
     return () => {
-        linkingListener.remove();
+      linkingListener.remove();
     };
-}, []);
+  }, []);
 
 
   useEffect(() => {
     const loadGoal = async () => {
       try {
-        const goal = await AsyncStorage.getItem('spendingGoal');
+        const goalKey = `spendingGoal_${currentMonth}_${currentYear}`;
+        const goal = await AsyncStorage.getItem(goalKey);
         if (goal !== null) {
           setSavedGoal(convertToAmerican(goal));
         }
@@ -84,38 +104,50 @@ const HomeScreen = () => {
     };
 
     loadGoal();
-  }, []);
+  }, [currentMonth, currentYear]);
+
 
   const saveGoal = async () => {
     try {
-      await AsyncStorage.setItem('spendingGoal', spendingGoal);
+      const goalKey = `spendingGoal_${modalMonth}_${modalYear}`;
+      await AsyncStorage.setItem(goalKey, spendingGoal);
       setSavedGoal(convertToAmerican(spendingGoal));
       setGoalModalVisible(false);
     } catch (error) {
       console.error("Erro ao salvar a meta de gastos", error);
     }
   };
+
   useEffect(() => {
+    let income = 0;
+    let expense = 0;
     let monthlyIncome = 0;
     let monthlyExpense = 0;
+    const accountTotals = {};
 
     transactions.forEach((transaction) => {
       const transactionDate = new Date(transaction.date);
       const transactionMonth = transactionDate.getMonth();
       const transactionYear = transactionDate.getFullYear();
+      const today = new Date();
+      const amount = parseFloat(transaction.amount);
 
-      if (
-        transactionMonth === currentMonth &&
-        transactionYear === currentYear
-      ) {
-        const amount = parseFloat(transaction.amount);
-        if (isNaN(amount)) {
-          console.warn(
-            `Valor inválido para a transação: ${transaction.amount}`
-          );
-          return;
+      if (isNaN(amount)) {
+        console.warn(`Valor inválido para a transação: ${transaction.amount}`);
+        return;
+      }
+
+      if (transactionDate <= today) {
+        if (transaction.type === "income") {
+          income += amount;
+          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) + amount;
+        } else if (transaction.type === "expense") {
+          expense += amount;
+          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) - amount;
         }
+      }
 
+      if (transactionMonth === currentMonth && transactionYear === currentYear) {
         if (transaction.type === "income") {
           monthlyIncome += amount;
         } else if (transaction.type === "expense") {
@@ -124,6 +156,9 @@ const HomeScreen = () => {
       }
     });
 
+    setTotalIncome(income);
+    setTotalExpense(expense);
+    setBalance(income - expense);
     setMonthlyIncome(monthlyIncome);
     setMonthlyExpense(monthlyExpense);
     setMonthlyBalance(monthlyIncome - monthlyExpense);
@@ -131,14 +166,19 @@ const HomeScreen = () => {
     const spendingGoalValue = parseFloat(savedGoal) || 0;
     const remaining = spendingGoalValue - monthlyExpense;
     setAmountLeft(remaining);
+    setGoalColor(remaining < 0 ? "red" : "blue");
+    setBalanceColor(balance > 0 ? "blue" : "red");
 
-    // Atualiza a cor com base na meta
-    if (remaining < 0) {
-      setGoalColor("red");
-    } else {
-      setGoalColor("blue");
-    }
-  }, [transactions, currentMonth, currentYear, savedGoal]);
+    const initialAccountValues = {};
+    accounts.forEach((account) => {
+      initialAccountValues[account.id] = accountTotals[account.id] || 0;
+    });
+    setAccountValues(initialAccountValues);
+
+    // Atualizar saldo acumulado
+    setAccumulatedBalance(accumulatedBalance + monthlyBalance);
+
+  }, [transactions, accounts, currentMonth, currentYear, savedGoal]);
 
 
   useEffect(() => {
@@ -167,6 +207,63 @@ const HomeScreen = () => {
       minimumFractionDigits: 2,
     }).format(value);
   };
+  useEffect(() => {
+    let income = 0;
+    let expense = 0;
+    let monthlyIncome = 0;
+    let monthlyExpense = 0;
+    const accountTotals = {};
+
+    transactions.forEach((transaction) => {
+      const transactionDate = new Date(transaction.date);
+      const transactionMonth = transactionDate.getMonth();
+      const transactionYear = transactionDate.getFullYear();
+      const today = new Date();
+      const amount = parseFloat(transaction.amount);
+
+      if (isNaN(amount)) {
+        console.warn(`Valor inválido para a transação: ${transaction.amount}`);
+        return;
+      }
+
+      if (transactionDate <= today) {
+        if (transaction.type === "income") {
+          income += amount;
+          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) + amount;
+        } else if (transaction.type === "expense") {
+          expense += amount;
+          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) - amount;
+        }
+      }
+
+      if (transactionMonth === currentMonth && transactionYear === currentYear) {
+        if (transaction.type === "income") {
+          monthlyIncome += amount;
+        } else if (transaction.type === "expense") {
+          monthlyExpense += amount;
+        }
+      }
+    });
+
+    setTotalIncome(income);
+    setTotalExpense(expense);
+    setBalance(income - expense);
+    setMonthlyIncome(monthlyIncome);
+    setMonthlyExpense(monthlyExpense);
+    setMonthlyBalance(monthlyIncome - monthlyExpense);
+
+    const spendingGoalValue = parseFloat(savedGoal) || 0;
+    const remaining = spendingGoalValue - monthlyExpense;
+    setAmountLeft(remaining);
+    setGoalColor(remaining < 0 ? "red" : "blue");
+    setBalanceColor(balance > 0 ? "blue" : "red");
+
+    const initialAccountValues = {};
+    accounts.forEach((account) => {
+      initialAccountValues[account.id] = accountTotals[account.id] || 0;
+    });
+    setAccountValues(initialAccountValues);
+  }, [transactions, accounts, currentMonth, currentYear, savedGoal]);
 
   useEffect(() => {
     let income = 0;
@@ -274,9 +371,9 @@ const HomeScreen = () => {
     if (percentage < 50) {
       return "blue";
     } else if (percentage < 75) {
-      return "orange"; 
+      return "orange";
     } else {
-      return "red"; 
+      return "red";
     }
   };
   const renderProgressBar = () => {
@@ -304,6 +401,8 @@ const HomeScreen = () => {
   };
 
   const closeModal = () => {
+    setCurrentMonth(new Date().getMonth());
+    setCurrentYear(new Date().getFullYear());
     setModalVisible(false);
   };
 
@@ -315,6 +414,8 @@ const HomeScreen = () => {
       } else {
         setCurrentMonth(currentMonth - 1);
       }
+      // Subtrai o saldo mensal do mês atual
+      setAccumulatedBalance(accumulatedBalance - monthlyBalance);
     } else if (direction === "next") {
       if (currentMonth === 11) {
         setCurrentMonth(0);
@@ -322,6 +423,8 @@ const HomeScreen = () => {
       } else {
         setCurrentMonth(currentMonth + 1);
       }
+      // Adiciona o saldo mensal do mês atual
+      setAccumulatedBalance(accumulatedBalance + monthlyBalance);
     }
   };
 
@@ -453,327 +556,352 @@ const HomeScreen = () => {
     // Combina a parte inteira e a parte decimal para o formato americano
     return `${integerPart}.${decimalPart}`;
   }
-    return (
-      <View style={HomeStyles.container}>
-        <ScrollView contentContainerStyle={HomeStyles.scrollViewContent}>
-          <View style={HomeStyles.balanceContainer}>
-            <View style={HomeStyles.textContainer}>
-              <Text style={HomeStyles.balanceText}>Saldo</Text>
-              <Text style={[HomeStyles.balanceAmount, { color: balanceColor }]}>
-                {formatToBRL(parseFloat(balance.toFixed(2).replace(".", ",")))}
-              </Text>
-            </View>
-          </View>
+  return (
+    <View style={HomeStyles.container}>
+      <View style={HomeStyles.monthYearSelector}>
+        <TouchableOpacity onPress={() => changeMonth("prev")}>
+          <Icon name="chevron-left" size={24} />
+        </TouchableOpacity>
+        <Text style={HomeStyles.monthYearText}>
+          {formatMonthYear(currentMonth, currentYear)}
+        </Text>
+        <TouchableOpacity onPress={() => changeMonth("next")}>
+          <Icon name="chevron-right" size={24} />
+        </TouchableOpacity>
+      </View>
+      <View style={HomeStyles.accountDivider} />
 
-          <View style={HomeStyles.summaryContainer}>
-            <Card
-              style={HomeStyles.card}
-              onPress={() => navigateToTransactions("income")}
-            >
-              <Card.Content>
-                <Text style={HomeStyles.cardTitle}>Receitas</Text>
-                <Text style={HomeStyles.cardAmountIncome}>
-                  {formatToBRL(parseFloat(totalIncome.toFixed(2).replace(".", ",")))}
-                </Text>
-              </Card.Content>
-            </Card>
-            <Card
-              style={HomeStyles.card}
-              onPress={() => navigateToTransactions("expense")}
-            >
-              <Card.Content>
-                <Text style={HomeStyles.cardTitle}>Despesas</Text>
-                <Text style={HomeStyles.cardAmountExpense}>
-                  {formatToBRL(parseFloat(totalExpense.toFixed(2).replace(".", ",")))}
-                </Text>
-              </Card.Content>
-            </Card>
+      <ScrollView contentContainerStyle={HomeStyles.scrollViewContent}>
+        <View style={HomeStyles.balanceContainer}>
+          <View style={HomeStyles.textContainer}>
+            <Text style={HomeStyles.balanceText}>Saldo</Text>
+            <Text style={[HomeStyles.balanceAmount, { color: balanceColor }]}>
+              {formatToBRL(parseFloat(balance.toFixed(2).replace(".", ",")))}
+            </Text>
+            
           </View>
-          
-          <Card style={HomeStyles.accountsCard} onPress={() => setGoalModalVisible(true)}>
+        </View>
+
+        <View style={HomeStyles.summaryContainer}>
+          <Card
+            style={HomeStyles.card}
+            onPress={() => navigateToTransactions("income")}
+          >
             <Card.Content>
-              <Text style={HomeStyles.cardTitle}>Limite de Gastos Mensais</Text>
+              <Text style={HomeStyles.cardTitle}>Receitas</Text>
+              <Text style={HomeStyles.cardAmountIncome}>
+                {formatToBRL(parseFloat(totalIncome.toFixed(2).replace(".", ",")))}
+              </Text>
+            </Card.Content>
+          </Card>
+          <Card
+            style={HomeStyles.card}
+            onPress={() => navigateToTransactions("expense")}
+          >
+            <Card.Content>
+              <Text style={HomeStyles.cardTitle}>Despesas</Text>
+              <Text style={HomeStyles.cardAmountExpense}>
+                {formatToBRL(parseFloat(totalExpense.toFixed(2).replace(".", ",")))}
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
 
-              <View style={HomeStyles.monthlyBalanceItem}>
+        <Card style={HomeStyles.accountsCard} onPress={() => setGoalModalVisible(true)}>
+          <Card.Content>
+            <Text style={HomeStyles.cardTitle}>Limite de Gastos Mensais</Text>
 
-                <Text style={{ fontSize: 16 }}>
+            <View style={HomeStyles.monthlyBalanceItem}>
+
+              <Text style={{ fontSize: 16 }}>
                 limite:
-                </Text>
-
-                <Text>{formatToBRL(parseFloat(savedGoal))}</Text>
-              </View>
-              <View style={HomeStyles.monthlyBalanceItem}>
-
-                <Text style={{ fontSize: 16 }}>
-                  Gasto Mensal:
-                </Text>
-                <Text style={{ color: 'red' }}>{formatToBRL(monthlyExpense)}</Text>
-              </View>
-              {renderProgressBar()}
-
-              <Text style={{ color: goalColor, fontSize: 16 }}>
-                {amountLeft < 0
-                  ? `O limite foir Excedido em ${formatToBRL(Math.abs(amountLeft))}`
-                  : `Falta ${formatToBRL(amountLeft)} para alcançar o limite`}
               </Text>
 
-            </Card.Content>
-          </Card>
+              <Text>{formatToBRL(parseFloat(savedGoal))}</Text>
+            </View>
+            <View style={HomeStyles.monthlyBalanceItem}>
 
-          <Card style={HomeStyles.accountsCard}>
-            <Card.Content>
-              <Text style={HomeStyles.accountsTitle}>Contas</Text>
-              {accounts.map((account) => (
-                <View key={account.id} style={HomeStyles.accountItem}>
+              <Text style={{ fontSize: 16 }}>
+                Gasto Mensal:
+              </Text>
+              <Text style={{ color: 'red' }}>{formatToBRL(monthlyExpense)}</Text>
+            </View>
+            {renderProgressBar()}
 
-                  <Text style={HomeStyles.accountName}>{account.name} {'\n'}
+            <Text style={{ color: goalColor, fontSize: 16 }}>
+              {amountLeft < 0
+                ? `O limite foir Excedido em ${formatToBRL(Math.abs(amountLeft))}`
+                : `Falta ${formatToBRL(amountLeft)} para alcançar o limite`}
+            </Text>
 
-                    <Text
-                      style={[
-                        HomeStyles.accountAmount,
-                        { color: getAccountColor(accountValues[account.id] || 0) },
-                      ]}
-                    >
-                      {formatToBRL(parseFloat((accountValues[account.id] || 0)
-                        .toFixed(2)
-                        .replace(".", ",")))}
+          </Card.Content>
+        </Card>
 
+        <Card style={HomeStyles.accountsCard}>
+          <Card.Content>
+            <Text style={HomeStyles.accountsTitle}>Contas</Text>
+            {accounts.map((account) => (
+              <View key={account.id} style={HomeStyles.accountItem}>
 
-                    </Text>
-                  </Text>
+                <Text style={HomeStyles.accountName}>{account.name} {'\n'}
 
-
-                  <TouchableOpacity onPress={() => navigateToAddTransactionsAccount(account.id)} style={HomeStyles.addButton}>
-                    <MaterialIcons name="add" size={30} color="blue" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <View style={HomeStyles.accountDivider} />
-              <View style={HomeStyles.totalContainer}>
-                <Text style={HomeStyles.totalText}>Total:</Text>
-                <Text
-                  style={[
-                    HomeStyles.totalAmount,
-                    {
-                      color: getAccountColor(
-                        Object.values(accountValues).reduce((a, b) => a + b, 0)
-                      ),
-                    },
-                  ]}
-                >
-                  {formatToBRL(parseFloat(Object.values(accountValues)
-                    .reduce((a, b) => a + b, 0)
-                    .toFixed(2)
-                    .replace(".", ",")))}
-                </Text>
-              </View>
-            </Card.Content>
-          </Card>
-
-          <Card style={HomeStyles.monthlyBalanceCard} onPress={openModal}>
-            <Card.Content>
-              <Text style={HomeStyles.monthlyBalanceTitle}>Balanço Mensal</Text>
-              <View style={HomeStyles.monthlyBalanceContent}>
-                <View style={HomeStyles.monthlyBalanceItem}>
-                  <Text style={HomeStyles.monthlyBalanceLabel}>Receitas:</Text>
-                  <Text style={[HomeStyles.monthlyBalanceValue,  { color:  "blue" }]}>
-
-                    {formatToBRL(parseFloat(monthlyIncome.toFixed(2).replace(".", ",")))}
-                  </Text>
-                </View>
-                <View style={HomeStyles.monthlyBalanceItem}>
-                  <Text style={HomeStyles.monthlyBalanceLabel}>Despesas:</Text>
-                  <Text style={[HomeStyles.monthlyBalanceValue,  { color:  "red" }]}>
-
-                    {formatToBRL(parseFloat(monthlyExpense.toFixed(2).replace(".", ",")))}
-                  </Text>
-                </View>
-                <View style={HomeStyles.accountDivider} />
-
-                <View style={HomeStyles.monthlyBalanceItem}>
-                  <Text style={HomeStyles.monthlyBalanceLabel}>Balanço:</Text>
                   <Text
                     style={[
-                      HomeStyles.monthlyBalanceValue,
-                      { color: monthlyBalance < 0 ? "red" : "blue" },
+                      HomeStyles.accountAmount,
+                      { color: getAccountColor(accountValues[account.id] || 0) },
                     ]}
                   >
-                    {formatToBRL(parseFloat(monthlyBalance.toFixed(2).replace(".", ",")))}
-                  </Text>
-                </View>
-              </View>
-            </Card.Content>
-          </Card>
+                    {formatToBRL(parseFloat((accountValues[account.id] || 0)
+                      .toFixed(2)
+                      .replace(".", ",")))}
 
-        </ScrollView>
-        <Modal
-          visible={goalModalVisible}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setGoalModalVisible(false)}
-        >
-          <View style={HomeStyles.ModalGoalsContainer}>
-            <View style={HomeStyles.ModalGoalsContent}>
-              <Text style={HomeStyles.ModalGoalsTitle}>Configurar Limite de Gastos</Text>
-              <TextInput
-                style={HomeStyles.ModalGoalsInput}
-                placeholder="Digite o limite de gastos"
-                keyboardType="numeric"
-                value={spendingGoal}
-                onChangeText={handleChange}
-              />
-              <View style={HomeStyles.ModalGoalsButtons}>
-                <TouchableOpacity style={HomeStyles.ModalGoalsSaveButton} onPress={saveGoal}>
-                  <Text style={HomeStyles.ModalGoalsSaveButtonText}>Salvar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={HomeStyles.ModalGoalsCancelButton} onPress={() => setGoalModalVisible(false)}>
-                  <Text style={HomeStyles.ModalGoalsCancelButtonText}>Cancelar</Text>
+
+                  </Text>
+                </Text>
+
+
+                <TouchableOpacity onPress={() => navigateToAddTransactionsAccount(account.id)} style={HomeStyles.addButton}>
+                  <MaterialIcons name="add" size={30} color="blue" />
                 </TouchableOpacity>
               </View>
+            ))}
+            <View style={HomeStyles.accountDivider} />
+            <View style={HomeStyles.totalContainer}>
+              <Text style={HomeStyles.totalText}>Total:</Text>
+              <Text
+                style={[
+                  HomeStyles.totalAmount,
+                  {
+                    color: getAccountColor(
+                      Object.values(accountValues).reduce((a, b) => a + b, 0)
+                    ),
+                  },
+                ]}
+              >
+                {formatToBRL(parseFloat(Object.values(accountValues)
+                  .reduce((a, b) => a + b, 0)
+                  .toFixed(2)
+                  .replace(".", ",")))}
+              </Text>
             </View>
-          </View>
-        </Modal>
-        {/* Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={closeModal}
-        >
-          <View style={HomeStyles.modalContainer}>
-            <View style={HomeStyles.modalContent}>
-              <View style={HomeStyles.modalBody}>
-                <View style={HomeStyles.buttonContainer}>
-                  <TouchableOpacity
-                    style={[
-                      HomeStyles.modalButton,
-                      selectedCalculationType === "category" &&
-                      HomeStyles.modalButtonSelected,
-                    ]}
-                    onPress={() => setSelectedCalculationType("category")}
-                  >
-                    <Text style={HomeStyles.modalButtonText}>Por Categoria</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      HomeStyles.modalButton,
-                      selectedCalculationType === "account" &&
-                      HomeStyles.modalButtonSelected,
-                    ]}
-                    onPress={() => setSelectedCalculationType("account")}
-                  >
-                    <Text style={HomeStyles.modalButtonText}>Por Conta</Text>
-                  </TouchableOpacity>
-                </View>
-                <ScrollView>
-                  {selectedCalculationType === "category" ? (
-                    <View>
-                      <View style={HomeStyles.balanceContainer}>
-                        <View style={HomeStyles.column}>
-                          <Text style={HomeStyles.modalSectionTitle}>Receitas</Text>
-                          <Text style={HomeStyles.movementTextIncome}>
-                            {formatToBRL(parseFloat(getCategoryTotals("income").totalSum))}
-                          </Text>
-                          {getCategoryTotals("income").totals.map((category) => (
-                            <Text key={category.id}>
-                              {category.name}
-                              {"\n"}
-                              <Text style={HomeStyles.incomeTotal}>
-                                {formatToBRL(parseFloat(category.total))}
-                              </Text>
-                            </Text>
-                          ))}
-                        </View>
-                        <View style={HomeStyles.column}>
-                          <Text style={HomeStyles.modalSectionTitle}>Despesas</Text>
-                          <Text style={HomeStyles.movementTextExpense}>
-                            {formatToBRL(parseFloat(getCategoryTotals("expense").totalSum))}
-                          </Text>
-                          {getCategoryTotals("expense").totals.map((category) => (
-                            <Text key={category.id}>
-                              {category.name}
-                              {"\n"}
-                              <Text style={HomeStyles.expenseTotal}>
-                                {formatToBRL(parseFloat(category.total))}
-                              </Text>
-                            </Text>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  ) : (
-                    <View>
-                      <View style={HomeStyles.balanceContainer}>
-                        <View style={HomeStyles.column}>
-                          <Text style={HomeStyles.modalSectionTitle}>Receitas</Text>
-                          <Text style={HomeStyles.movementTextIncome}>
-                            {formatToBRL(parseFloat(getAccountTotals("income").totalSum))}
-                          </Text>
-                          {getAccountTotals("income").totals.map((account) => (
-                            <Text key={account.id}>
-                              {account.name}
-                              {"\n"}
-                              <Text style={HomeStyles.incomeTotal}>
-                                {formatToBRL(parseFloat(account.total))}
-                              </Text>
-                            </Text>
-                          ))}
-                        </View>
-                        <View style={HomeStyles.column}>
-                          <Text style={HomeStyles.modalSectionTitle}>Despesas</Text>
-                          <Text style={HomeStyles.movementTextExpense}>
-                            {formatToBRL(parseFloat(getAccountTotals("expense").totalSum))}
-                          </Text>
-                          {getAccountTotals("expense").totals.map((account) => (
-                            <Text key={account.id}>
-                              {account.name}
-                              {"\n"}
-                              <Text style={HomeStyles.expenseTotal}>
-                                {formatToBRL(parseFloat(account.total))}
-                              </Text>
-                            </Text>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  )}
-                </ScrollView>
-                <View style={HomeStyles.balanceRow}>
-                  <Text style={HomeStyles.modalTitle}>Balanço</Text>
-                  <Text style={HomeStyles.modalBalanceTotal}>
-                    {formatToBRL(parseFloat(getCategoryTotals("income").totalSum) -
-                      parseFloat(getCategoryTotals("expense").totalSum))}
-                  </Text>
-                </View>
+          </Card.Content>
+        </Card>
 
-                <View style={HomeStyles.monthYearSelector}>
-                  <TouchableOpacity onPress={() => changeMonth("prev")}>
-                    <Icon name="chevron-left" size={24} />
-                  </TouchableOpacity>
-                  <Text style={HomeStyles.monthYearText}>
-                    {formatMonthYear(currentMonth, currentYear)}
-                  </Text>
-                  <TouchableOpacity onPress={() => changeMonth("next")}>
-                    <Icon name="chevron-right" size={24} />
-                  </TouchableOpacity>
-                </View>
+        <Card style={HomeStyles.monthlyBalanceCard} onPress={openModal}>
+          <Card.Content>
 
-                <TouchableOpacity
-                  onPress={closeModal}
-                  style={HomeStyles.modalCloseButton}
+            <Text style={HomeStyles.monthlyBalanceTitle}>Balanço Mensal </Text>
+            <View style={HomeStyles.accountDivider} />
+
+
+            <View style={HomeStyles.accountDivider} />
+
+            <View style={HomeStyles.monthlyBalanceContent}>
+              <View style={HomeStyles.monthlyBalanceItem}>
+                <Text style={HomeStyles.monthlyBalanceLabel}>Receitas:</Text>
+                <Text style={[HomeStyles.monthlyBalanceValue, { color: "blue" }]}>
+
+                  {formatToBRL(parseFloat(monthlyIncome.toFixed(2).replace(".", ",")))}
+                </Text>
+              </View>
+              <View style={HomeStyles.monthlyBalanceItem}>
+                <Text style={HomeStyles.monthlyBalanceLabel}>Despesas:</Text>
+                <Text style={[HomeStyles.monthlyBalanceValue, { color: "red" }]}>
+
+                  {formatToBRL(parseFloat(monthlyExpense.toFixed(2).replace(".", ",")))}
+                </Text>
+              </View>
+              <View style={HomeStyles.accountDivider} />
+
+              <View style={HomeStyles.monthlyBalanceItem}>
+                <Text style={HomeStyles.monthlyBalanceLabel}>Balanço:</Text>
+                <Text
+                  style={[
+                    HomeStyles.monthlyBalanceValue,
+                    { color: monthlyBalance < 0 ? "red" : "blue" },
+                  ]}
                 >
-                  <Text style={HomeStyles.modalCloseText}>Fechar</Text>
-                </TouchableOpacity>
+                  {formatToBRL(parseFloat(monthlyBalance.toFixed(2).replace(".", ",")))}
+                </Text>
               </View>
             </View>
-          </View>
-        </Modal>
-        <HelpModal
-          visible={helpModalVisible}
-          onClose={() => setHelpModalVisible(false)}
-        />
-      </View>
-    );
-  };
+          </Card.Content>
+        </Card>
 
-  export default HomeScreen;
+      </ScrollView>
+      <Modal
+        visible={goalModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setGoalModalVisible(false)}
+      >
+        <View style={HomeStyles.ModalGoalsContainer}>
+          <View style={HomeStyles.ModalGoalsContent}>
+            <Text style={HomeStyles.ModalGoalsTitle}>Configurar Limite de Gastos</Text>
+
+            <View style={HomeStyles.monthYearSelector}>
+              <TouchableOpacity onPress={() => changeModalMonth("prev")}>
+                <Icon name="chevron-left" size={24} />
+              </TouchableOpacity>
+              <Text style={HomeStyles.monthYearText}>
+                {formatMonthYear(modalMonth, modalYear)}
+              </Text>
+              <TouchableOpacity onPress={() => changeModalMonth("next")}>
+                <Icon name="chevron-right" size={24} />
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={HomeStyles.ModalGoalsInput}
+              placeholder="Digite o limite de gastos"
+              keyboardType="numeric"
+              value={spendingGoal}
+              onChangeText={handleChange}
+            />
+
+            <View style={HomeStyles.ModalGoalsButtons}>
+              <TouchableOpacity style={HomeStyles.ModalGoalsSaveButton} onPress={saveGoal}>
+                <Text style={HomeStyles.ModalGoalsSaveButtonText}>Salvar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={HomeStyles.ModalGoalsCancelButton} onPress={() => setGoalModalVisible(false)}>
+                <Text style={HomeStyles.ModalGoalsCancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {/* Modal */}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <View style={HomeStyles.modalContainer}>
+          <View style={HomeStyles.modalContent}>
+            <View style={HomeStyles.modalBody}>
+              <View style={HomeStyles.buttonContainer}>
+                <TouchableOpacity
+                  style={[
+                    HomeStyles.modalButton,
+                    selectedCalculationType === "category" &&
+                    HomeStyles.modalButtonSelected,
+                  ]}
+                  onPress={() => setSelectedCalculationType("category")}
+                >
+                  <Text style={HomeStyles.modalButtonText}>Por Categoria</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    HomeStyles.modalButton,
+                    selectedCalculationType === "account" &&
+                    HomeStyles.modalButtonSelected,
+                  ]}
+                  onPress={() => setSelectedCalculationType("account")}
+                >
+                  <Text style={HomeStyles.modalButtonText}>Por Conta</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView>
+                {selectedCalculationType === "category" ? (
+                  <View>
+                    <View style={HomeStyles.balanceContainer}>
+                      <View style={HomeStyles.column}>
+                        <Text style={HomeStyles.modalSectionTitle}>Receitas</Text>
+                        <Text style={HomeStyles.movementTextIncome}>
+                          {formatToBRL(parseFloat(getCategoryTotals("income").totalSum))}
+                        </Text>
+                        {getCategoryTotals("income").totals.map((category) => (
+                          <Text key={category.id}>
+                            {category.name}
+                            {"\n"}
+                            <Text style={HomeStyles.incomeTotal}>
+                              {formatToBRL(parseFloat(category.total))}
+                            </Text>
+                          </Text>
+                        ))}
+                      </View>
+                      <View style={HomeStyles.column}>
+                        <Text style={HomeStyles.modalSectionTitle}>Despesas</Text>
+                        <Text style={HomeStyles.movementTextExpense}>
+                          {formatToBRL(parseFloat(getCategoryTotals("expense").totalSum))}
+                        </Text>
+                        {getCategoryTotals("expense").totals.map((category) => (
+                          <Text key={category.id}>
+                            {category.name}
+                            {"\n"}
+                            <Text style={HomeStyles.expenseTotal}>
+                              {formatToBRL(parseFloat(category.total))}
+                            </Text>
+                          </Text>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <View>
+                    <View style={HomeStyles.balanceContainer}>
+                      <View style={HomeStyles.column}>
+                        <Text style={HomeStyles.modalSectionTitle}>Receitas</Text>
+                        <Text style={HomeStyles.movementTextIncome}>
+                          {formatToBRL(parseFloat(getAccountTotals("income").totalSum))}
+                        </Text>
+                        {getAccountTotals("income").totals.map((account) => (
+                          <Text key={account.id}>
+                            {account.name}
+                            {"\n"}
+                            <Text style={HomeStyles.incomeTotal}>
+                              {formatToBRL(parseFloat(account.total))}
+                            </Text>
+                          </Text>
+                        ))}
+                      </View>
+                      <View style={HomeStyles.column}>
+                        <Text style={HomeStyles.modalSectionTitle}>Despesas</Text>
+                        <Text style={HomeStyles.movementTextExpense}>
+                          {formatToBRL(parseFloat(getAccountTotals("expense").totalSum))}
+                        </Text>
+                        {getAccountTotals("expense").totals.map((account) => (
+                          <Text key={account.id}>
+                            {account.name}
+                            {"\n"}
+                            <Text style={HomeStyles.expenseTotal}>
+                              {formatToBRL(parseFloat(account.total))}
+                            </Text>
+                          </Text>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </ScrollView>
+              <View style={HomeStyles.balanceRow}>
+                <Text style={HomeStyles.modalTitle}>Balanço</Text>
+                <Text style={HomeStyles.modalBalanceTotal}>
+                  {formatToBRL(parseFloat(getCategoryTotals("income").totalSum) -
+                    parseFloat(getCategoryTotals("expense").totalSum))}
+                </Text>
+              </View>
+
+
+
+              <TouchableOpacity
+                onPress={closeModal}
+                style={HomeStyles.modalCloseButton}
+              >
+                <Text style={HomeStyles.modalCloseText}>Fechar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <HelpModal
+        visible={helpModalVisible}
+        onClose={() => setHelpModalVisible(false)}
+      />
+    </View>
+  );
+};
+
+export default HomeScreen;

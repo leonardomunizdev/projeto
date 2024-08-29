@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, TextInput, Button, TouchableOpacity, Text, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet } from 'react-native';
+import { Picker } from "@react-native-picker/picker";
+
 
 const EditCategoryModal = ({ visible, onClose, category, updateCategory }) => {
     const [categoryName, setCategoryName] = useState('');

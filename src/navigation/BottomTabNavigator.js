@@ -1,7 +1,6 @@
-// navigation/BottomTabNavigator.js
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MaterialCommunityIcons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons'; // Removi ícones não usados
 import HomeScreen from '../screens/HomeScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import AddTransactionScreen from '../screens/AddTransactionScreen';
@@ -10,6 +9,7 @@ import StatisticsScreen from '../screens/StatisticsScreen';
 import PlusButton from '../components/PlusButton';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
+
 const Tab = createBottomTabNavigator();
 
 const TransactionsTabButton = (props) => {
@@ -25,17 +25,21 @@ const TransactionsTabButton = (props) => {
 };
 
 const Animation = (teste) => {
-  return(
-    <TouchableOpacity
-      {...teste}
-    />
+  return (
+    <TouchableOpacity {...teste} />
   );
-}
+};
+
 const BottomTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarStyle: { height: 60 },
+        tabBarStyle: { 
+          backgroundColor: 'white', // Fundo da barra de navegação
+          height: 60 
+        },
+        tabBarActiveTintColor: '#ff5722', // Cor dos ícones e texto quando selecionados
+        tabBarInactiveTintColor: 'gray', // Cor dos ícones e texto quando não selecionados
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === 'Transações') {
@@ -58,9 +62,8 @@ const BottomTabNavigator = () => {
         name="Home"
         component={HomeScreen}
         options={{ headerShown: false,
-          tabBarButton: (teste) =>  < Animation {...teste} />,
-
-         }}
+          tabBarButton: (teste) =>  <Animation {...teste} />,
+        }}
       />
       <Tab.Screen
         name="Transações"
@@ -75,20 +78,20 @@ const BottomTabNavigator = () => {
         component={AddTransactionScreen}  
         options={{ tabBarLabel: '', headerShown: false }}
       />
-
       <Tab.Screen
         name="Relatório"
         component={StatisticsScreen}
         options={{ 
-          tabBarButton: (teste) =>  < Animation {...teste} />,
-          headerShown: false }}
+          tabBarButton: (teste) => <Animation {...teste} />,
+          headerShown: false
+        }}
       />
       <Tab.Screen
         name="Opções"
         component={OptionsScreen}
-        options={{ headerShown: false,  
-          tabBarButton: (teste) =>  < Animation {...teste} />,
-
+        options={{ 
+          headerShown: false,  
+          tabBarButton: (teste) => <Animation {...teste} />,
         }}
       />
     </Tab.Navigator>

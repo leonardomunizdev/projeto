@@ -15,11 +15,15 @@ import { useCategories } from "../../../context/CategoryContext";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons'; // Importa ícones para o botão de remoção
+import { format, addMonths, addWeeks } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const { updateTransaction } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
+  const [date, setDate] = useState(new Date());
   const { transactions } = useTransactions();
   const [type, setType] = useState(transaction.type);
   const [description, setDescription] = useState(transaction.description);
@@ -27,11 +31,31 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const [categoryId, setCategoryId] = useState(transaction.categoryId);
   const [accountId, setAccountId] = useState(transaction.accountId);
   const [attachments, setAttachments] = useState(transaction.attachments || []);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    setDate(new Date(transaction.date)); // Inicializa com a data da transação
+    setType(transaction.type);
+    setDescription(transaction.description);
+    setAmount(formatValue(transaction.amount.toFixed(2).toString()));
+    setCategoryId(transaction.categoryId);
+    setAccountId(transaction.accountId);
+    setAttachments(transaction.attachments || []);
+  }, [transaction]);
 
   // Filtra as categorias de acordo com o tipo de transação selecionado
   const filteredCategories = categories.filter(
     (category) => category.type === type
   );
+  const onChange = (event, selectedDate) => {
+    setShowDatePicker(false); // Fechar o picker após a seleção
+    if (selectedDate) {
+      setDate(selectedDate); // Atualizar a data somente se houver uma nova seleção
+    }
+  };
+  
+
+
 
   const formatValue = (value) => {
     // Remove caracteres não numéricos
@@ -81,34 +105,34 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
       type,
       description,
       amount: parseFloat(convertToAmerican(amount)),
+      date, // Inclua a data atualizada
       categoryId,
       accountId,
-      attachments, // Inclua os anexos
+      attachments,
     };
-
-    console.log("Transações antes da atualização:", transactions);
-
+  
     if (transaction.isRecurring) {
       transactions.forEach((trans) => {
         if (trans.recurrenceId === transaction.recurrenceId) {
-          console.log("Atualizando transação:", trans);
           updateTransaction({
             ...trans,
             type,
             description,
             amount: parseFloat(convertToAmerican(amount)),
+            date, // Inclua a data atualizada
             categoryId,
             accountId,
-            attachments, // Inclua os anexos
+            attachments,
           });
         }
       });
     } else {
       updateTransaction(updatedTransaction);
     }
-
+  
     onClose();
   };
+  
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -116,9 +140,9 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
       allowsEditing: false, // Define como false para não permitir edição
       quality: 1,
     });
-  
+
     console.log(result); // Adicione isto para verificar o retorno
-  
+
     if (!result.canceled) {
       setAttachments([...attachments, result.assets[0].uri]);
     }
@@ -182,6 +206,30 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             value={amount}
             onChangeText={handleChange}
           />
+
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowDatePicker(true)}>
+            <TextInput
+              style={{color: 'white'}}
+              placeholder="Data"
+              value={format(date, "dd/MM/yyyy", { locale: ptBR })}
+              editable={false}
+              pointerEvents="none"
+            />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              testID="dateTimePicker"
+              value={date}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false); // Fechar o picker após selecionar
+                if (selectedDate) {
+                  setDate(selectedDate); // Atualiza a data somente se houver uma nova seleção
+                }
+              }}
+            />
+          )}
 
           <Picker
             selectedValue={categoryId}

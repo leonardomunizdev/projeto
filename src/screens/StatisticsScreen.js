@@ -100,7 +100,7 @@ const DashboardScreen = () => {
       installmentNumber = totalInstallments;
     }
 
-    return ` (${installmentNumber}/${totalInstallments})`;
+    return ` (${totalInstallments})`;
   };
 
   const formatNumberBR = (value) => {

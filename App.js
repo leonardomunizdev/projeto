@@ -7,16 +7,15 @@ import { CategoryProvider } from './src/context/CategoryContext';
 
 const App = () => {
   return (
-    
-    <NavigationContainer>
-      <TransactionProvider>
-        <CategoryProvider>
-          <AccountProvider>
-            <BottomTabNavigator />
-          </AccountProvider>
-        </CategoryProvider>
-      </TransactionProvider>
-    </NavigationContainer>
+      <NavigationContainer>
+        <TransactionProvider>
+          <CategoryProvider>
+            <AccountProvider>
+              <BottomTabNavigator />
+            </AccountProvider>
+          </CategoryProvider>
+        </TransactionProvider>
+      </NavigationContainer>
   );
 };
 
