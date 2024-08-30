@@ -16,8 +16,6 @@ import { shareAsync } from 'expo-sharing';
 import * as Updates from 'expo-updates';
 import HelpModal from '../components/modals/options/HelpModal';
 import JSZip from 'jszip';
-import SelectedCardsModal from '../components/modals/home/selectedCardsModal';
-import useCardVisibility from '../hooks/useCardVisibility.';
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);

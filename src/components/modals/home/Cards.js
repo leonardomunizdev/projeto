@@ -1,7 +1,7 @@
 // src/components/Cards.js
 
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 import HomeStyles from '../../../styles/screens/HomeScreenStyles';
@@ -20,43 +20,37 @@ export const BalanceCard = ({ balance, balanceColor, formatToBRL, label }) => (
   );
   
 
-export const AbstractCard = ({ totalIncome, totalExpense, formatToBRL, onLongPress }) => {
+  export const AbstractCard = ({ monthlyIncome, monthlyExpense, formatToBRL, onLongPress }) => {
     const navigation = useNavigation();
     
     const navigateToTransactions = (type) => {
         navigation.navigate("Transações", { filterType: type });
-      };
+    };
+    
     return(
-
-    <View style={HomeStyles.summaryContainer}>
-        <Card style={HomeStyles.card} onPress={() => navigateToTransactions("income")} onLongPress={onLongPress}>
-            <Card.Content>
-
-                <View style={HomeStyles.summaryItemContainer}>
-                    <Text style={HomeStyles.summaryItemTitle}>Receitas</Text>
-                    <Text style={[HomeStyles.summaryItemAmount, { color: 'blue' }]}>
-                        {formatToBRL(totalIncome)}
-                    </Text>
-                </View>
-            </Card.Content>
-        </Card>
-        <Card style={HomeStyles.card} onPress={() => navigateToTransactions("expense")} onLongPress={onLongPress}>
-
-            <Card.Content>
-                <View style={HomeStyles.summaryItemContainer}>
-                    <Text style={HomeStyles.summaryItemTitle}>Despesas</Text>
-                    <Text style={[HomeStyles.summaryItemAmount, { color: 'red' }]}>
-                        {formatToBRL(totalExpense)}
-                    </Text>
-                </View>
-            </Card.Content>
-        </Card>
-
-
-
-    </View>
-);
-
+        <View style={HomeStyles.summaryContainer}>
+            <Card style={HomeStyles.card} onPress={() => navigateToTransactions("income")} onLongPress={onLongPress}>
+                <Card.Content>
+                    <View style={HomeStyles.summaryItemContainer}>
+                        <Text style={HomeStyles.summaryItemTitle}>Receitas do Mês</Text>
+                        <Text style={[HomeStyles.summaryItemAmount, { color: 'blue' }]}>
+                            {formatToBRL(monthlyIncome)}
+                        </Text>
+                    </View>
+                </Card.Content>
+            </Card>
+            <Card style={HomeStyles.card} onPress={() => navigateToTransactions("expense")} onLongPress={onLongPress}>
+                <Card.Content>
+                    <View style={HomeStyles.summaryItemContainer}>
+                        <Text style={HomeStyles.summaryItemTitle}>Despesas do Mês</Text>
+                        <Text style={[HomeStyles.summaryItemAmount, { color: 'red' }]}>
+                            {formatToBRL(monthlyExpense)}
+                        </Text>
+                    </View>
+                </Card.Content>
+            </Card>
+        </View>
+    );
 };
 
 export const SpendingLimitCard = ({
@@ -117,12 +111,15 @@ export const SpendingLimitCard = ({
 
 };
 
+
+
 export const AccountsCard = ({
     accounts,
     accountValues,
     formatToBRL,
     HomeStyles,
-    onLongPress
+    onLongPress,
+    onPress
 }) => {
     const navigation = useNavigation();
 
@@ -131,12 +128,11 @@ export const AccountsCard = ({
     };
 
     return (
-        <Card style={HomeStyles.accountsCard} onLongPress={onLongPress}>
+        <Card style={HomeStyles.accountsCard} onLongPress={onLongPress} onPress={onPress}>
             <Card.Content>
                 <Text style={HomeStyles.accountsTitle}>Contas</Text>
                 {accounts.map((account) => (
                     <View key={account.id} style={HomeStyles.accountItem}>
-                        
                         <Text style={HomeStyles.accountName}>
                             {account.name}{'\n'}
                             <Text
@@ -146,18 +142,15 @@ export const AccountsCard = ({
                                 ]}
                             >
                                 {formatToBRL(parseFloat((accountValues[account.id] || 0)))}
-                                
                             </Text>
                         </Text>
                         <TouchableOpacity
                             onPress={() => navigateToAddTransactionsAccount(account.id)}
                             style={HomeStyles.addButton}
                         >
-                            <MaterialIcons name="add" size={30} color="blue" />
+                            <MaterialIcons name="add" size={30} color="blue" />         
                         </TouchableOpacity>
-                        
                     </View>
-                    
                 ))}
                 <View style={HomeStyles.accountDivider} />
                 <View style={HomeStyles.totalContainer}>
@@ -170,14 +163,18 @@ export const AccountsCard = ({
                             },
                         ]}
                     >
-                        {formatToBRL(parseFloat(Object.values(accountValues).reduce((a, b) => a + b, 0)))}
-                        
+                        {formatToBRL(
+                            parseFloat(
+                                Object.values(accountValues).reduce((a, b) => a + b, 0)
+                            )
+                        )}
                     </Text>
                 </View>
             </Card.Content>
         </Card>
     );
 };
+
 
 export const MonthlyBalanceCard = ({
     monthlyIncome,
@@ -222,3 +219,4 @@ export const MonthlyBalanceCard = ({
         </Card.Content>
     </Card>
 );
+

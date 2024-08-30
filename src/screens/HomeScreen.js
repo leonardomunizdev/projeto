@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback  } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Modal, Switch } from "react-native";
 import { useTransactions } from "../context/TransactionContext";
 import { useAccounts } from "../context/AccountContext";
@@ -11,6 +11,7 @@ import SelectedCardsModal from '../components/modals/home/selectedCardsModal';
 import MonthLimitModal from '../components/modals/home/MonthLimitModal';
 import { BalanceCard, AbstractCard, SpendingLimitCard, AccountsCard, MonthlyBalanceCard } from '../components/modals/home/Cards';
 import useCardVisibility from '../hooks/useCardVisibility.';
+import CardsModal from "../components/modals/home/CardsModal";
 
 const HomeScreen = () => {
   const { transactions } = useTransactions();
@@ -34,10 +35,10 @@ const HomeScreen = () => {
   const [monthlyBalances, setMonthlyBalances] = useState({});
   const [displayedBalance, setDisplayedBalance] = useState(0);
   const [balanceLabel, setBalanceLabel] = useState('Saldo');
-  const [refresh, setRefresh] = useState(false); 
+  const [refresh, setRefresh] = useState(false);
   const [savedGoal, setSavedGoal] = useState("");
+  const [accountCardsVisible, setAccountCardsVisible] = useState(false);
 
-  
   useEffect(() => {
     const loadGoal = async () => {
       try {
@@ -62,7 +63,7 @@ const HomeScreen = () => {
     }
   };
 
-  
+
 
 
   useEffect(() => {
@@ -109,46 +110,57 @@ const HomeScreen = () => {
     const balances = {};
 
     transactions.forEach((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      const transactionMonth = transactionDate.getMonth();
-      const transactionYear = transactionDate.getFullYear();
-      const amount = parseFloat(transaction.amount);
+        const transactionDate = new Date(transaction.date);
+        const transactionMonth = transactionDate.getMonth();
+        const transactionYear = transactionDate.getFullYear();
+        const amount = parseFloat(transaction.amount);
 
-      if (isNaN(amount)) {
-        console.warn(`Valor inválido para a transação: ${transaction.amount}`);
-        return;
-      }
-
-      // Acumulados
-      if (transactionDate <= today) {
-        if (transaction.type === "income") {
-          income += amount;
-          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) + amount;
-        } else if (transaction.type === "expense") {
-          expense += amount;
-          accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) - amount;
+        if (isNaN(amount)) {
+            console.warn(`Valor inválido para a transação: ${transaction.amount}`);
+            return;
         }
-      }
 
-      // Mensal
-      if (transactionMonth === currentMonth && transactionYear === currentYear) {
-        if (transaction.type === "income") {
-          monthlyIncome += amount;
-        } else if (transaction.type === "expense") {
-          monthlyExpense += amount;
+        // Calcular acumulado de cada conta somente até o mês selecionado
+        const isInSelectedRange =
+            transactionYear < currentYear ||
+            (transactionYear === currentYear && transactionMonth <= currentMonth);
+
+        if (isInSelectedRange) {
+            if (transaction.type === "income") {
+                accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) + amount;
+            } else if (transaction.type === "expense") {
+                accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) - amount;
+            }
         }
-      }
 
-      // Armazenando saldos mensais
-      const balanceKey = `${transactionYear}-${transactionMonth}`;
-      if (!balances[balanceKey]) {
-        balances[balanceKey] = 0;
-      }
-      if (transaction.type === "income") {
-        balances[balanceKey] += amount;
-      } else if (transaction.type === "expense") {
-        balances[balanceKey] -= amount;
-      }
+        // Calcular total de renda e despesas acumuladas até o mês atual
+        if (transactionDate <= today) {
+            if (transaction.type === "income") {
+                income += amount;
+            } else if (transaction.type === "expense") {
+                expense += amount;
+            }
+        }
+
+        // Mensal
+        if (transactionMonth === currentMonth && transactionYear === currentYear) {
+            if (transaction.type === "income") {
+                monthlyIncome += amount;
+            } else if (transaction.type === "expense") {
+                monthlyExpense += amount;
+            }
+        }
+
+        // Armazenando saldos mensais
+        const balanceKey = `${transactionYear}-${transactionMonth}`;
+        if (!balances[balanceKey]) {
+            balances[balanceKey] = 0;
+        }
+        if (transaction.type === "income") {
+            balances[balanceKey] += amount;
+        } else if (transaction.type === "expense") {
+            balances[balanceKey] -= amount;
+        }
     });
 
     // Atualizando estados
@@ -163,18 +175,15 @@ const HomeScreen = () => {
     const remaining = spendingGoalValue - monthlyExpense;
     setAmountLeft(remaining);
 
-    const initialAccountValues = {};
-    accounts.forEach((account) => {
-      initialAccountValues[account.id] = accountTotals[account.id] || 0;
-    });
-    setAccountValues(initialAccountValues);
+    // Atualizando os valores das contas com o total acumulado até o mês selecionado
+    setAccountValues(accountTotals);
 
     // Atualizar saldo acumulado
     setAccumulatedBalance((prevBalance) => prevBalance + monthlyBalance);
 
     // Armazenar os saldos mensais
     setMonthlyBalances(balances);
-  }, [transactions, accounts, currentMonth, currentYear, savedGoal]);
+}, [transactions, accounts, currentMonth, currentYear, savedGoal]);
 
   console.log("sss", savedGoal);
 
@@ -310,6 +319,7 @@ const HomeScreen = () => {
           <Icon name="chevron-right" size={24} />
         </TouchableOpacity>
       </View>
+
       <View style={HomeStyles.accountDivider} />
 
       <ScrollView contentContainerStyle={HomeStyles.scrollViewContent}>
@@ -324,11 +334,10 @@ const HomeScreen = () => {
 
 
         <AbstractCard
-          totalIncome={totalIncome}
-          totalExpense={totalExpense}
+          monthlyIncome={monthlyIncome}
+          monthlyExpense={monthlyExpense}
           formatToBRL={formatToBRL}
           onLongPress={() => setSelectedCardsModalVisible(true)}
-
         />
 
         {cardVisibility.SpendingLimitCard &&
@@ -348,6 +357,7 @@ const HomeScreen = () => {
             formatToBRL={formatToBRL}
             HomeStyles={HomeStyles}
             onLongPress={() => setSelectedCardsModalVisible(true)}
+            onPress={() => setAccountCardsVisible(true)}
           />}
 
         {cardVisibility.MonthlyBalanceCard &&
@@ -380,11 +390,16 @@ const HomeScreen = () => {
         visible={helpModalVisible}
         onClose={() => setHelpModalVisible(false)}
       />
+
       <SelectedCardsModal
         visible={selectedCardsModalVisible}
         onClose={() => setSelectedCardsModalVisible(false)}
         cardVisibility={cardVisibility}
         toggleCardVisibility={toggleCardVisibility}
+      />
+      <CardsModal
+        visible={accountCardsVisible}
+        onClose={() => setAccountCardsVisible(false)}
       />
 
     </View>
