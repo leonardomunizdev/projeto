@@ -33,12 +33,12 @@ export const AccountProvider = ({ children }) => {
     saveAccounts();
   }, [accounts]);
 
-  const addAccount = (name) => {
+  const addAccount = (name, initialBalance = 0) => { // Adicionando initialBalance como parâmetro
     const existingAccount = accounts.find(account => account.name === name);
     if (existingAccount) {
       return existingAccount.id; // Retorna a ID da conta existente
     }
-    const newAccount = { id: Date.now().toString(), name };
+    const newAccount = { id: Date.now().toString(), name, initialBalance }; // Inclui initialBalance na nova conta
     setAccounts(prevAccounts => [...prevAccounts, newAccount]);
     return newAccount.id;
   };

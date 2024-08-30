@@ -3,9 +3,8 @@ import { Modal, View, Text, TextInput, Button, TouchableOpacity, Alert, FlatList
 import { Ionicons } from '@expo/vector-icons';
 import optionsStyles from '../../../styles/screens/OptionsScreenStyles'; 
 import { useAccounts } from '../../../context/AccountContext';
+import { useTransactions } from '../../../context/TransactionContext';
 import EditAccountModal from './EditAccountModal'; 
-
-
 
 const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) => {
   const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
@@ -13,22 +12,26 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
+  const [initialBalance, setInitialBalance] = useState(''); // Novo estado para o valor inicial
 
   const handleAddAccount = () => {
     if (newAccountName.trim() === '') {
       Alert.alert('Erro', 'O nome da conta não pode estar vazio.');
       return;
     }
-    addAccount(newAccountName);
+    if (initialBalance.trim() === '' || isNaN(initialBalance)) {
+      Alert.alert('Erro', 'O valor inicial deve ser um número válido.');
+      return;
+    }
+    addAccount(newAccountName, parseFloat(initialBalance)); // Passando o valor inicial
     setNewAccountName('');
+    setInitialBalance(''); // Limpa o campo de valor inicial após adicionar a conta
   };
 
   const openEditModal = (account) => {
     setSelectedAccount(account);
     setIsEditModalVisible(true);
   };
-
-  
 
   const openConfirmModal = (accountId) => {
     setAccountToRemove(accountId);
@@ -44,7 +47,6 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
   };
 
   return (
-    
     <View style={optionsStyles.container}>
       <Modal
         visible={visible}
@@ -67,13 +69,20 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
               onChangeText={setNewAccountName}
               placeholder="Nome da nova conta"
             />
+            <TextInput
+              style={optionsStyles.input}
+              value={initialBalance}
+              onChangeText={setInitialBalance}
+              placeholder="Valor inicial"
+              keyboardType="numeric" // Permite apenas entrada numérica
+            />
             <Button title="Adicionar Conta" onPress={handleAddAccount} />
             <FlatList
               data={accounts}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
                 <View style={optionsStyles.accountItem}>
-                  <Text style={optionsStyles.accountName}>{item.name}</Text>
+                  <Text style={optionsStyles.accountName}>{item.name} - {item.initialBalance}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TouchableOpacity onPress={() => openEditModal(item)}>
                       <Ionicons name="create" size={24} color="black" />
@@ -88,17 +97,15 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
           </View>
         </View>
       </Modal>
+
       {selectedAccount && (
         <EditAccountModal
-        visible={isEditModalVisible}
-        onClose={() => setIsEditModalVisible(false)}
-        account={selectedAccount} // Passando a conta correta para o modal
-        onSave={updateAccount} // Usando a função que chama updateAccount
-      />
-        
-      )}   
-
-      
+          visible={isEditModalVisible}
+          onClose={() => setIsEditModalVisible(false)}
+          account={selectedAccount}
+          onSave={updateAccount}
+        />
+      )}
 
       <Modal
         visible={isConfirmModalVisible}

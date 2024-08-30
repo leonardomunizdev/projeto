@@ -4,7 +4,6 @@ export const HomeStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    paddingTop: 50,
     backgroundColor: "#f5f5f5",
   },
   balanceContainer: {
@@ -46,11 +45,11 @@ export const HomeStyles = StyleSheet.create({
     },
     cardAmountIncome: {
       fontSize: 16,
-      color: 'blue',
+     
     },
     cardAmountExpense: {
       fontSize: 16,
-      color: 'red',
+     
       
     },
     accountsCard: {
@@ -105,7 +104,8 @@ export const HomeStyles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginVertical: 8,
+      marginVertical: 2,
+      backgroundColor: '#ece9e8'
     },
     monthYearText: {
       fontSize: 18,
@@ -169,7 +169,7 @@ export const HomeStyles = StyleSheet.create({
     modalBalanceTotal: {
       fontSize: 18,
       fontWeight: 'bold',
-      color: 'blue', // ou 'red', dependendo do valor do balanço
+      color: 'black', // ou 'red', dependendo do valor do balanço
     },
     modalSectionTitle: {
       fontSize: 20,
@@ -338,6 +338,15 @@ export const HomeStyles = StyleSheet.create({
       fontSize: 24,
       color: 'blue',
     },
+    additionalCard: {
+      marginTop: 10,
+      padding: 20,
+      backgroundColor: '#f0f0f0',
+  },
+  additionalCardTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+  },
   });
 
   export default HomeStyles;

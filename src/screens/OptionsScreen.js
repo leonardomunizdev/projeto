@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Text, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, View, StyleSheet, Alert, BackHandler, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { RFValue } from 'react-native-responsive-fontsize';
@@ -16,6 +16,8 @@ import { shareAsync } from 'expo-sharing';
 import * as Updates from 'expo-updates';
 import HelpModal from '../components/modals/options/HelpModal';
 import JSZip from 'jszip';
+import SelectedCardsModal from '../components/modals/home/selectedCardsModal';
+import useCardVisibility from '../hooks/useCardVisibility.';
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
@@ -30,7 +32,9 @@ const OptionsScreen = () => {
   const [isLoading, setIsLoading] = useState(false); // Novo estado para carregamento
   const [helpModalVisible, setHelpModalVisible] = useState(false);
 
-  
+
+
+
   const showRestartAlert = () => {
     Alert.alert(
       'Reiniciar o Aplicativo',
@@ -64,14 +68,14 @@ const OptionsScreen = () => {
         obj[key] = value;
         return obj;
       }, {});
-  
+
       // 2. Criar um novo arquivo ZIP
       const zip = new JSZip();
-  
+
       // 3. Adicionar dados JSON ao ZIP
       const jsonData = JSON.stringify(dataToExport);
       zip.file('data.json', jsonData);
-  
+
       // 4. Adicionar imagens ao ZIP
       const transactions = JSON.parse(dataToExport['transactions'] || '[]');
       for (const transaction of transactions) {
@@ -85,19 +89,19 @@ const OptionsScreen = () => {
           }
         }
       }
-  
+
       // 5. Gerar o arquivo ZIP
       const zipContent = await zip.generateAsync({ type: 'base64' });
-  
+
       // 6. Salvar o arquivo ZIP no sistema de arquivos
       const zipFileUri = `${FileSystem.documentDirectory}backup.zip`;
       await FileSystem.writeAsStringAsync(zipFileUri, zipContent, { encoding: FileSystem.EncodingType.Base64 });
-  
+
       // 7. Compartilhar o arquivo ZIP
       await shareAsync(zipFileUri);
-  
+
       console.log('Backup completo.');
-  
+
     } catch (error) {
       console.error('Erro ao exportar os dados:', error);
     }
@@ -206,6 +210,7 @@ const OptionsScreen = () => {
               <Ionicons name="cloud-download" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Importar Backup de dados</Text>
             </TouchableOpacity>
+            
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setHelpModalVisible(true)}>
               <Ionicons name="help-circle-outline" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Ajuda</Text>
@@ -214,7 +219,6 @@ const OptionsScreen = () => {
               <Ionicons name="trash" size={RFValue(24)} color="red" />
               <Text style={optionsStyles.optionText}>Limpar Todos os Dados</Text>
             </TouchableOpacity>
-
             <AccountModal
               visible={isAccountModalVisible}
               onClose={() => setIsAccountModalVisible(false)}
@@ -250,6 +254,7 @@ const OptionsScreen = () => {
               visible={helpModalVisible}
               onClose={() => setHelpModalVisible(false)}
             />
+            
           </>
         )}
       </KeyboardAvoidingView>
