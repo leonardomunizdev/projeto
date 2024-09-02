@@ -153,7 +153,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
       installmentNumber = totalInstallments;
     }
   
-    return ` ${installmentNumber} de ${totalInstallments}`;
+    return `${totalInstallments}`;
   };
 
 
