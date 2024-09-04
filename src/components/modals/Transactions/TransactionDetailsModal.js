@@ -16,6 +16,9 @@ import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Ionicons } from "@expo/vector-icons";
+import EditTransactionModal from "./EditTransactionModal";
+import { useTransactions } from "../../../context/TransactionContext";
+import TransactionsStyles from "../../../styles/screens/TransactionsScreenStyles";
 
 // Função para converter arquivos em base64
 const getBase64 = async (uri) => {
@@ -47,6 +50,104 @@ const formatDate = (date) => {
 
 const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
   const [attachmentsBase64, setAttachmentsBase64] = useState([]);
+  const [transactionToEdit, setTransactionToEdit] = useState(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const {transactions, removeTransaction } = useTransactions();
+  const [removeModalVisible, setRemoveModalVisible] = useState(false);
+  const [modalType, setModalType] = useState(null);
+  const [currentTransaction, setCurrentTransaction] = useState(null);
+
+  const handleEdit = () => {
+    setTransactionToEdit(transaction);
+    setEditModalVisible(true);
+  };
+
+  
+  
+  const removeAllRecurringTransactions = () => {
+    const { recurrenceId } = currentTransaction;
+    const transactionsToRemove = transactions.filter(
+      (transaction) => transaction.recurrenceId === recurrenceId
+    );
+    transactionsToRemove.forEach((transaction) =>
+      removeTransaction(transaction.id)
+    );
+    setRemoveModalVisible(false);
+  };
+
+  const removePreviousRecurringTransactions = () => {
+    const { recurrenceId, date } = currentTransaction;
+
+    const transactionsToRemove = transactions.filter(
+      (transaction) =>
+        transaction.recurrenceId === recurrenceId &&
+        moment(transaction.date).isBefore(date, "day")
+    );
+    transactionsToRemove.forEach((transaction) =>
+      removeTransaction(transaction.id)
+    );
+    setRemoveModalVisible(false);
+  };
+
+  const removeFutureRecurringTransactions = () => {
+    const { recurrenceId, date } = currentTransaction;
+
+    const transactionsToRemove = transactions.filter(
+      (transaction) =>
+        transaction.recurrenceId === recurrenceId &&
+        moment(transaction.date).isAfter(date, "day")
+    );
+    transactionsToRemove.forEach((transaction) =>
+      removeTransaction(transaction.id)
+    );
+    setRemoveModalVisible(false);
+  };
+  
+  const confirmDelete = () => {
+    Alert.alert(
+      "Confirmar Exclusão",
+      "Você tem certeza de que deseja excluir esta transação?",
+      [
+        {
+          text: "Cancelar",
+          onPress: () => console.log("Cancelado"),
+          style: "cancel",
+        },
+        {
+          text: "Excluir",
+          onPress: () => {
+            removeTransactionById();
+            onClose(); // Fechar modal de detalhes da transação após a exclusão
+          },
+          style: "destructive",
+        },
+      ]
+    );
+  };
+  
+  
+  useEffect(() => {
+    if (currentTransaction) {
+      if (currentTransaction.isRecurring) {
+        setRemoveModalVisible(true);
+      } else {
+        confirmDelete();
+      }
+    }
+  }, [currentTransaction]);
+
+  const removeTransactionById = () => {
+    if (currentTransaction) {
+      const { id } = currentTransaction;
+      removeTransaction(id);
+      setRemoveModalVisible(false); // Fechar o modal de remoção
+      onClose(); // Fechar o modal de detalhes da transação
+    } else {
+      console.error("Nenhuma transação selecionada para remoção.");
+      Alert.alert("Erro", "Nenhuma transação foi selecionada para remoção.");
+    }
+  };
+  
 
   useEffect(() => {
     const convertAttachments = async () => {
@@ -94,19 +195,18 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
         </style>
       </head>
       <body>
-        ${
-          attachmentsBase64.length > 0
-            ? attachmentsBase64
-                .map(
-                  (attachment) => `
+        ${attachmentsBase64.length > 0
+        ? attachmentsBase64
+          .map(
+            (attachment) => `
           <div>
             <img src="${attachment}" class="attachment-image"/>
           </div>
         `
-                )
-                .join("")
-            : "<p>Nenhum anexo disponível</p>"
-        }
+          )
+          .join("")
+        : "<p>Nenhum anexo disponível</p>"
+      }
       </body>
       </html>
     `;
@@ -131,147 +231,249 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
     ) {
       return '';
     }
-  
+
     const startDate = moment(transaction.startDate, "YYYY-MM-DD");
     const transactionDate = moment(transaction.date, "YYYY-MM-DD");
     const totalInstallments = transaction.recorrenceCount;
-  
+
     // Calcula a diferença em meses entre a data de início e a data da transação
     let monthsDifference = transactionDate.diff(startDate, "months");
-  
+
     // Lógica para calcular o número da parcela
     let installmentNumber;
-  
+
     if (transactionDate.isSame(startDate, "month")) {
       installmentNumber = monthsDifference + 1; // Subtrai 1 se for o mesmo mês da startDate
     } else {
       installmentNumber = monthsDifference + 2; // Soma 2 caso contrário
     }
-  
+
     // Garante que o número da parcela não exceda o total de parcelas
     if (installmentNumber > totalInstallments) {
       installmentNumber = totalInstallments;
     }
-  
+
     return `${totalInstallments}`;
   };
 
-
+  const handleDelete = () => {
+    if (!transaction) return;
+    setCurrentTransaction(transaction);
+  
+    if (transaction.isRecurring) {
+      setRemoveModalVisible(true); // Abrir o modal de remoção para transações recorrentes
+    } else {
+      confirmDelete(); // Mostrar o Alert diretamente para transações não recorrentes
+    }
+  };
   return (
-    
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.title}>Detalhes da Transação</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={24} color="black" />
-          </TouchableOpacity>
-          <ScrollView contentContainerStyle={styles.scrollView}>
-            <View style={styles.tableContainer}>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Descrição</Text>
-                <Text style={styles.tableCell}>
-                  {transaction.description || "N/A"}
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Valor</Text>
-                <Text style={styles.tableCell}>
-                  {formatCurrency(transaction.amount)}
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Categoria</Text>
-                <Text style={styles.tableCell}>
-                  {transaction.categoryName || "N/A"}
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Conta</Text>
-                <Text style={styles.tableCell}>
-                  {transaction.accountName || "N/A"}
-                </Text>
-              </View>
-              <View style={styles.tableRow}>
-                <Text style={styles.tableHeader}>Data</Text>
-                <Text style={styles.tableCell}>
-                  {formatDate(transaction.date)}
-                </Text>
-              </View>
+    <View style={styles.container}>
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <TouchableOpacity style={styles.modalContainer} onPressOut={onClose}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalContent, transaction.type === 'expense' ? styles.stripeExpense : styles.stripeIncome]}>
+            <Text style={styles.title}>{transaction.description || "N/A"}</Text>
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+              <Ionicons name="trash" size={40} color="red" />
+            </TouchableOpacity>
+            <ScrollView contentContainerStyle={styles.scrollView}>
+              <View style={styles.tableContainer}>
 
-              {transaction.isRecurring && (
                 <View style={styles.tableRow}>
-                  <Text style={styles.tableHeader}>Parcela</Text>
+                  <Text style={styles.tableHeader}>Valor</Text>
                   <Text style={styles.tableCell}>
-                    
-                    {
-                    
-                    getCurrentInstallment(transaction)
-                    
-                    
-                    }
+                    {formatCurrency(transaction.amount)}
                   </Text>
                 </View>
-              )}
-            </View>
-            {attachmentsBase64.length > 0 && (
-              <View style={styles.detailContainer}>
-                {attachmentsBase64.map((attachment, index) => {
-                  const isBase64 = attachment.startsWith("data:image/");
-                  return isBase64 ? (
-                    <Image
-                      key={index}
-                      source={{ uri: attachment }}
-                      style={styles.attachmentImage}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <TouchableOpacity
-                      key={index}
-                      onPress={() => handleAttachmentPress(attachment)}
-                    >
-                      <Text style={styles.attachmentText}>
-                        Abrir Anexo {index + 1}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeader}>Categoria</Text>
+                  <Text style={styles.tableCell}>
+                    {transaction.categoryName || "N/A"}
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeader}>Conta</Text>
+                  <Text style={styles.tableCell}>
+                    {transaction.accountName || "N/A"}
+                  </Text>
+                </View>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeader}>Data</Text>
+                  <Text style={styles.tableCell}>
+                    {formatDate(transaction.date)}
+                  </Text>
+                </View>
+
+                {transaction.isRecurring && (
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableHeader}>Parcela</Text>
+                    <Text style={styles.tableCell}>
+
+                      {
+
+                        getCurrentInstallment(transaction)
+
+
+                      }
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
-          </ScrollView>
-          <View style={styles.buttonContainer}>
-            
+              {attachmentsBase64.length > 0 && (
+                <View style={styles.detailContainer}>
+                  {attachmentsBase64.map((attachment, index) => {
+                    const isBase64 = attachment.startsWith("data:image/");
+                    return isBase64 ? (
+                      <Image
+                        key={index}
+                        source={{ uri: attachment }}
+                        style={styles.attachmentImage}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <TouchableOpacity
+                        key={index}
+                        onPress={() => handleAttachmentPress(attachment)}
+                      >
+                        <Text style={styles.attachmentText}>
+                          Abrir Anexo {index + 1}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </ScrollView>
+
+
+
+            <TouchableOpacity
+              onPress={handleEdit}
+              style={[styles.pdfButton, { marginBottom: 10 }]} // Cor verde para o novo botão
+            >
+              <Text style={[styles.buttonText, { color: 'white' }]}>Editar Transação</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               onPress={generateImagesPdf}
-              style={[styles.pdfButton, { backgroundColor: "#28a745" }]} // Cor verde para o novo botão
+              style={[styles.pdfButton,
+              {
+                borderWidth: 2,
+                borderColor: '#007AFF',
+                backgroundColor: 'transparent',
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 20,
+              }
+
+              ]} // Cor verde para o novo botão
             >
-              <Text style={styles.pdfButtonText}>Baixar NF</Text>
+              <Text style={styles.buttonText}>Baixar NF</Text>
+            </TouchableOpacity>
+
+
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+      {transactionToEdit && (
+        <EditTransactionModal
+          isVisible={editModalVisible}
+          onClose={() => setEditModalVisible(false)}
+          transaction={transactionToEdit || {}} // Passa um objeto vazio se transactionToEdit for undefined
+          closeDetail={onClose}
+        />
+      )}
+
+
+
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={removeModalVisible}
+      >
+        <View style={removeModalStyles.modalOverlay}>
+          <View style={removeModalStyles.modalContent}>
+            <Text style={removeModalStyles.modalTitle}>Excluir Transação Recorrente</Text>
+            <TouchableOpacity
+              style={removeModalStyles.optionButton}
+              onPress={() => {
+                removeTransactionById();
+                setRemoveModalVisible(false)
+                onClose();
+              }}
+            >
+              <Text style={removeModalStyles.optionText}>Somente esta</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={removeModalStyles.optionButton}
+              onPress={() => {
+                removeAllRecurringTransactions();
+                setRemoveModalVisible(false)
+                onClose()
+              }}
+            >
+              <Text style={removeModalStyles.optionText}>Todas as parcelas</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={removeModalStyles.optionButton}
+              onPress={() => {
+                removePreviousRecurringTransactions();
+                setRemoveModalVisible(false)
+                onClose();
+              }}
+            >
+              <Text style={removeModalStyles.optionText}>Parcelas anteriores</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={removeModalStyles.optionButton}
+              onPress={() => {
+                removeFutureRecurringTransactions();
+                setRemoveModalVisible(false)
+                onClose();
+              }}
+            >
+              <Text style={removeModalStyles.optionText}>Parcelas futuras</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[removeModalStyles.optionButton, removeModalStyles.cancelButton]}
+              onPress={() => setRemoveModalVisible(false)}
+            >
+              <Text style={removeModalStyles.cancelText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </View>
+
+
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
     backgroundColor: "rgba(0,0,0,0.6)",
   },
   modalContent: {
-    width: "90%",
-    maxHeight: "80%",
+    width: "100%",
+    height: "60%",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
     backgroundColor: "#ffffff",
-    borderRadius: 15,
     padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     elevation: 5,
     shadowColor: "#000000",
     shadowOpacity: 0.2,
@@ -329,20 +531,67 @@ const styles = StyleSheet.create({
   pdfButton: {
     backgroundColor: "#007BFF",
     paddingVertical: 12, // Altura do botão
-    paddingHorizontal: "10%", // Aumentado para maior largura
     borderRadius: 5,
     marginHorizontal: 10, // Adicionado para espaçamento entre os botões
+    borderRadius: 20,
   },
-  pdfButtonText: {
-    color: "#ffffff",
+  buttonText: {
+    textAlign: 'center',
+    color: "black",
     fontWeight: "bold",
     fontSize: 16, // Tamanho da fonte
   },
-  closeButton: {
+  deleteButton: {
     position: "absolute",
-    top: 25,
+    top: 15,
     right: 10,
     zIndex: 1,
+  },
+  stripeIncome: {
+    borderTopColor: 'blue',
+    borderTopWidth: 20,
+  },
+  stripeExpense: {
+    borderTopColor: 'red',
+    borderTopWidth: 20,
+  },
+  
+});
+
+const removeModalStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  optionButton: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  optionText: {
+    fontSize: 16,
+  },
+  cancelButton: {
+    marginTop: 15,
+    borderBottomWidth: 0,
+  },
+  cancelText: {
+    color: 'red',
+    textAlign: 'center',
   },
 });
 

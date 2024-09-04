@@ -105,7 +105,8 @@ export const HomeStyles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'space-between',
       marginVertical: 2,
-      backgroundColor: '#ece9e8'
+      backgroundColor: '#ece9e8',
+      borderRadius: 35
     },
     monthYearText: {
       fontSize: 18,

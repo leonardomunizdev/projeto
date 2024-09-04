@@ -45,6 +45,7 @@ const AddTransactionScreen = () => {
   const { categories } = useCategories();
 
   const [transactionType, setTransactionType] = useState("income");
+
   const [amount, setAmount] = useState("0,00");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date());
@@ -66,6 +67,14 @@ const AddTransactionScreen = () => {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [selectedCategoryType, setSelectedCategoryType] = useState('income');
   const route = useRoute();
+
+
+  useEffect(() => {
+    if (route.params?.handleSaveAndNavigate) {
+      handleSaveAndNavigate();
+    }
+  }, [route.params]);
+
 
   useEffect(() => {
     if (route.params?.imageUri) {
@@ -235,6 +244,8 @@ const AddTransactionScreen = () => {
     } catch (error) {
       console.error("Failed to save last transaction type", error);
     }
+
+    navigation.navigate('AddTransactionScreen', { transactionType: type });
   };
   
 
@@ -369,10 +380,10 @@ const AddTransactionScreen = () => {
     ...addTransactionsStyles.transactionButton,
     backgroundColor:
       recurrence.unit === type ? getButtonColor() : '#CCCCCC',
-  });
+  }); 
   const getStyleButtons = () => ({
-    backgroundColor: getButtonColor(),
-    padding: 10,
+    backgroundColor: getButtonColor(), 
+    padding: 10,  
     margin: 5,
     borderRadius: 5,
     alignItems: "center",
@@ -381,6 +392,7 @@ const AddTransactionScreen = () => {
     color: "white",
     switchThumbColor: 'red',
 
+    
   });
 
 
@@ -457,7 +469,7 @@ const AddTransactionScreen = () => {
                 ))}
               </Picker>
               <TouchableOpacity onPress={() => setIsAccountModalVisible(true)} style={addTransactionsStyles.addButton}>
-                <MaterialIcons name="add" size={24} style={{ color: getButtonColor() }} />
+              <MaterialIcons name="add" size={24} style={[{ color: getButtonColor(),padding: 10,  }]} />
               </TouchableOpacity>
             </View>
 
@@ -477,7 +489,7 @@ const AddTransactionScreen = () => {
                 ))}
               </Picker>
               <TouchableOpacity onPress={() => setIsCategoryModalVisible(true)} style={addTransactionsStyles.addButton}>
-                <MaterialIcons name="add" size={24} style={{ color: getButtonColor() }} />
+                <MaterialIcons name="add" size={24} style={[{ color: getButtonColor(),padding: 10,  }]} />
               </TouchableOpacity>
 
             </View>
@@ -580,9 +592,7 @@ const AddTransactionScreen = () => {
             selectedCategoryType={selectedCategoryType}
             setSelectedCategoryType={setSelectedCategoryType}
           />
-          <TouchableOpacity style={[getStyleButtons()]} onPress={handleSaveAndNavigate}>
-            <Text style={{ color: "white" }}>Salvar</Text>
-          </TouchableOpacity>
+          
         </View>
 
       </ScrollView>

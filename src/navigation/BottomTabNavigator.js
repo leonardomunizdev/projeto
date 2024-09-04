@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Removi ícones não usados
 import HomeScreen from '../screens/HomeScreen';
@@ -31,6 +31,12 @@ const Animation = (teste) => {
 };
 
 const BottomTabNavigator = () => {
+  const [transactionType, setTransactionType] = useState('income');
+
+  const handleChangeTransactionType = (type) => {
+    setTransactionType(type);
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -51,18 +57,19 @@ const BottomTabNavigator = () => {
           } else if (route.name === 'Opções') {
             iconName = 'cog';
           } else if (route.name === 'AddTransactionScreen') {
-            return <PlusButton />;
+            // Não renderize PlusButton como uma tela; apenas como um componente
+            return <PlusButton transactionType={transactionType} />;
           }
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
         tabBarLabelStyle: { fontSize: 14 },
       })}
-    > 
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ headerShown: false,
-          tabBarButton: (teste) =>  <Animation {...teste} />,
+          tabBarButton: (props) => <Animation {...props} />,
         }}
       />
       <Tab.Screen
@@ -82,7 +89,7 @@ const BottomTabNavigator = () => {
         name="Relatório"
         component={StatisticsScreen}
         options={{ 
-          tabBarButton: (teste) => <Animation {...teste} />,
+          tabBarButton: (props) => <Animation {...props} />,
           headerShown: false
         }}
       />
@@ -91,7 +98,7 @@ const BottomTabNavigator = () => {
         component={OptionsScreen}
         options={{ 
           headerShown: false,  
-          tabBarButton: (teste) => <Animation {...teste} />,
+          tabBarButton: (props) => <Animation {...props} />,
         }}
       />
     </Tab.Navigator>

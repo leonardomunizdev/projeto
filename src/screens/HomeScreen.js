@@ -42,20 +42,20 @@ const HomeScreen = () => {
   const [incomeCount, setIncomeCount] = useState(0);
   const [expenseCount, setExpenseCount] = useState(0);
 
-  
+
   const handleOpenAccountModal = (account) => {
     const accountName = account.name || 'Conta Desconhecida';
     const balance = accountValues[account.id] || 0;
-  
+
     setSelectedAccount({
       name: accountName,
       balance: balance
     });
-  
+
     setAccountModalVisible(true);
   };
-  
-  
+
+
   useEffect(() => {
     const loadGoal = async () => {
       try {
@@ -321,47 +321,48 @@ const HomeScreen = () => {
 
     <View style={HomeStyles.container}>
 
-      <View style={HomeStyles.monthYearSelector}>
-
-        <TouchableOpacity style={[
-          { paddingRight: '10%', padding: 20, borderRadius: 20 } // Aumentando a área de contato
-        ]} onPress={() => changeMonth("prev")}>
-          <Icon name="chevron-left" size={24} />
-        </TouchableOpacity>
-        <Text style={HomeStyles.monthYearText}>
-          {formatMonthYear(currentMonth, currentYear)}
-        </Text>
-        <TouchableOpacity style={[
-          { paddingLeft: '10%', padding: 20, borderRadius: 20 } // Aumentando a área de contato
-        ]}
-          onPress={() => changeMonth("next")}>
-          <Icon name="chevron-right" size={24} />
-        </TouchableOpacity>
-      </View>
-      
-      <View style={HomeStyles.accountDivider} />
-
       <ScrollView contentContainerStyle={HomeStyles.scrollViewContent}>
 
-        <BalanceCard
-          balance={displayedBalance}
-          balanceColor={displayedBalance < 0 ? 'red' : 'blue'}
-          formatToBRL={formatToBRL}
-          label={balanceLabel}
-          onLongPress={() => setSelectedCardsModalVisible(true)}
-          accountValues={accountValues}
-        />
+        <View style={    {backgroundColor: '#ece9e8', borderRadius: 35, marginBottom: 20}}>
+          
+          <View style={HomeStyles.monthYearSelector}>
+
+            <TouchableOpacity style={[
+              { paddingRight: '10%', padding: 20, borderRadius: 20  } // Aumentando a área de contato
+            ]} onPress={() => changeMonth("prev")}>
+              <Icon name="chevron-left" size={24} />
+            </TouchableOpacity>
+            <Text style={HomeStyles.monthYearText}>
+              {formatMonthYear(currentMonth, currentYear)}
+            </Text>
+            <TouchableOpacity style={[
+              { paddingLeft: '10%', padding: 20, borderRadius: 20 } // Aumentando a área de contato
+            ]}
+              onPress={() => changeMonth("next")}>
+              <Icon name="chevron-right" size={24} />
+            </TouchableOpacity>
+          </View>
 
 
-        <AbstractCard
-          monthlyIncome={monthlyIncome}
-          monthlyExpense={monthlyExpense}
-          formatToBRL={formatToBRL}
-          onLongPress={() => setSelectedCardsModalVisible(true)}
-          accountValues={accountValues}
+          <BalanceCard
+            balance={displayedBalance}
+            balanceColor={displayedBalance < 0 ? 'red' : 'blue'}
+            formatToBRL={formatToBRL}
+            label={balanceLabel}
+            onLongPress={() => setSelectedCardsModalVisible(true)}
+            accountValues={accountValues}
+          />
 
-        />
 
+          <AbstractCard
+            monthlyIncome={monthlyIncome}
+            monthlyExpense={monthlyExpense}
+            formatToBRL={formatToBRL}
+            onLongPress={() => setSelectedCardsModalVisible(true)}
+            accountValues={accountValues}
+
+          />
+        </View>
         {cardVisibility.SpendingLimitCard &&
           <SpendingLimitCard
             savedGoal={savedGoal}
@@ -421,12 +422,12 @@ const HomeScreen = () => {
         toggleCardVisibility={toggleCardVisibility}
       />
 
-<AccountBalanceModal
-  visible={accountModalVisible}
-  onClose={() => setAccountModalVisible(false)}
-  accountName={selectedAccount?.name || ''}
-  balance={selectedAccount?.balance || 0}
-/>
+      <AccountBalanceModal
+        visible={accountModalVisible}
+        onClose={() => setAccountModalVisible(false)}
+        accountName={selectedAccount?.name || ''}
+        balance={selectedAccount?.balance || 0}
+      />
 
 
     </View>

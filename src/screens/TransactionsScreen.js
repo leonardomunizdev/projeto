@@ -22,6 +22,9 @@ import "moment/locale/pt-br";
 import EditTransactionModal from "../components/modals/Transactions/EditTransactionModal";
 import TransactionDetailsModal from "../components/modals/Transactions/TransactionDetailsModal";
 import { Alert } from "react-native";
+import HomeStyles from "../styles/screens/HomeScreenStyles";
+import { Ionicons } from "@expo/vector-icons";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 // FORMATA OS VALORES PARA REAIS(BRL)
 const formatCurrency = (value) => {
@@ -382,22 +385,23 @@ const handleTransactionPress = (transaction) => {
 
   return (
     
-    <View style={TransactionsStyles.container}>
-      <View style={TransactionsStyles.footer}>
+    <View style={HomeStyles.container}>
+
+      <View style={HomeStyles.monthYearSelector}>
         <TouchableOpacity
           onPress={() => changeMonth(-1)}
           style={TransactionsStyles.navButton}
         >
-          <Text style={TransactionsStyles.navButtonText}>Anterior</Text>
+          <Icon name="chevron-left" size={24} />
         </TouchableOpacity>
-        <Text style={TransactionsStyles.footerTitle}>
+        <Text style={HomeStyles.monthYearText}>
           {selectedMonth.format("MMMM YYYY")}
         </Text>
         <TouchableOpacity
           onPress={() => changeMonth(1)}
           style={TransactionsStyles.navButton}
         >
-          <Text style={TransactionsStyles.navButtonText}>Próximo</Text>
+          <Icon name="chevron-right" size={24} />
         </TouchableOpacity>
       </View>
       <TextInput

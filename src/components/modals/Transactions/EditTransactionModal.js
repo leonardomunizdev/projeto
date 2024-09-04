@@ -8,23 +8,23 @@ import {
   StyleSheet,
   FlatList,
   Image,
+  Alert,
 } from "react-native";
 import { useTransactions } from "../../../context/TransactionContext";
 import { useAccounts } from "../../../context/AccountContext";
 import { useCategories } from "../../../context/CategoryContext";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons'; // Importa ícones para o botão de remoção
-import { format, addMonths, addWeeks } from "date-fns";
+import { Ionicons } from '@expo/vector-icons';
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
+const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) => {
   const { updateTransaction } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
   const [date, setDate] = useState(new Date());
-  const { transactions } = useTransactions();
   const [type, setType] = useState(transaction.type);
   const [description, setDescription] = useState(transaction.description);
   const [amount, setAmount] = useState(transaction.amount.toFixed(2).toString());
@@ -34,7 +34,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
-    setDate(new Date(transaction.date)); // Inicializa com a data da transação
+    setDate(new Date(transaction.date));
     setType(transaction.type);
     setDescription(transaction.description);
     setAmount(formatValue(transaction.amount.toFixed(2).toString()));
@@ -43,57 +43,39 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
     setAttachments(transaction.attachments || []);
   }, [transaction]);
 
-  // Filtra as categorias de acordo com o tipo de transação selecionado
   const filteredCategories = categories.filter(
     (category) => category.type === type
   );
+
   const onChange = (event, selectedDate) => {
-    setShowDatePicker(false); // Fechar o picker após a seleção
+    setShowDatePicker(false);
     if (selectedDate) {
-      setDate(selectedDate); // Atualizar a data somente se houver uma nova seleção
+      setDate(selectedDate);
     }
   };
-  
-
-
 
   const formatValue = (value) => {
-    // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-
-    // Certifique-se de que o valor tenha no mínimo 3 dígitos
     value = value.padStart(3, '0');
-
-    // Separa a parte inteira da parte decimal
     const integerPart = value.slice(0, -2);
     const decimalPart = value.slice(-2);
-
-    // Formata a parte inteira com pontos de milhar
     const formattedInteger = integerPart
       .split('')
       .reverse()
       .reduce((acc, digit, index) => {
         return digit + (index && index % 3 === 0 ? '.' : '') + acc;
       }, '');
-
-    // Combina a parte inteira e a parte decimal
     return `${formattedInteger},${decimalPart}`;
   };
 
   const convertToAmerican = (value) => {
-    // Remove caracteres não numéricos
     value = value.replace(/\D/g, '');
-
-    // Adiciona pontos e vírgulas conforme necessário
-    const integerPart = value.slice(0, -2); // Parte inteira
-    const decimalPart = value.slice(-2);   // Parte decimal
-
-    // Combina a parte inteira e a parte decimal para o formato americano
+    const integerPart = value.slice(0, -2);
+    const decimalPart = value.slice(-2);
     return `${integerPart}.${decimalPart}`;
   };
 
   const handleChange = (text) => {
-    // Remove caracteres não numéricos e formata o valor
     const formattedValue = formatValue(text);
     const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
     setAmount(cleanedValue);
@@ -105,43 +87,51 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
       type,
       description,
       amount: parseFloat(convertToAmerican(amount)),
-      date, // Inclua a data atualizada
+      date,
       categoryId,
       accountId,
       attachments,
     };
-  
+
     if (transaction.isRecurring) {
-      transactions.forEach((trans) => {
-        if (trans.recurrenceId === transaction.recurrenceId) {
-          updateTransaction({
-            ...trans,
-            type,
-            description,
-            amount: parseFloat(convertToAmerican(amount)),
-            date, // Inclua a data atualizada
-            categoryId,
-            accountId,
-            attachments,
-          });
-        }
-      });
+      const hasDateChanged = date.getTime() !== new Date(transaction.date).getTime();
+      if (hasDateChanged) {
+        Alert.alert(
+          "Alterar Data Recorrente",
+          "Você tem certeza que deseja alterar a data desta transação recorrente? Isso poderá causar problemas com as transações futuras.",
+          [
+            {
+              text: "Cancelar",
+              style: "cancel",
+            },
+            {
+              text: "Confirmar",
+              onPress: () => {
+                updateTransaction(updatedTransaction);
+                onClose();
+                closeDetail();
+              },
+            },
+          ]
+        );
+      } else {
+        updateTransaction(updatedTransaction);
+        onClose();
+        closeDetail();
+      }
     } else {
       updateTransaction(updatedTransaction);
+      onClose();
+      closeDetail();
     }
-  
-    onClose();
   };
-  
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false, // Define como false para não permitir edição
+      allowsEditing: false,
       quality: 1,
     });
-
-    console.log(result); // Adicione isto para verificar o retorno
 
     if (!result.canceled) {
       setAttachments([...attachments, result.assets[0].uri]);
@@ -151,15 +141,6 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
   const removeAttachment = (uri) => {
     setAttachments(attachments.filter((item) => item !== uri));
   };
-
-  useEffect(() => {
-    setType(transaction.type);
-    setDescription(transaction.description);
-    setAmount(formatValue(transaction.amount.toFixed(2).toString()));
-    setCategoryId(transaction.categoryId);
-    setAccountId(transaction.accountId);
-    setAttachments(transaction.attachments || []);
-  }, [transaction]);
 
   return (
     <Modal
@@ -207,28 +188,30 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             onChangeText={handleChange}
           />
 
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowDatePicker(true)}>
-            <TextInput
-              style={{color: 'white'}}
-              placeholder="Data"
-              value={format(date, "dd/MM/yyyy", { locale: ptBR })}
-              editable={false}
-              pointerEvents="none"
-            />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              testID="dateTimePicker"
-              value={date}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false); // Fechar o picker após selecionar
-                if (selectedDate) {
-                  setDate(selectedDate); // Atualiza a data somente se houver uma nova seleção
-                }
-              }}
-            />
+          {!transaction.isRecurring && (
+            <>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <TextInput
+                  style={{ color: 'white' }}
+                  placeholder="Data"
+                  value={format(date, "dd/MM/yyyy", { locale: ptBR })}
+                  editable={false}
+                  pointerEvents="none"
+                />
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={date}
+                  mode="date"
+                  display="default"
+                  onChange={onChange}
+                />
+              )}
+            </>
           )}
 
           <Picker
@@ -269,7 +252,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction }) => {
             renderItem={({ item }) => (
               <View style={styles.attachmentContainer}>
                 <Image source={{ uri: item }} style={styles.attachment} />
-                <TouchableOpacity onPress={() => removeAttachment(item)} >
+                <TouchableOpacity onPress={() => removeAttachment(item)}>
                   <Ionicons name="trash-bin-outline" size={24} color="red" />
                 </TouchableOpacity>
               </View>

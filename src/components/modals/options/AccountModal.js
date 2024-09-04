@@ -19,10 +19,7 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
       Alert.alert('Erro', 'O nome da conta não pode estar vazio.');
       return;
     }
-    if (initialBalance.trim() === '' || isNaN(initialBalance)) {
-      Alert.alert('Erro', 'O valor inicial deve ser um número válido.');
-      return;
-    }
+    
     addAccount(newAccountName, parseFloat(initialBalance)); // Passando o valor inicial
     setNewAccountName('');
     setInitialBalance(''); // Limpa o campo de valor inicial após adicionar a conta
@@ -69,13 +66,7 @@ const AccountModal = ({ visible, onClose, newAccountName, setNewAccountName }) =
               onChangeText={setNewAccountName}
               placeholder="Nome da nova conta"
             />
-            <TextInput
-              style={optionsStyles.input}
-              value={initialBalance}
-              onChangeText={setInitialBalance}
-              placeholder="Valor inicial"
-              keyboardType="numeric" // Permite apenas entrada numérica
-            />
+           
             <Button title="Adicionar Conta" onPress={handleAddAccount} />
             <FlatList
               data={accounts}
