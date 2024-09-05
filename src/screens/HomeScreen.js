@@ -9,12 +9,16 @@ import HelpModal from '../components/modals/options/HelpModal';
 import BalanceModal from '../components/modals/home/BalanceModal';
 import SelectedCardsModal from '../components/modals/home/selectedCardsModal';
 import MonthLimitModal from '../components/modals/home/MonthLimitModal';
-import { BalanceCard, AbstractCard, SpendingLimitCard, AccountsCard, MonthlyBalanceCard } from '../components/modals/home/Cards';
+import { BalanceCard, AbstractCard, SpendingLimitCard, AccountsCard, MonthlyBalanceCard, CreditCard } from '../components/modals/home/Cards';
 import useCardVisibility from '../hooks/useCardVisibility.';
 import AccountBalanceModal from "../components/modals/home/AccountBalanceModal";
+import { useCreditCards } from "../context/CreditCardContext";
+
+
 const HomeScreen = () => {
   const { transactions } = useTransactions();
   const { accounts } = useAccounts();
+  const {creditCards} = useCreditCards();
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
   const [balance, setBalance] = useState(0);
@@ -35,7 +39,7 @@ const HomeScreen = () => {
   const [displayedBalance, setDisplayedBalance] = useState(0);
   const [balanceLabel, setBalanceLabel] = useState('Saldo');
   const [refresh, setRefresh] = useState(false);
-  const [savedGoal, setSavedGoal] = useState("");
+  const [savedGoal, setSavedGoal] = useState(0);
   const [accountCardsVisible, setAccountCardsVisible] = useState(false);
   const [accountModalVisible, setAccountModalVisible] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -43,6 +47,9 @@ const HomeScreen = () => {
   const [expenseCount, setExpenseCount] = useState(0);
 
 
+
+  console.log('aaaaaaaaaaaaa',creditCards.usedLimit);
+  
   const handleOpenAccountModal = (account) => {
     const accountName = account.name || 'Conta Desconhecida';
     const balance = accountValues[account.id] || 0;
@@ -323,12 +330,12 @@ const HomeScreen = () => {
 
       <ScrollView contentContainerStyle={HomeStyles.scrollViewContent}>
 
-        <View style={    {backgroundColor: '#ece9e8', borderRadius: 35, marginBottom: 20}}>
-          
+        <View style={{ backgroundColor: '#ece9e8', borderRadius: 35, marginBottom: 20 }}>
+
           <View style={HomeStyles.monthYearSelector}>
 
             <TouchableOpacity style={[
-              { paddingRight: '10%', padding: 20, borderRadius: 20  } // Aumentando a área de contato
+              { paddingRight: '10%', padding: 20, borderRadius: 20 } // Aumentando a área de contato
             ]} onPress={() => changeMonth("prev")}>
               <Icon name="chevron-left" size={24} />
             </TouchableOpacity>
@@ -384,6 +391,16 @@ const HomeScreen = () => {
             onPress={handleOpenAccountModal}
           />}
 
+        {cardVisibility.CreditCard &&
+
+            <CreditCard
+              creditCards={creditCards}
+            
+              formatToBRL={formatToBRL}
+              
+            />}
+        
+
         {cardVisibility.MonthlyBalanceCard &&
           <MonthlyBalanceCard
             monthlyIncome={monthlyIncome}
@@ -394,6 +411,9 @@ const HomeScreen = () => {
             visible={() => setModalVisible(true)}
             onLongPress={() => setSelectedCardsModalVisible(true)}
           />}
+
+
+
 
       </ScrollView>
 
@@ -427,8 +447,9 @@ const HomeScreen = () => {
         onClose={() => setAccountModalVisible(false)}
         accountName={selectedAccount?.name || ''}
         balance={selectedAccount?.balance || 0}
-      />
 
+      />
+      
 
     </View>
   );

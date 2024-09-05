@@ -21,7 +21,7 @@ import { ptBR } from "date-fns/locale";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) => {
-  const { updateTransaction } = useTransactions();
+  const { updateMultipleTransactions, updateTransaction, transactions } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
   const [date, setDate] = useState(new Date());
@@ -32,7 +32,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
   const [accountId, setAccountId] = useState(transaction.accountId);
   const [attachments, setAttachments] = useState(transaction.attachments || []);
   const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const isFirstInstallment = transactions.filter(t => t.recurrenceId === transaction.recurrenceId)[0]?.id === transaction.id;
   useEffect(() => {
     setDate(new Date(transaction.date));
     setType(transaction.type);
@@ -80,7 +80,17 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
     const cleanedValue = formattedValue.replace(/^0+(?!,)/, '');
     setAmount(cleanedValue);
   };
-
+  const handleDatePickerPress = () => {
+    if (!isFirstInstallment && transaction.isRecurring) {
+      Alert.alert(
+        "Alteração de Data Bloqueada",
+        "A data só pode ser alterada na primeira parcela de uma transação recorrente.",
+        [{ text: "OK" }]
+      );
+    } else {
+      setShowDatePicker(true);
+    }
+  };
   const handleSave = () => {
     const updatedTransaction = {
       ...transaction,
@@ -94,30 +104,59 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
     };
 
     if (transaction.isRecurring) {
-      const hasDateChanged = date.getTime() !== new Date(transaction.date).getTime();
-      if (hasDateChanged) {
-        Alert.alert(
-          "Alterar Data Recorrente",
-          "Você tem certeza que deseja alterar a data desta transação recorrente? Isso poderá causar problemas com as transações futuras.",
-          [
-            {
-              text: "Cancelar",
-              style: "cancel",
-            },
-            {
-              text: "Confirmar",
-              onPress: () => {
-                updateTransaction(updatedTransaction);
-                onClose();
-                closeDetail();
-              },
-            },
-          ]
-        );
+      // Agrupar transações recorrentes por recurrenceId
+      const groupedTransactions = transactions.filter(
+        (t) => t.recurrenceId === transaction.recurrenceId
+      );
+
+      if (groupedTransactions.length > 0) {
+        // Verificar se é a primeira parcela
+        const isFirstInstallment = groupedTransactions[0].id === transaction.id;
+
+        if (isFirstInstallment) {
+          // Calcular a diferença de tempo entre a data original e a nova data
+          const originalDate = new Date(transaction.date);
+          const dateDifference = date.getTime() - originalDate.getTime();
+
+          // Atualizar as datas das parcelas subsequentes
+          const updatedGroupedTransactions = groupedTransactions.map((t, index) => {
+            const newDate = new Date(t.date);
+            newDate.setTime(newDate.getTime() + dateDifference);
+
+            return {
+              ...t,
+              type,
+              description,
+              amount: parseFloat(convertToAmerican(amount)),
+              date: newDate,
+              categoryId,
+              accountId,
+              attachments,
+            };
+          });
+
+          // Atualizar todas as transações recorrentes
+          updateMultipleTransactions(updatedGroupedTransactions);
+        } else {
+          
+            
+                  const updatedGroupedTransactions = groupedTransactions.map((t) => ({
+                    ...t,
+                    type,
+                    description,
+                    amount: parseFloat(convertToAmerican(amount)),
+                    categoryId,
+                    accountId,
+                    attachments,
+                  }));
+
+                  updateMultipleTransactions(updatedGroupedTransactions);
+                  onClose();
+                  closeDetail();
+                
+        }
       } else {
-        updateTransaction(updatedTransaction);
-        onClose();
-        closeDetail();
+        console.log("Nenhuma transação recorrente encontrada.");
       }
     } else {
       updateTransaction(updatedTransaction);
@@ -125,6 +164,10 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
       closeDetail();
     }
   };
+
+
+
+
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -188,31 +231,32 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
             onChangeText={handleChange}
           />
 
-          {!transaction.isRecurring && (
-            <>
-              <TouchableOpacity
-                style={styles.addButton}
-                onPress={() => setShowDatePicker(true)}
-              >
-                <TextInput
-                  style={{ color: 'white' }}
-                  placeholder="Data"
-                  value={format(date, "dd/MM/yyyy", { locale: ptBR })}
-                  editable={false}
-                  pointerEvents="none"
-                />
-              </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={date}
-                  mode="date"
-                  display="default"
-                  onChange={onChange}
-                />
-              )}
-            </>
-          )}
+          <>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={handleDatePickerPress} // Usa a função de bloqueio
+            >
+              <TextInput
+                style={{ color: 'white' }}
+                placeholder="Data"
+                value={format(date, "dd/MM/yyyy", { locale: ptBR })}
+                editable={false}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
+
+
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={date}
+                mode="date"
+                display="default"
+                onChange={onChange}
+              />
+            )}
+          </>
+
 
           <Picker
             selectedValue={categoryId}
@@ -227,6 +271,7 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
               />
             ))}
           </Picker>
+
 
           <Picker
             selectedValue={accountId}

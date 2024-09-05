@@ -6,7 +6,8 @@ const useCardVisibility = () => {
     
     SpendingLimitCard: true,
     AccountsCard: true,
-    MonthlyBalanceCard: true
+    MonthlyBalanceCard: true,
+    CreditCard: true
   });
 
   useEffect(() => {

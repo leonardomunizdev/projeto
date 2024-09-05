@@ -65,6 +65,14 @@ export const TransactionProvider = ({ children }) => {
     }
   };
   
+  const updateMultipleTransactions = (updatedTransactions) => {
+    setTransactions((prevTransactions) =>
+      prevTransactions.map((transaction) =>
+        updatedTransactions.find((ut) => ut.id === transaction.id) || transaction
+      )
+    );
+  };
+  
 
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
@@ -154,7 +162,8 @@ export const TransactionProvider = ({ children }) => {
       saveAttachmentToTransaction,
       setTransactions,
       clearTransactions,
-      updateTransaction
+      updateTransaction,
+      updateMultipleTransactions
     }}>
       {children}
     </TransactionContext.Provider>

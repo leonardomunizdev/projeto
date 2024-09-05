@@ -32,7 +32,7 @@ export const HomeStyles = StyleSheet.create({
       flexDirection: "row",
       justifyContent: "space-between",
       marginVertical: 20,
-      marginHorizontal: '0.0001%'
+      
 
     },
     card: {
@@ -54,7 +54,7 @@ export const HomeStyles = StyleSheet.create({
     },
     accountsCard: {
       marginBottom: 16,
-      marginHorizontal: '3%'
+      marginHorizontal: '0.2%'
     },
     accountsTitle: {
       fontSize: 18,
@@ -104,7 +104,7 @@ export const HomeStyles = StyleSheet.create({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginVertical: 2,
+      marginVertical: 20,
       backgroundColor: '#ece9e8',
       borderRadius: 35
     },

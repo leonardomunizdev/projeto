@@ -420,75 +420,7 @@ const handleTransactionPress = (transaction) => {
 
       
 
-      {/*  MODAL DE EXCLUSÃO DE TRANSAÇÕES  */}
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={TransactionsStyles.modalContainer}>
-          <View style={TransactionsStyles.modalContent}>
-            {modalType === "recurring" ? (
-              <>
-                <Text style={TransactionsStyles.modalTitle}>
-                  Excluir transações recorrentes
-                </Text>
-
-                <TouchableOpacity
-                  onPress={confirmRemoveAllRecurringTransactions}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>Todas as parcelas</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={confirmRemovePreviousRecurringTransactions}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>
-                    Parcelas anteriores
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={confirmRemoveFutureRecurringTransactions}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>Parcelas futuras</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={confirmRemoveCurrentTransaction}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>Esta parcela</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text style={TransactionsStyles.modalTitle}>Gerir transação</Text>
-
-                <TouchableOpacity
-                  onPress={() => handleEdit(currentTransaction)}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={confirmDelete}
-                  style={TransactionsStyles.modalButton}
-                >
-                  <Text style={TransactionsStyles.modalButtonText}>Excluir</Text>
-                </TouchableOpacity>
-              </>
-            )}
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={[TransactionsStyles.modalButton, TransactionsStyles.cancelButton]}
-            >
-              <Text style={TransactionsStyles.modalButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+     
       {transactionToEdit && (
         <EditTransactionModal
           isVisible={editModalVisible}

@@ -175,7 +175,24 @@ export const optionsStyles = StyleSheet.create({
       marginTop: 10,
       fontSize: RFValue(16),
     },
-    
+    cardItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: '#ccc',
+  },
+  cardName: {
+      fontSize: 16,
+  },
+  cardLimit: {
+      fontSize: 14,
+      color: '#666',
+  },
+  cardList: {
+      marginTop: 20,
+  },
 });
 
 export default optionsStyles;

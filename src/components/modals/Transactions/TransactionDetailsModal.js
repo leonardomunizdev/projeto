@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import EditTransactionModal from "./EditTransactionModal";
 import { useTransactions } from "../../../context/TransactionContext";
 import TransactionsStyles from "../../../styles/screens/TransactionsScreenStyles";
+import { Button, Icon } from "react-native-paper";
 
 // Função para converter arquivos em base64
 const getBase64 = async (uri) => {
@@ -52,18 +53,19 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
   const [attachmentsBase64, setAttachmentsBase64] = useState([]);
   const [transactionToEdit, setTransactionToEdit] = useState(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const {transactions, removeTransaction } = useTransactions();
+  const { transactions, removeTransaction } = useTransactions();
   const [removeModalVisible, setRemoveModalVisible] = useState(false);
   const [modalType, setModalType] = useState(null);
   const [currentTransaction, setCurrentTransaction] = useState(null);
+  const [modalAttachemmentsVisible, setModalAttachemmentsVisible] = useState(false);
 
   const handleEdit = () => {
     setTransactionToEdit(transaction);
     setEditModalVisible(true);
   };
 
-  
-  
+
+
   const removeAllRecurringTransactions = () => {
     const { recurrenceId } = currentTransaction;
     const transactionsToRemove = transactions.filter(
@@ -102,7 +104,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
     );
     setRemoveModalVisible(false);
   };
-  
+
   const confirmDelete = () => {
     Alert.alert(
       "Confirmar Exclusão",
@@ -124,8 +126,8 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
       ]
     );
   };
-  
-  
+
+
   useEffect(() => {
     if (currentTransaction) {
       if (currentTransaction.isRecurring) {
@@ -147,7 +149,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
       Alert.alert("Erro", "Nenhuma transação foi selecionada para remoção.");
     }
   };
-  
+
 
   useEffect(() => {
     const convertAttachments = async () => {
@@ -191,7 +193,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
       <head>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; }
-          .attachment-image { width: 100%; height: auto; max-height: 600px; margin-top: 10px; border: 1px solid #ddd; }
+          .attachment-image { width: 100%; height: auto; max-height:1000px; max-width: 500px; margin-top: 10px; border: 1px solid #ddd; }
         </style>
       </head>
       <body>
@@ -200,7 +202,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
           .map(
             (attachment) => `
           <div>
-            <img src="${attachment}" class="attachment-image"/>
+            <center><img src="${attachment}" class="attachment-image"/></center>
           </div>
         `
           )
@@ -259,7 +261,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
   const handleDelete = () => {
     if (!transaction) return;
     setCurrentTransaction(transaction);
-  
+
     if (transaction.isRecurring) {
       setRemoveModalVisible(true); // Abrir o modal de remoção para transações recorrentes
     } else {
@@ -289,6 +291,14 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
                     {formatCurrency(transaction.amount)}
                   </Text>
                 </View>
+                {transaction.isRecurring && (
+                  <View style={styles.tableRow}>
+                    <Text style={styles.tableHeader}>Parcela</Text>
+                    <Text style={styles.tableCell}>
+                      {getCurrentInstallment(transaction)}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.tableRow}>
                   <Text style={styles.tableHeader}>Categoria</Text>
                   <Text style={styles.tableCell}>
@@ -307,78 +317,46 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
                     {formatDate(transaction.date)}
                   </Text>
                 </View>
-
-                {transaction.isRecurring && (
-                  <View style={styles.tableRow}>
-                    <Text style={styles.tableHeader}>Parcela</Text>
+                <View style={styles.tableRow}>
+                  <Text style={styles.tableHeader}>Há Anexos</Text>
+                  <View style={[styles.tableCellContainer, { flexDirection: 'row', alignItems: 'center', }]}>
                     <Text style={styles.tableCell}>
-
-                      {
-
-                        getCurrentInstallment(transaction)
-
-
-                      }
+                      {attachmentsBase64.length > 0 ? "Sim" : "Não"}
                     </Text>
-                  </View>
-                )}
-              </View>
-              {attachmentsBase64.length > 0 && (
-                <View style={styles.detailContainer}>
-                  {attachmentsBase64.map((attachment, index) => {
-                    const isBase64 = attachment.startsWith("data:image/");
-                    return isBase64 ? (
-                      <Image
-                        key={index}
-                        source={{ uri: attachment }}
-                        style={styles.attachmentImage}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <TouchableOpacity
-                        key={index}
-                        onPress={() => handleAttachmentPress(attachment)}
-                      >
-                        <Text style={styles.attachmentText}>
-                          Abrir Anexo {index + 1}
-                        </Text>
+                    {attachmentsBase64.length > 0 && (
+                      <TouchableOpacity onPress={() => setModalAttachemmentsVisible(true)} style={[styles.iconButton, { marginLeft: 10, }]}>
+                        <Ionicons name="eye" size={24} color="black" />
                       </TouchableOpacity>
-                    );
-                  })}
+                    )}
+                  </View>
                 </View>
-              )}
+              </View>
             </ScrollView>
-
-
 
             <TouchableOpacity
               onPress={handleEdit}
-              style={[styles.pdfButton, { marginBottom: 10 }]} // Cor verde para o novo botão
+              style={[styles.pdfButton, { marginBottom: 10 }]}
             >
               <Text style={[styles.buttonText, { color: 'white' }]}>Editar Transação</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={generateImagesPdf}
-              style={[styles.pdfButton,
-              {
+              style={[styles.pdfButton, {
                 borderWidth: 2,
                 borderColor: '#007AFF',
                 backgroundColor: 'transparent',
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 borderRadius: 20,
-              }
-
-              ]} // Cor verde para o novo botão
+              }]}
             >
               <Text style={styles.buttonText}>Baixar NF</Text>
             </TouchableOpacity>
-
-
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
       {transactionToEdit && (
         <EditTransactionModal
           isVisible={editModalVisible}
@@ -388,7 +366,46 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
         />
       )}
 
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={modalAttachemmentsVisible}
+      >
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { height: '100%', borderTopRadius: 40 }]}>
+            <ScrollView
 
+            >
+              {attachmentsBase64.map((attachment, index) => {
+                const isBase64 = attachment.startsWith("data:image/");
+                return isBase64 ? (
+                  <View key={index} style={styles.attachmentContainer}>
+                    <Image
+                      source={{ uri: attachment }}
+                      style={styles.attachmentImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => handleAttachmentPress(attachment)}
+                    style={styles.attachmentContainer}
+                  >
+                    <Text style={styles.attachmentText}>
+                      Abrir Anexo {index + 1}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalAttachemmentsVisible(false)}>
+
+              <Text style={{ color: "white", }}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         transparent={true}
@@ -467,7 +484,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
-    height: "60%",
+    height: "65%",
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
     backgroundColor: "#ffffff",
@@ -495,6 +512,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 5,
     overflow: "hidden",
+
   },
   tableRow: {
     flexDirection: "row",
@@ -511,13 +529,9 @@ const styles = StyleSheet.create({
     width: "70%",
     color: "#666666",
   },
-  attachmentImage: {
-    width: "100%",
-    height: 200,
-    marginVertical: 10,
-  },
+
   attachmentText: {
-    color: "#007BFF",
+    color: "white",
     textDecorationLine: "underline",
     marginVertical: 5,
   },
@@ -555,7 +569,32 @@ const styles = StyleSheet.create({
     borderTopColor: 'red',
     borderTopWidth: 20,
   },
-  
+  scrollViewContent: {
+    flexDirection: 'row',
+  },
+  attachmentContainer: {
+    marginHorizontal: 10,
+  },
+  attachmentImage: {
+    width: '100%',  // Ajuste conforme necessário
+    height: 800,
+    marginVertical: 20 // Ajuste conforme necessário
+  },
+  attachmentText: {
+    color: "#007BFF",
+    textDecorationLine: "underline",
+    marginVertical: 5,
+  },
+  closeButton: {
+    backgroundColor: "#d9534f",
+    padding: 10,
+    marginTop: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    marginLeft: 5,
+
+  }
+
 });
 
 const removeModalStyles = StyleSheet.create({

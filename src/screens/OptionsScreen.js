@@ -16,6 +16,7 @@ import { shareAsync } from 'expo-sharing';
 import * as Updates from 'expo-updates';
 import HelpModal from '../components/modals/options/HelpModal';
 import JSZip from 'jszip';
+import CreditCardModal from '../components/modals/options/CreditCardModal';
 
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
@@ -29,7 +30,7 @@ const OptionsScreen = () => {
   const [selectedCategoryType, setSelectedCategoryType] = useState('income');
   const [isLoading, setIsLoading] = useState(false); // Novo estado para carregamento
   const [helpModalVisible, setHelpModalVisible] = useState(false);
-
+  const [isCreditCardModalVisible, setCreditCardModalVisible ] = useState(false);
 
 
 
@@ -183,6 +184,10 @@ const OptionsScreen = () => {
               <Ionicons name="wallet" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Gerir Contas Bancarias</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setCreditCardModalVisible(true)}>
+              <Ionicons name="wallet" size={RFValue(24)} color="black" />
+              <Text style={optionsStyles.optionText}>Gerir Cartões de Credito</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsCategoryModalVisible(true)}>
               <Ionicons name="list" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Gerir Categorias</Text>
@@ -208,7 +213,7 @@ const OptionsScreen = () => {
               <Ionicons name="cloud-download" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Importar Backup de dados</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setHelpModalVisible(true)}>
               <Ionicons name="help-circle-outline" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Ajuda</Text>
@@ -252,7 +257,12 @@ const OptionsScreen = () => {
               visible={helpModalVisible}
               onClose={() => setHelpModalVisible(false)}
             />
-            
+            <CreditCardModal
+              visible={isCreditCardModalVisible}
+              onClose={() => setCreditCardModalVisible(false)}
+             
+
+            />
           </>
         )}
       </KeyboardAvoidingView>
