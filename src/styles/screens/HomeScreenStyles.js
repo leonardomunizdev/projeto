@@ -348,6 +348,21 @@ export const HomeStyles = StyleSheet.create({
       fontSize: 18,
       fontWeight: 'bold',
   },
+  creditCard: {
+    backgroundColor: '#fff',
+    marginVertical: 10,
+    padding: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  creditCardLimit: {
+    fontSize: 12,
+    color: 'gray',
+  },
   });
 
   export default HomeStyles;

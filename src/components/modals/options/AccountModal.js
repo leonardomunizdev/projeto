@@ -13,7 +13,7 @@ const AccountModal = ({ visible, onClose }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("Debito");
   const [creditLimit, setCreditLimit] = useState('');
   const [dueDate, setDueDate] = useState(1); // Default to 1
   const [newAccountName, setNewAccountName] = useState('');
@@ -45,7 +45,7 @@ const AccountModal = ({ visible, onClose }) => {
     setDueDate(1); // Reseta para o padrão
     setNewAccountName(''); // Limpar o nome da conta após adicionar
     setSelectedAccount(null);
-    setSelectedCategory(null); // Voltar ao estado inicial
+    setSelectedCategory(selectedCategory === 'Credito' ? 'Credito' : 'Debito'); // Voltar ao estado inicial
   };
 
   const openEditModal = (account) => {
@@ -89,18 +89,27 @@ const AccountModal = ({ visible, onClose }) => {
             <Text style={optionsStyles.modalTitle}>Gerir Contas</Text>
             <View style={optionsStyles.categoryButtonContainer}>
               <TouchableOpacity
-                style={[optionsStyles.categoryButton, optionsStyles.expenseButton, selectedCategory === 'Credito' && optionsStyles.selectedButton]}
-                onPress={() => setSelectedCategory('Credito')}
-              >
-                <Text style={optionsStyles.expenseButtonText}>Credito</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[optionsStyles.categoryButton, optionsStyles.incomeButton, selectedCategory === 'Debito' && optionsStyles.selectedButton]}
+                style={[optionsStyles.categoryButton,
+                selectedCategory === 'Debito' && optionsStyles.incomeButton
+                ]}
                 onPress={() => setSelectedCategory('Debito')}
               >
-                <Text style={optionsStyles.incomeButtonText}>Debito</Text>
+                <Text style={[optionsStyles.categoryButtonText,
+                selectedCategory === 'Debito' && optionsStyles.expenseButtonText
+                ]}>Contas</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[optionsStyles.categoryButton,
+                selectedCategory === 'Credito' && optionsStyles.expenseButton,
+                ]}
+                onPress={() => setSelectedCategory('Credito')}
+              >
+                <Text style={[optionsStyles.categoryButtonText,
+                selectedCategory === 'Credito' && optionsStyles.incomeButtonText
+                ]}>Cartões</Text>
+              </TouchableOpacity>
+
+
             </View>
 
             {selectedCategory === 'Credito' && (
@@ -110,7 +119,9 @@ const AccountModal = ({ visible, onClose }) => {
                   style={optionsStyles.picker}
                   onValueChange={(itemValue) => setSelectedAccount(itemValue)}
                 >
-                  {accounts.map(account => (
+                  <Picker.Item label="Selecionar Conta" value={null} />
+
+                  {debitAccounts.map(account => (
                     <Picker.Item key={account.id} label={account.name} value={account.id} />
                   ))}
                 </Picker>
@@ -163,9 +174,7 @@ const AccountModal = ({ visible, onClose }) => {
               <FlatList
                 data={debitAccounts}
                 keyExtractor={item => item.id}
-                ListHeaderComponent={() => (
-                  <Text style={optionsStyles.sectionHeader}>Contas de Débito</Text>
-                )}
+
                 renderItem={({ item }) => (
                   <View style={optionsStyles.accountItem}>
                     <Text style={optionsStyles.accountName}>
@@ -188,9 +197,7 @@ const AccountModal = ({ visible, onClose }) => {
               <FlatList
                 data={creditAccounts}
                 keyExtractor={item => item.id}
-                ListHeaderComponent={() => (
-                  <Text style={optionsStyles.sectionHeader}>Contas de Crédito</Text>
-                )}
+
                 renderItem={({ item }) => (
                   <View style={optionsStyles.accountItem}>
                     <Text style={optionsStyles.accountName}>

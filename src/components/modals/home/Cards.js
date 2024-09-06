@@ -150,7 +150,61 @@ export const AccountsCard = ({
             <Card style={HomeStyles.accountsCard} onLongPress={onLongPress}>
                 <Card.Content>
                     <Text style={HomeStyles.accountsTitle}>Contas</Text>
-                    {accounts.map((account) => (
+                    {accounts
+                    .filter((account) => account.type === 'Debito')
+                    .map((account) => (
+                        <TouchableOpacity
+                            key={account.id}
+                            onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
+                        >
+                            <View style={HomeStyles.accountItem}>
+                                <Text style={HomeStyles.accountName}>
+                                    {account.name}{'\n'}
+                                    <Text
+                                        style={[
+                                            HomeStyles.accountAmount,
+                                            { color: accountValues[account.id] < 0 ? 'red' : 'blue' },
+                                        ]}
+                                    >
+                                        {formatToBRL(parseFloat((accountValues[account.id] || 0)))}
+                                    </Text>
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => navigateToAddTransactionsAccount(account.id)}
+                                    style={HomeStyles.addButton}
+                                >
+                                    <MaterialIcons name="add" size={30} color="blue" />
+                                </TouchableOpacity>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                    <View style={HomeStyles.accountDivider} />
+                    <View style={HomeStyles.totalContainer}>
+                        <Text style={HomeStyles.totalText}>Total:</Text>
+                        <Text
+                            style={[
+                                HomeStyles.totalAmount,
+                                {
+                                    color: Object.values(accountValues).reduce((a, b) => a + b, 0) < 0 ? 'red' : 'blue',
+                                },
+                            ]}
+                        >
+                            {formatToBRL(
+                                parseFloat(
+                                    Object.values(accountValues).reduce((a, b) => a + b, 0)
+                                )
+                            )}
+                        </Text>
+                    </View>
+                </Card.Content>
+            </Card>
+
+            <Card style={HomeStyles.accountsCard} onLongPress={onLongPress}>
+                <Card.Content>
+                    <Text style={HomeStyles.accountsTitle}>Cartões de Credito</Text>
+                    {accounts
+                    .filter((account) => account.type === 'Debito')
+                    .map((account) => (
                         <TouchableOpacity
                             key={account.id}
                             onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
@@ -250,7 +304,6 @@ export const MonthlyBalanceCard = ({
 export const CreditCard = ({
     cardName,
     dueDate,
-
     formatToBRL,
     onPress,
     onLongPress,

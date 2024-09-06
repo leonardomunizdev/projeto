@@ -18,7 +18,7 @@ import { useCreditCards } from "../context/CreditCardContext";
 const HomeScreen = () => {
   const { transactions } = useTransactions();
   const { accounts } = useAccounts();
-  const {creditCards} = useCreditCards();
+  const { creditCards } = useCreditCards();
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
   const [balance, setBalance] = useState(0);
@@ -48,8 +48,8 @@ const HomeScreen = () => {
 
 
 
-  console.log('aaaaaaaaaaaaa',creditCards.usedLimit);
-  
+  console.log('aaaaaaaaaaaaa', accounts);
+
   const handleOpenAccountModal = (account) => {
     const accountName = account.name || 'Conta Desconhecida';
     const balance = accountValues[account.id] || 0;
@@ -393,13 +393,15 @@ const HomeScreen = () => {
 
         {cardVisibility.CreditCard &&
 
-            <CreditCard
-              creditCards={creditCards}
-            
-              formatToBRL={formatToBRL}
-              
-            />}
-        
+          <CreditCard
+            creditCards={creditCards}
+            accounts={accounts}
+            formatToBRL={formatToBRL}
+            accountValues={accountValues}
+            onLongPress={() => setSelectedCardsModalVisible(true)}
+
+          />}
+
 
         {cardVisibility.MonthlyBalanceCard &&
           <MonthlyBalanceCard
@@ -449,7 +451,7 @@ const HomeScreen = () => {
         balance={selectedAccount?.balance || 0}
 
       />
-      
+
 
     </View>
   );

@@ -13,7 +13,17 @@ export const AccountProvider = ({ children }) => {
       try {
         const storedAccounts = await AsyncStorage.getItem('accounts');
         if (storedAccounts) {
-          setAccounts(JSON.parse(storedAccounts));
+          const parsedAccounts = JSON.parse(storedAccounts);
+          
+          // Verifica se alguma conta não tem tipo definido e atribui "Debito"
+          const updatedAccounts = parsedAccounts.map(account => {
+            if (!account.type) {
+              return { ...account, type: 'Debito' };
+            }
+            return account;
+          });
+  
+          setAccounts(updatedAccounts);
         }
       } catch (error) {
         console.error('Erro ao carregar contas:', error);
@@ -59,12 +69,15 @@ export const AccountProvider = ({ children }) => {
     setAccounts(updatedAccounts);
   };
 
-  const updateAccount = (accountId, newName, newDueDate) => {
+  const updateAccount = (accountId, newName, newType, newDueDate) => {
     const updatedAccounts = accounts.map(account =>
-      account.id === accountId ? { ...account, name: newName, dueDate: newDueDate } : account
+      account.id === accountId
+        ? { ...account, name: newName, type: newType, dueDate: newType === 'Credito' ? newDueDate : undefined }
+        : account
     );
     setAccounts(updatedAccounts);
   };
+  
   const calculateAccountBalance = (accountId) => {
     const currentDate = moment().format('YYYY-MM-DD');
     
