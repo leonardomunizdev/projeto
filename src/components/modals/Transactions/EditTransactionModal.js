@@ -136,6 +136,8 @@ const EditTransactionModal = ({ isVisible, onClose, transaction, closeDetail }) 
           });
 
           // Atualizar todas as transações recorrentes
+          onClose();
+                  closeDetail();
           updateMultipleTransactions(updatedGroupedTransactions);
         } else {
           

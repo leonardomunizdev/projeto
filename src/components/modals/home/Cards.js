@@ -1,15 +1,17 @@
 // src/components/Cards.js
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 import { Card } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import HomeStyles from "../../../styles/screens/HomeScreenStyles";
 import { useNavigation } from "@react-navigation/native";
 import { useCreditCards } from "../../../context/CreditCardContext";
+import { useTransactions } from "../../../context/TransactionContext";
 import { useAccounts } from "../../../context/AccountContext";
 import CreditCardModal from "../options/CreditCardModal";
 import moment from "moment";
+
 export const BalanceCard = ({
   balance,
   balanceColor,
@@ -148,8 +150,8 @@ export const SpendingLimitCard = ({
             <Text style={{ color: goalColor, fontSize: 16 }}>
               {amountLeft < 0
                 ? `O limite foi excedido em ${formatToBRL(
-                    Math.abs(amountLeft)
-                  )}`
+                  Math.abs(amountLeft)
+                )}`
                 : `Falta ${formatToBRL(amountLeft)} para alcançar o limite`}
             </Text>
           </>
@@ -168,11 +170,33 @@ export const AccountsCard = ({
   onPress,
 }) => {
   const navigation = useNavigation();
-  const [selectedAccount, setSelectedAccount] = useState(null);
 
   const navigateToAddTransactionsAccount = (accountId) => {
     navigation.navigate("AddTransactionScreen", { accountId });
   };
+
+  const getCreditSubAccounts = (debitAccountId) => {
+    return accounts.filter(
+      (account) => account.type === "Credito" && account.debitAccountId === debitAccountId
+    );
+  };
+
+  const calculateDebitAccountBalance = (account) => {
+    const debitBalance = accountValues[account.id] || 0;
+    const creditSubAccounts = getCreditSubAccounts(account.id);
+    
+    // Soma o saldo das subcontas de crédito associadas
+    const creditSubAccountsBalance = creditSubAccounts.reduce((sum, creditAccount) => {
+      return sum + (accountValues[creditAccount.id] || 0);
+    }, 0);
+
+    // Retorna o saldo da conta de débito mais o saldo das subcontas de crédito
+    return debitBalance + creditSubAccountsBalance;
+  };
+
+  const totalDebitBalance = accounts
+    .filter((account) => account.type === "Debito")
+    .reduce((total, account) => total + calculateDebitAccountBalance(account), 0);
 
   return (
     <>
@@ -181,35 +205,40 @@ export const AccountsCard = ({
           <Text style={HomeStyles.accountsTitle}>Contas</Text>
           {accounts
             .filter((account) => account.type === "Debito")
-            .map((account) => (
-              <TouchableOpacity
-                key={account.id}
-                onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
-              >
-                <View style={HomeStyles.accountItem}>
-                  <Text style={HomeStyles.accountName}>
-                    {account.name}
-                    {"\n"}
-                    <Text
-                      style={[
-                        HomeStyles.accountAmount,
-                        {
-                          color: accountValues[account.id] < 0 ? "red" : "blue",
-                        },
-                      ]}
-                    >
-                      {formatToBRL(parseFloat(accountValues[account.id] || 0))}
+            .map((account) => {
+              const totalBalance = calculateDebitAccountBalance(account);
+              console.log("dedbito", calculateDebitAccountBalance(account));
+
+              return (
+                <TouchableOpacity
+                  key={account.id}
+                  onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
+                >
+                  <View style={HomeStyles.accountItem}>
+                    <Text style={HomeStyles.accountName}>
+                      {account.name}
+                      {"\n"}
+                      <Text
+                        style={[
+                          HomeStyles.accountAmount,
+                          {
+                            color: totalBalance < 0 ? "red" : "blue",
+                          },
+                        ]}
+                      >
+                        {formatToBRL(totalBalance)}
+                      </Text>
                     </Text>
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => navigateToAddTransactionsAccount(account.id)}
-                    style={HomeStyles.addButton}
-                  >
-                    <MaterialIcons name="add" size={30} color="blue" />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
+                    <TouchableOpacity
+                      onPress={() => navigateToAddTransactionsAccount(account.id)}
+                      style={HomeStyles.addButton}
+                    >
+                      <MaterialIcons name="add" size={30} color="blue" />
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           <View style={HomeStyles.accountDivider} />
           <View style={HomeStyles.totalContainer}>
             <Text style={HomeStyles.totalText}>Total:</Text>
@@ -224,11 +253,7 @@ export const AccountsCard = ({
                 },
               ]}
             >
-              {formatToBRL(
-                parseFloat(
-                  Object.values(accountValues).reduce((a, b) => a + b, 0)
-                )
-              )}
+              {formatToBRL(totalDebitBalance)}
             </Text>
           </View>
         </Card.Content>
@@ -236,6 +261,7 @@ export const AccountsCard = ({
     </>
   );
 };
+
 
 export const MonthlyBalanceCard = ({
   monthlyIncome,
@@ -293,12 +319,15 @@ export const CreditCard = ({
   creditCards,
   accountValues,
   accounts,
+  currentMonth,
+  currentYear
 }) => {
   const [isCreditCardModalVisible, setCreditCardModalVisible] = useState(false);
-
-  const calculatePercentage = (usedLimit, limit) => {
-    console.log("usedLimit", usedLimit);
-    const percentage = (500 / 1000) * 100;
+  const {calculateAccountTransactionsTotal } = useTransactions();
+  const calculatePercentage = (limit, usedLimit) => {
+    console.log("pusedLimit", usedLimit);
+    console.log("plimit", limit);
+    const percentage = (Math.abs(usedLimit) / Math.abs(limit)) * 100;
     return Math.min(percentage, 100); // Garante que o valor não exceda 100%
   };
 
@@ -315,10 +344,7 @@ export const CreditCard = ({
     );
   };
 
-  const getAccountNameById = (id) => {
-    const account = accounts.find((acc) => acc.id === id);
-    return account ? account.name : "";
-  };
+
   return (
     <>
       <Card
@@ -340,15 +366,28 @@ export const CreditCard = ({
               <MaterialIcons name="add" size={30} color="#ff5722" />
             </TouchableOpacity>
           </View>
+         
           {accounts
             .filter((account) => account.type === "Credito")
             .map((account) => {
-              const percentage = calculatePercentage(0, account.limit);
+              const limit = account.initialBalance;
+              const key = `${currentYear}-${currentMonth}`;
+              const usedLimit = calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
+              const availableBalance = account.initialBalance + usedLimit;
+              const percentage = calculatePercentage(limit, usedLimit);
+              console.log("Key for month:", key);
 
+              console.log("lixxxxxmit", limit);
+              console.log("Usedlimit", usedLimit);
+              console.log("currentYear", currentYear);
+              console.log("currentMonth", currentMonth);
+              console.log("accountValues:", accountValues);
+              console.log("Account ID:", account.id);
+ 
               return (
                 <TouchableOpacity
                   key={account.id}
-                  onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
+                // Passa a conta clicada para a função de abertura do modal
                 >
                   <View style={HomeStyles.accountItem}>
                     <Text
@@ -380,10 +419,13 @@ export const CreditCard = ({
                   >
                     <Text style={[styles.cardLabel, { textAlign: "right" }]}>
                       disponível:{" "}
-                      {formatToBRL(account.limit - (accountValues[account.id] || 0))}
+                      {formatToBRL(availableBalance)}
                     </Text>
                     <Text style={[styles.cardLabel, { textAlign: "right" }]}>
                       usado:
+
+                      {formatToBRL(usedLimit)}
+                      {console.log("values", Math.abs(accountValues[account.id]))}
                     </Text>
                   </View>
                   <View style={HomeStyles.accountDivider} />
@@ -393,71 +435,7 @@ export const CreditCard = ({
         </Card.Content>
       </Card>
 
-      <Card
-        style={HomeStyles.accountsCard}
-        onPress={onPress}
-        onLongPress={onLongPress}
-      >
-        <Card.Content>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text style={[HomeStyles.cardTitle, { marginBottom: 15 }]}>
-              Cartões de Credito
-            </Text>
-            <TouchableOpacity
-              onPress={() => setCreditCardModalVisible(true)}
-              style={[HomeStyles.addButton, { marginTop: -16 }]}
-            >
-              <MaterialIcons name="add" size={30} color="blue" />
-            </TouchableOpacity>
-          </View>
 
-          {creditCards.map((card) => {
-            const percentage = calculatePercentage(
-              card.usedLimit || 0,
-              card.limit
-            );
-            return (
-              <TouchableOpacity key={card.id} style={styles.cardInfoContainer}>
-                <Text
-                  style={[
-                    styles.cardLabel,
-                    { fontSize: 15, fontWeight: "bold" },
-                  ]}
-                >
-                  {getAccountNameById(card.accountId)}:{" "}
-                  <Text style={{ fontSize: 12, fontWeight: "300" }}>
-                    Fecha dia {moment(card.dueDate).format("DD")}{" "}
-                  </Text>
-                </Text>
-
-                {renderProgressBar(percentage)}
-
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Text style={[styles.cardLabel, { textAlign: "right" }]}>
-                    disponível:{" "}
-                    {formatToBRL(card.limit - (card.usedLimit || 0))}
-                  </Text>
-                  <Text style={[styles.cardLabel, { textAlign: "right" }]}>
-                    usado: {formatToBRL(card.usedLimit || 0)}
-                  </Text>
-                </View>
-                <View style={HomeStyles.accountDivider} />
-              </TouchableOpacity>
-            );
-          })}
-        </Card.Content>
-        <CreditCardModal
-          visible={isCreditCardModalVisible}
-          onClose={() => setCreditCardModalVisible(false)}
-        />
-      </Card>
     </>
   );
 };

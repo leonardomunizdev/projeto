@@ -34,19 +34,23 @@ const AccountModal = ({ visible, onClose }) => {
       Alert.alert('Erro', 'Selecione uma conta para associar ao crédito.');
       return;
     }
-
+  
     if (newAccountName.trim() === '' && selectedCategory === 'Debito') {
       Alert.alert('Erro', 'O nome da conta não pode estar vazio.');
       return;
     }
-
-    addAccount(newAccountName, selectedCategory === 'Credito' ? parseFloat(creditLimit) : 0, selectedCategory, dueDate); // Passa o dueDate
+  
+    // Passa o ID da conta de débito para a conta de crédito
+    const debitAccountId = selectedCategory === 'Credito' ? selectedAccount : null;
+  
+    addAccount(newAccountName, selectedCategory === 'Credito' ? parseFloat(creditLimit) : 0, selectedCategory, dueDate, debitAccountId); // Passa o dueDate
     setCreditLimit('');
     setDueDate(1); // Reseta para o padrão
     setNewAccountName(''); // Limpar o nome da conta após adicionar
     setSelectedAccount(null);
     setSelectedCategory(selectedCategory === 'Credito' ? 'Credito' : 'Debito'); // Voltar ao estado inicial
   };
+  
 
   const openEditModal = (account) => {
     setSelectedAccount(account);
@@ -146,7 +150,6 @@ const AccountModal = ({ visible, onClose }) => {
                       style={addTransactionsStyles.recurrenceInput}
                       value={dueDate.toString()}
                       keyboardType="numeric"
-                      editable={false}
                     />
 
                     <TouchableOpacity

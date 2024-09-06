@@ -43,12 +43,22 @@ export const AccountProvider = ({ children }) => {
     saveAccounts();
   }, [accounts]);
 
-  const addAccount = (name, initialBalance = 0, type = 'Debito', dueDate = 1) => {
+  const addAccount = (name, initialBalance = 0, type = 'Debito', dueDate = 1, debitAccountId = null) => {
     const existingAccount = accounts.find(account => account.name === name);
     if (existingAccount) {
       return existingAccount.id; // Retorna a ID da conta existente
     }
-    const newAccount = { id: Date.now().toString(), name, initialBalance, type, dueDate }; // Inclui o dueDate
+  
+    // Se for uma conta de crédito, vincula a uma conta de débito
+    const newAccount = {
+      id: Date.now().toString(),
+      name,
+      initialBalance,
+      type,
+      dueDate: type === 'Credito' ? dueDate : undefined,
+      debitAccountId: type === 'Credito' ? debitAccountId : null, // Subconta de débito
+    };
+    
     setAccounts(prevAccounts => [...prevAccounts, newAccount]);
     return newAccount.id;
   };
@@ -80,9 +90,10 @@ export const AccountProvider = ({ children }) => {
   
   const calculateAccountBalance = (accountId) => {
     const currentDate = moment().format('YYYY-MM-DD');
-    
-    return transactions
-      .filter(transaction => 
+  
+    // Calcula o saldo da conta de débito
+    let accountBalance = transactions
+      .filter(transaction =>
         transaction.accountId === accountId &&
         (moment(transaction.date).isBefore(currentDate, 'day') || moment(transaction.date).isSame(currentDate, 'day'))
       )
@@ -91,7 +102,17 @@ export const AccountProvider = ({ children }) => {
           ? total + transaction.amount
           : total - transaction.amount;
       }, 0);
+  
+    // Se a conta for de débito, soma os limites de crédito usados das subcontas de crédito
+    const subAccounts = accounts.filter(account => account.debitAccountId === accountId);
+    subAccounts.forEach(subAccount => {
+      accountBalance += subAccount.initialBalance; // Adiciona o limite da subconta de crédito
+    });
+  
+    return accountBalance;
   };
+  
+  
   
   return (
     <AccountContext.Provider value={{ accounts, addAccount, removeAccount, updateAccount, calculateAccountBalance  }}>

@@ -32,7 +32,6 @@ import AccountModal from "../components/modals/options/AccountModal";
 import CategoryModal from "../components/modals/options/CategoryModal";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 export const getButtonColor = (type) => {
   return type === "expense" ? "red" : "blue";
 };
@@ -42,7 +41,8 @@ const AddTransactionScreen = () => {
   const { addTransaction } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
-
+  const {transactions} = useTransactions();
+  const [accountValues, setAccountValues] = useState({});
   const [transactionType, setTransactionType] = useState("income");
 
   const [amount, setAmount] = useState("0,00");
@@ -123,6 +123,13 @@ const AddTransactionScreen = () => {
 
     return transactions;
   };
+  const calculateUsedLimit = (accountId) => {
+    const creditTransactions = transactions.filter(
+      (transaction) => transaction.accountId === accountId && transaction.type === "expense"
+    );
+    const usedLimit = creditTransactions.reduce((acc, transaction) => acc + transaction.amount, 0);
+    return usedLimit;
+  };
 
   const handleSaveAndNavigate = async () => {
     if (!description || !amount || !selectedAccount || !selectedCategory) {
@@ -130,22 +137,32 @@ const AddTransactionScreen = () => {
       return;
     }
 
-    if (
-      isNaN(parseFloat(convertToAmerican(amount))) ||
-      parseFloat(convertToAmerican(amount)) <= 0
-    ) {
+    const amountParsed = parseFloat(convertToAmerican(amount));
+    if (isNaN(amountParsed) || amountParsed <= 0) {
       Alert.alert("Erro", "O valor deve ser um número positivo.");
       console.log(amount);
-
       return;
     }
+
+    // Verificação do limite do cartão de crédito
+    const selectedAccountData = accounts.find(account => account.id === selectedAccount);
+    if (selectedAccountData && selectedAccountData.type === 'Credito') {
+      const limit = selectedAccountData.initialBalance;
+      const usedLimit = calculateUsedLimit(selectedAccountData.id);  // Usar a função para calcular o limite usado
+      console.log("Limite usado: ", usedLimit);
+      if (amountParsed > (limit - usedLimit)) {
+        Alert.alert("Erro", "Não há limite suficiente no cartão de crédito para essa transação.");
+        return;
+      }
+    }
+
 
     const recurrenceId = UUID.v4();
     const baseTransaction = {
       id: UUID.v4(),
       type: transactionType,
       description,
-      amount: parseFloat(convertToAmerican(amount)),
+      amount: amountParsed,
       date: format(date, "yyyy-MM-dd", { locale: ptBR }),
       startDate: date,
       accountId: selectedAccount,
@@ -188,6 +205,7 @@ const AddTransactionScreen = () => {
     setRecurrenceInfo("");
     setAttachments([]);
   };
+
 
   useEffect(() => {
     const loadLastTransactionType = async () => {
@@ -464,13 +482,13 @@ const AddTransactionScreen = () => {
                 >
                   <Picker.Item label="Selecione uma conta" value="" />
                   {accounts
-                  .map((account) => (
-                    <Picker.Item
-                      key={account.id}
-                      label={account.name}
-                      value={account.id}
-                    />
-                  ))}
+                    .map((account) => (
+                      <Picker.Item
+                        key={account.id}
+                        label={account.name}
+                        value={account.id}
+                      />
+                    ))}
                 </Picker>
                 <TouchableOpacity
                   onPress={() => setIsAccountModalVisible(true)}
@@ -493,14 +511,14 @@ const AddTransactionScreen = () => {
                 >
                   <Picker.Item label="Selecione uma conta" value="" />
                   {accounts
-                  .filter((account) => account.type === "Credito")
-                  .map((account) => (
-                    <Picker.Item
-                      key={account.id}
-                      label={account.name}
-                      value={account.id}
-                    />
-                  ))}
+                    .filter((account) => account.type === "Credito")
+                    .map((account) => (
+                      <Picker.Item
+                        key={account.id}
+                        label={account.name}
+                        value={account.id}
+                      />
+                    ))}
                 </Picker>
                 <TouchableOpacity
                   onPress={() => setIsAccountModalVisible(true)}

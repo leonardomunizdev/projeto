@@ -45,8 +45,8 @@ export const TransactionProvider = ({ children }) => {
     ));
     console.log(`Recurrence Count: ${updatedTransaction.recurrenceCount}`); // Acessando recurrenceCount aqui
   };
-  
-  
+
+
   // Dentro do TransactionContext.js
   const editTransaction = (updatedTransaction) => {
     setTransactions((prevTransactions) =>
@@ -64,7 +64,7 @@ export const TransactionProvider = ({ children }) => {
       setTransactions(prevTransactions => [...prevTransactions, transaction]);
     }
   };
-  
+
   const updateMultipleTransactions = (updatedTransactions) => {
     setTransactions((prevTransactions) =>
       prevTransactions.map((transaction) =>
@@ -72,7 +72,7 @@ export const TransactionProvider = ({ children }) => {
       )
     );
   };
-  
+
 
   const addMultipleTransactions = (transactions) => {
     setTransactions(prevTransactions => [...prevTransactions, ...transactions]);
@@ -93,11 +93,30 @@ export const TransactionProvider = ({ children }) => {
       return total;
     }, 0);
   };
+  // Dentro do TransactionContext.js
+
+  const calculateAccountTransactionsTotal = (accountId, month, year) => {
+    // Ajuste o índice do mês para zero-based
+  
+    return transactions
+      .filter(transaction => {
+        const transactionDate = moment(transaction.date);
+        return (
+          transaction.accountId === accountId &&
+          transactionDate.month() === month && // Ajuste para o mês correto (0-based)
+          transactionDate.year() === year
+        );
+      })
+      .reduce((total, transaction) => {
+        return transaction.type === 'income' ? total + transaction.amount : total - transaction.amount;
+      }, 0);
+  };
+  
 
   const generateRecurringTransactions = (baseTransaction, recurrence) => {
     const transactions = [];
     let nextDate = moment(baseTransaction.date);
-  
+
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...baseTransaction,
@@ -106,17 +125,17 @@ export const TransactionProvider = ({ children }) => {
         recurringId: baseTransaction.id,
         recurrenceCount: recurrence.count, // Adiciona o recurrenceCount à transação
       });
-  
+
       if (recurrence.unit === 'month') {
         nextDate = nextDate.add(1, 'month');
       } else if (recurrence.unit === 'week') {
         nextDate = nextDate.add(1, 'week');
       }
     }
-  
+
     return transactions;
   };
-  
+
 
   // Atualiza uma transação existente com novos anexos
   const updateTransactionAttachments = (id, attachments) => {
@@ -163,7 +182,8 @@ export const TransactionProvider = ({ children }) => {
       setTransactions,
       clearTransactions,
       updateTransaction,
-      updateMultipleTransactions
+      updateMultipleTransactions,
+      calculateAccountTransactionsTotal
     }}>
       {children}
     </TransactionContext.Provider>

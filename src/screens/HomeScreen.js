@@ -52,7 +52,7 @@ const HomeScreen = () => {
 
   const handleOpenAccountModal = (account) => {
     const accountName = account.name || 'Conta Desconhecida';
-    const balance = accountValues[account.id] || 0;
+    const balance = [account.id] || 0;
 
     setSelectedAccount({
       name: accountName,
@@ -130,32 +130,38 @@ const HomeScreen = () => {
     let monthlyIncome = 0;
     let monthlyExpense = 0;
     const accountTotals = {};
+    const creditCardTotals = {};
     const today = new Date();
     const balances = {};
-
+  
     transactions.forEach((transaction) => {
       const transactionDate = new Date(transaction.date);
       const transactionMonth = transactionDate.getMonth();
       const transactionYear = transactionDate.getFullYear();
       const amount = parseFloat(transaction.amount);
-
+  
       if (isNaN(amount)) {
         console.warn(`Valor inválido para a transação: ${transaction.amount}`);
         return;
       }
-
+  
       // Calcular acumulado de cada conta somente até o mês selecionado
       const isInSelectedRange =
         transactionYear < currentYear ||
         (transactionYear === currentYear && transactionMonth <= currentMonth);
-
+  
       if (isInSelectedRange) {
         if (transaction.type === "income") {
           accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) + amount;
         } else if (transaction.type === "expense") {
           accountTotals[transaction.accountId] = (accountTotals[transaction.accountId] || 0) - amount;
         }
-
+  
+        // Se a conta for do tipo "Crédito", acumular no total de crédito usado
+        if (transaction.accountType === "credit") {
+          creditCardTotals[transaction.accountId] = (creditCardTotals[transaction.accountId] || 0) + amount;
+        }
+  
         // Armazenando saldos mensais
         const balanceKey = `${transactionYear}-${transactionMonth}`;
         if (!balances[balanceKey]) {
@@ -167,7 +173,7 @@ const HomeScreen = () => {
           balances[balanceKey] -= amount;
         }
       }
-
+  
       // Calcular total de renda e despesas acumuladas até o mês atual
       if (transactionDate <= today) {
         if (transaction.type === "income") {
@@ -176,7 +182,7 @@ const HomeScreen = () => {
           expense += amount;
         }
       }
-
+  
       // Mensal
       if (transactionMonth === currentMonth && transactionYear === currentYear) {
         if (transaction.type === "income") {
@@ -186,7 +192,15 @@ const HomeScreen = () => {
         }
       }
     });
-
+  
+    // Somar o limite usado nas contas de crédito às contas de débito correspondentes
+    creditCards.forEach((creditCard) => {
+      if (creditCard.linkedDebitAccountId) {
+        const usedCredit = creditCardTotals[creditCard.id] || 0;
+        accountTotals[creditCard.linkedDebitAccountId] = (accountTotals[creditCard.linkedDebitAccountId] || 0) - usedCredit;
+      }
+    });
+  
     // Atualizando estados
     setTotalIncome(income);
     setTotalExpense(expense);
@@ -194,21 +208,25 @@ const HomeScreen = () => {
     setMonthlyIncome(monthlyIncome);
     setMonthlyExpense(monthlyExpense);
     setMonthlyBalance(monthlyIncome - monthlyExpense);
-
+  
     const spendingGoalValue = parseFloat(savedGoal) || 0;
     const remaining = spendingGoalValue - monthlyExpense;
     setAmountLeft(remaining);
-
+  
     // Atualizando os valores das contas com o total acumulado até o mês selecionado
     setAccountValues(accountTotals);
-
+  
     // Calcular saldo acumulado considerando todos os meses até o mês selecionado
     const accumulated = Object.keys(balances).reduce((acc, key) => acc + balances[key], 0);
     setAccumulatedBalance(accumulated);
-
+  
     // Armazenar os saldos mensais
     setMonthlyBalances(balances);
-  }, [transactions, accounts, currentMonth, currentYear, savedGoal]);
+  }, [transactions, accounts, currentMonth, currentYear, savedGoal, creditCards]);
+  
+  console.log("accountValues:", accountValues); // Verifique o valor de accountValues
+  
+  
 
 
   console.log("sss", savedGoal);
@@ -399,6 +417,8 @@ const HomeScreen = () => {
             formatToBRL={formatToBRL}
             accountValues={accountValues}
             onLongPress={() => setSelectedCardsModalVisible(true)}
+            currentMonth={currentMonth}
+            currentYear={currentYear}
 
           />}
 
