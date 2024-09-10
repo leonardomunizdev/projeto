@@ -79,14 +79,23 @@ export const AccountProvider = ({ children }) => {
     setAccounts(updatedAccounts);
   };
 
-  const updateAccount = (accountId, newName, newType, newDueDate) => {
+  const updateAccount = (accountId, newName, newType, newCreditLimit, newDueDate, debitAccountId) => {
     const updatedAccounts = accounts.map(account =>
       account.id === accountId
-        ? { ...account, name: newName, type: newType, dueDate: newType === 'Credito' ? newDueDate : undefined }
+        ? {
+            ...account,
+            name: newName,
+            type: newType,
+            dueDate: newType === 'Credito' ? newDueDate : undefined,
+            initialBalance: newType === 'Credito' ? newCreditLimit : account.initialBalance, // Atualiza limite de crédito
+            debitAccountId: newType === 'Credito' ? debitAccountId : account.debitAccountId // Atualiza conta associada
+          }
         : account
     );
     setAccounts(updatedAccounts);
   };
+  
+  
   
   const calculateAccountBalance = (accountId) => {
     const currentDate = moment().format('YYYY-MM-DD');

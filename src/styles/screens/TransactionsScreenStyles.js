@@ -13,7 +13,7 @@ export const TransactionsStyles = StyleSheet.create({
     paddingLeft: 10,
     marginBottom: 10,
     marginTop: 10,
-
+    marginTop: 2,
     fontSize: 16,
   },
   listContent: {
@@ -157,7 +157,41 @@ export const TransactionsStyles = StyleSheet.create({
   },
   installment: {
     color: 'black',
-  }
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    marginVertical: 10,
+    color: 'white',
+
+    
+  },
+  filterItem: {
+    alignItems: 'center',
+    marginBottom: 5,
+    color: 'white',
+
+    
+  },
+  filterText: {
+    fontSize: 12,
+    backgroundColor: 'transparent',
+    borderColor: 'red',
+    padding: 10,
+    borderRadius: 35,
+    color: 'red',
+    borderWidth: 2,
+    
+  },
+  removeButton: {
+    marginLeft: 10,
+    padding: 5,
+    borderRadius: 5,
+    backgroundColor: 'red',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   
 });
 

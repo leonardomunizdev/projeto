@@ -69,6 +69,17 @@ const AddTransactionScreen = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedCategoryType, setSelectedCategoryType] = useState("income");
   const route = useRoute();
+  const { activateSwitch } = route.params || {};
+
+  useEffect(() => {
+    if (activateSwitch !== undefined) {
+      setIsCredit(activateSwitch); // Configura o valor do switch
+    }
+  }, [activateSwitch]);
+
+  const toggleSwitch = () => {
+    setIsCredit((previousValue) => !previousValue);
+  };
 
   useEffect(() => {
     if (route.params?.handleSaveAndNavigate) {
@@ -466,7 +477,7 @@ const AddTransactionScreen = () => {
                 </Text>
                 <Switch
                   value={isCredit}
-                  onValueChange={(value) => setIsCredit(value)}
+                  onValueChange={toggleSwitch}
                   trackColor={{ false: "silver", true: getButtonColor() }}
                   thumbColor={isCredit ? getButtonColor() : "silver"}
                 />
@@ -482,6 +493,7 @@ const AddTransactionScreen = () => {
                 >
                   <Picker.Item label="Selecione uma conta" value="" />
                   {accounts
+                      .filter((account) => account.type === "Debito")
                     .map((account) => (
                       <Picker.Item
                         key={account.id}

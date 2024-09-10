@@ -184,10 +184,7 @@ const OptionsScreen = () => {
               <Ionicons name="wallet" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Gerir Contas Bancarias</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setCreditCardModalVisible(true)}>
-              <Ionicons name="wallet" size={RFValue(24)} color="black" />
-              <Text style={optionsStyles.optionText}>Gerir Cartões de Credito</Text>
-            </TouchableOpacity>
+            
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsCategoryModalVisible(true)}>
               <Ionicons name="list" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Gerir Categorias</Text>

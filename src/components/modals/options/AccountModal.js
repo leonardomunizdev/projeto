@@ -71,9 +71,26 @@ const AccountModal = ({ visible, onClose }) => {
   };
 
   // Funções para manipular o dia de vencimento
-  const increaseDueDate = () => setDueDate(prev => prev < 31 ? prev + 1 : prev);
-  const decreaseDueDate = () => setDueDate(prev => prev > 1 ? prev - 1 : prev);
+  const increaseDueDate = () => setDueDate(prev => (prev < 28 ? prev + 1 : prev));
+const decreaseDueDate = () => setDueDate(prev => (prev > 1 ? prev - 1 : prev));
 
+const handleDueDateChange = (text) => {
+  const value = parseInt(text, 10);
+
+  if (!isNaN(value)) {
+    if (value > 28) {
+      Alert.alert('Erro', 'O dia de vencimento não pode ser maior que 28.');
+      setDueDate(28); // Resetar para 28 se o valor for maior que 28
+    } else if (value < 1) {
+      Alert.alert('Erro', 'O dia de vencimento não pode ser menor que 1.');
+      setDueDate(0); // Resetar para 1 se o valor for menor que 1
+    } else {
+      setDueDate(value);
+    }
+  } else {
+    setDueDate(0); // Valor padrão se o input for inválido
+  }
+};
   return (
     <View style={optionsStyles.container}>
       <Modal
@@ -150,6 +167,7 @@ const AccountModal = ({ visible, onClose }) => {
                       style={addTransactionsStyles.recurrenceInput}
                       value={dueDate.toString()}
                       keyboardType="numeric"
+                      onChangeText={handleDueDateChange}
                     />
 
                     <TouchableOpacity

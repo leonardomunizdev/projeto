@@ -171,10 +171,13 @@ export const AccountsCard = ({
 }) => {
   const navigation = useNavigation();
 
-  const navigateToAddTransactionsAccount = (accountId) => {
-    navigation.navigate("AddTransactionScreen", { accountId });
+  const navigateToAddTransactionsAccount = (accountId, activateSwitch) => {
+    navigation.navigate("AddTransactionScreen", { accountId, activateSwitch });
   };
-
+  
+  const navigateToTransactions = (account) => {
+    navigation.navigate("Transações", { filterAccount: account });
+  };
   const getCreditSubAccounts = (debitAccountId) => {
     return accounts.filter(
       (account) => account.type === "Credito" && account.debitAccountId === debitAccountId
@@ -212,7 +215,7 @@ export const AccountsCard = ({
               return (
                 <TouchableOpacity
                   key={account.id}
-                  onPress={() => onPress(account)} // Passa a conta clicada para a função de abertura do modal
+                  onPress={() => navigateToTransactions(account.name)}
                 >
                   <View style={HomeStyles.accountItem}>
                     <Text style={HomeStyles.accountName}>
@@ -230,7 +233,7 @@ export const AccountsCard = ({
                       </Text>
                     </Text>
                     <TouchableOpacity
-                      onPress={() => navigateToAddTransactionsAccount(account.id)}
+                      onPress={() => navigateToAddTransactionsAccount(account.id, false)} // Aqui o switch será desativado
                       style={HomeStyles.addButton}
                     >
                       <MaterialIcons name="add" size={30} color="blue" />
@@ -324,6 +327,16 @@ export const CreditCard = ({
 }) => {
   const [isCreditCardModalVisible, setCreditCardModalVisible] = useState(false);
   const {calculateAccountTransactionsTotal } = useTransactions();
+  const navigation = useNavigation();
+
+  const navigateToTransactions = (account) => {
+    navigation.navigate("Transações", { filterAccount: account });
+  };
+  const navigateToAddTransactionsAccount = (accountId, activateSwitch) => {
+    navigation.navigate("AddTransactionScreen", { accountId, activateSwitch });
+  };
+  
+  
   const calculatePercentage = (limit, usedLimit) => {
     console.log("pusedLimit", usedLimit);
     console.log("plimit", limit);
@@ -359,12 +372,7 @@ export const CreditCard = ({
             <Text style={[HomeStyles.cardTitle, { marginBottom: 15 }]}>
               Cartões de Credito
             </Text>
-            <TouchableOpacity
-              onPress={() => setCreditCardModalVisible(true)}
-              style={[HomeStyles.addButton, { marginTop: -16 }]}
-            >
-              <MaterialIcons name="add" size={30} color="#ff5722" />
-            </TouchableOpacity>
+            
           </View>
          
           {accounts
@@ -375,6 +383,7 @@ export const CreditCard = ({
               const usedLimit = calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
               const availableBalance = account.initialBalance + usedLimit;
               const percentage = calculatePercentage(limit, usedLimit);
+              
               console.log("Key for month:", key);
 
               console.log("lixxxxxmit", limit);
@@ -383,10 +392,12 @@ export const CreditCard = ({
               console.log("currentMonth", currentMonth);
               console.log("accountValues:", accountValues);
               console.log("Account ID:", account.id);
- 
+              console.log("Accounname", account.name);
               return (
                 <TouchableOpacity
                   key={account.id}
+                  onPress={() => navigateToTransactions(account.name)}
+                  
                 // Passa a conta clicada para a função de abertura do modal
                 >
                   <View style={HomeStyles.accountItem}>
@@ -403,7 +414,7 @@ export const CreditCard = ({
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
-                        navigateToAddTransactionsAccount(account.id)
+                        navigateToAddTransactionsAccount(account.id, true)
                       }
                       style={HomeStyles.addButton}
                     >

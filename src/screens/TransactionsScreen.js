@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import {
   useRoute,
-  useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
 import { useTransactions } from "../context/TransactionContext";
@@ -25,6 +24,10 @@ import { Alert } from "react-native";
 import HomeStyles from "../styles/screens/HomeScreenStyles";
 import { Ionicons } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
+import { IconButton } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
 
 // FORMATA OS VALORES PARA REAIS(BRL)
 const formatCurrency = (value) => {
@@ -40,6 +43,7 @@ const formatCurrency = (value) => {
 //////////////////////////////////////////////////
 
 const TransactionsScreen = () => {
+  const navigation = useNavigation();
   const { transactions, removeTransaction } = useTransactions();
   const { accounts } = useAccounts();
   const { categories } = useCategories();
@@ -47,6 +51,9 @@ const TransactionsScreen = () => {
 
   const [filterType, setFilterType] = useState(
     route.params?.filterType || undefined
+  );
+  const [filterAccount, setFilterAccount] = useState(
+    route.params?.filterAccount || undefined
   );
   const [selectedMonth, setSelectedMonth] = useState(moment().startOf("month"));
   const [searchText, setSearchText] = useState("");
@@ -58,12 +65,52 @@ const TransactionsScreen = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [transactionDetailsModalVisible, setTransactionDetailsModalVisible] =
     useState(false);
+  const [selectedAccount, setSelectedAccount] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
-  const handleEdit = (transaction) => {
-    setTransactionToEdit(transaction);
-    setEditModalVisible(true);
+  const handleFilterSelection = (filterType, value) => {
+    setAppliedFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterType]: value,
+    }));
   };
+  const removeFilter = (filterType) => {
+    setAppliedFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterType]: null,
+    }));
+  };
+
+  const toggleModal = () => {
+    setFilterModalVisible(false);
+  };
+  const [appliedFilters, setAppliedFilters] = useState({
+    type: filterType,
+    account: filterAccount,
+    category: null,
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      const { filterType: receivedFilter, filterAccount: AccountFilter } = route.params || {};
+
+      setAppliedFilters({
+        type: receivedFilter,
+        account: AccountFilter,
+        category: null,
+      });
+
+      return () => {
+        setAppliedFilters({
+          type: undefined,
+          account: undefined,
+          category: null,
+        });
+      };
+    }, [route.params?.filterType, route.params?.filterAccount])
+  );
 
   // FUNÇÕES PARA PEGAR OS NOMES DAS CONTAS E DAS CATEGORIAS
   const getAccountName = (accountId) => {
@@ -79,38 +126,53 @@ const TransactionsScreen = () => {
   // CONTROLE DE FILTROS
   const applyFilter = (transactions) => {
     return transactions.filter((transaction) => {
-      const descriptionMatches = transaction.description
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-      const categoryMatches = getCategoryName(transaction.categoryId)
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-      const accountMatches = getAccountName(transaction.accountId)
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
+      const categoryFilterMatches = !appliedFilters.category || getCategoryName(transaction.categoryId) === appliedFilters.category;
+      const descriptionMatches = transaction.description.toLowerCase().includes(searchText.toLowerCase());
+      const categoryMatches = getCategoryName(transaction.categoryId).toLowerCase().includes(searchText.toLowerCase());
+      const accountMatches = getAccountName(transaction.accountId).toLowerCase().includes(searchText.toLowerCase());
+      const accountFilterMatches = !appliedFilters.account ||
+        getAccountName(transaction.accountId).toLowerCase() === appliedFilters.account.toLowerCase();
 
       return (
         moment(transaction.date, "YYYY-MM-DD").isSame(selectedMonth, "month") &&
-        (!filterType || transaction.type === filterType) &&
+        (!appliedFilters.type || transaction.type === appliedFilters.type) &&
+        accountFilterMatches &&
+        categoryFilterMatches &&
         (descriptionMatches || categoryMatches || accountMatches)
       );
     });
   };
 
+
+
   useFocusEffect(
     useCallback(() => {
-      const { filterType: receivedFilter } = route.params || {};
-      if (receivedFilter) {
-        setFilterType(receivedFilter);
-      } else {
-        setFilterType(undefined);
-      }
+      const { filterType: receivedFilter, filterAccount: AccountFilter } = route.params || {};
+
+      setFilterType(receivedFilter);
+      setFilterAccount(AccountFilter);
 
       return () => {
         setFilterType(undefined);
+        setFilterAccount(undefined);
       };
-    }, [route.params?.filterType])
+    }, [route.params?.filterType, route.params?.filterAccount])
   );
+
+
+
+  const clearAllFilters = () => {
+
+
+    setAppliedFilters({
+      type: null,
+      account: null,
+      category: null,
+    });
+    setSelectedAccount(""); // Resetando o filtro da conta no modal
+    setSelectedCategory(""); // Resetando o filtro da categoria no modal
+  };
+
 
   const filteredTransactions = applyFilter(transactions).sort((a, b) =>
     moment(a.date).diff(moment(b.date))
@@ -122,7 +184,7 @@ const TransactionsScreen = () => {
     setSelectedMonth((prevMonth) => prevMonth.clone().add(direction, "month"));
   };
   //////////////////////////////////////////////////
-  
+
 
   // FUNÇÃO PARA CONTAGEM DE PARECLAS
   //////////////////////////////////////////////////
@@ -132,148 +194,6 @@ const TransactionsScreen = () => {
     setCurrentTransaction(transaction);
     setModalVisible(true);
     setModalType(transaction.isRecurring ? "recurring" : "single");
-  };
-
-  const removeAllRecurringTransactions = () => {
-    const { recurrenceId } = currentTransaction;
-    const transactionsToRemove = transactions.filter(
-      (transaction) => transaction.recurrenceId === recurrenceId
-    );
-    transactionsToRemove.forEach((transaction) =>
-      removeTransaction(transaction.id)
-    );
-    setModalVisible(false);
-  };
-
-  const removePreviousRecurringTransactions = () => {
-    const { recurrenceId, date } = currentTransaction;
-
-    const transactionsToRemove = transactions.filter(
-      (transaction) =>
-        transaction.recurrenceId === recurrenceId &&
-        moment(transaction.date).isBefore(date, "day")
-    );
-    transactionsToRemove.forEach((transaction) =>
-      removeTransaction(transaction.id)
-    );
-    setModalVisible(false);
-  };
-
-  const removeFutureRecurringTransactions = () => {
-    const { recurrenceId, date } = currentTransaction;
-
-    const transactionsToRemove = transactions.filter(
-      (transaction) =>
-        transaction.recurrenceId === recurrenceId &&
-        moment(transaction.date).isAfter(date, "day")
-    );
-    transactionsToRemove.forEach((transaction) =>
-      removeTransaction(transaction.id)
-    );
-    setModalVisible(false);
-  };
-  const confirmDelete = () => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Você tem certeza de que deseja excluir esta transação?",
-      [
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancelado"),
-          style: "cancel",
-        },
-        {
-          text: "Excluir",
-          onPress: removeTransactionById,
-          style: "destructive",
-        },
-      ]
-    );
-  };
-  const confirmRemoveAllRecurringTransactions = () => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Você tem certeza de que deseja excluir todas as parcelas desta transação recorrente?",
-      [
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancelado"),
-          style: "cancel",
-        },
-        {
-          text: "Excluir",
-          onPress: removeAllRecurringTransactions,
-          style: "destructive",
-        },
-      ]
-    );
-  };
-
-  const confirmRemovePreviousRecurringTransactions = () => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Você tem certeza de que deseja excluir todas as parcelas anteriores a esta transação recorrente?",
-      [
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancelado"),
-          style: "cancel",
-        },
-        {
-          text: "Excluir",
-          onPress: removePreviousRecurringTransactions,
-          style: "destructive",
-        },
-      ]
-    );
-  };
-
-  const confirmRemoveFutureRecurringTransactions = () => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Você tem certeza de que deseja excluir todas as parcelas futuras desta transação recorrente?",
-      [
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancelado"),
-          style: "cancel",
-        },
-        {
-          text: "Excluir",
-          onPress: removeFutureRecurringTransactions,
-          style: "destructive",
-        },
-      ]
-    );
-  };
-
-  const confirmRemoveCurrentTransaction = () => {
-    Alert.alert(
-      "Confirmar Exclusão",
-      "Você tem certeza de que deseja excluir esta parcela da transação recorrente?",
-      [
-        {
-          text: "Cancelar",
-          onPress: () => console.log("Cancelado"),
-          style: "cancel",
-        },
-        {
-          text: "Excluir",
-          onPress: removeTransactionById,
-          style: "destructive",
-        },
-      ]
-    );
-  };
-
-  const removeTransactionById = () => {
-    if (currentTransaction) {
-      const { id } = currentTransaction;
-      removeTransaction(id);
-      setModalVisible(false);
-    } else {
-      console.error("Nenhuma transação selecionada para remoção.");
-    }
   };
 
   //////////////////////////////////////////////////
@@ -294,13 +214,13 @@ const TransactionsScreen = () => {
     ) {
       return '';
     }
-  
+
     const startDate = moment(transaction.startDate, "YYYY-MM-DD");
     const transactionDate = moment(transaction.date, "YYYY-MM-DD");
     const totalInstallments = transaction.recorrenceCount;
-  
+
     let installmentNumber;
-  
+
     // Verifica se a recorrência é mensal
     if (transaction.recurrenceType === 'month') {
       const monthsDifference = transactionDate.diff(startDate, "months");
@@ -309,46 +229,46 @@ const TransactionsScreen = () => {
       } else {
         installmentNumber = monthsDifference + 2;
       }
-  
+
       if (installmentNumber > totalInstallments) {
         installmentNumber = totalInstallments;
       }
-  
+
       return `Parcela ${totalInstallments}`;
-  
-    // Verifica se a recorrência é semanal
+
+      // Verifica se a recorrência é semanal
     } else if (transaction.recurrenceType === 'week') {
       return `Parcela  ${totalInstallments}`;
     }
-  
+
     return '';
   };
-  
-  
-  
 
 
-const handleTransactionPress = (transaction) => {
 
-  
-  setCurrentTransaction(transaction);
-  setTransactionDetailsModalVisible(true);
-};
-  
-  
-  
-  
+
+
+  const handleTransactionPress = (transaction) => {
+
+
+    setCurrentTransaction(transaction);
+    setTransactionDetailsModalVisible(true);
+  };
+
+
+
+
   // RENDERIZAÇÃO DAS TRANSAÇÕES
   const renderItem = ({ item, index }) => {
     const dayOfWeek = formatDayOfWeek(item.date);
     const previousDate =
       index > 0 ? filteredTransactions[index - 1].date : null;
     const isNewDay = previousDate !== item.date;
-  
+
     const recurrenceInfo = getCurrentInstallment(item);
     console.log(item.amount);
     return (
-      
+
       <View>
         {isNewDay && <Text style={TransactionsStyles.dateHeader}>{dayOfWeek}</Text>}
         <TouchableOpacity
@@ -378,13 +298,13 @@ const handleTransactionPress = (transaction) => {
       </View>
     );
   };
-  
+
   {
     /*/////////////////////////////////////////////////////////////////////////////////////////// */
   }
 
   return (
-    
+
     <View style={HomeStyles.container}>
 
       <View style={HomeStyles.monthYearSelector}>
@@ -404,12 +324,46 @@ const handleTransactionPress = (transaction) => {
           <Icon name="chevron-right" size={24} />
         </TouchableOpacity>
       </View>
-      <TextInput
-        style={TransactionsStyles.searchInput}
-        placeholder="Pesquisar por descrição, Conta ou Categoria"
-        value={searchText}
-        onChangeText={setSearchText}
-      />
+
+      <View style={{}}>
+        <TextInput
+          style={TransactionsStyles.searchInput}
+          placeholder="Pesquisar por descrição, Conta ou Categoria"
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+        <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={{ position: 'absolute', marginTop: '0.1%', marginLeft: '80%', paddingLeft: '10%' }}>
+          <Ionicons name="filter-circle-outline" size={40} />
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={TransactionsStyles.filtersContainer}>
+        {appliedFilters.type && (
+          <View style={TransactionsStyles.filterItem}>
+            <TouchableOpacity onPress={() => removeFilter('type')} style={TransactionsStyles.removeFilterButton}>
+            <Text style={[TransactionsStyles.filterText, { color: 'red' }]}>
+              {appliedFilters.type === 'expense' ? 'Despesa' : appliedFilters.type === 'income' ? 'Receita' : appliedFilters.type}   X
+            </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {appliedFilters.account && (
+          <View style={TransactionsStyles.filterItem}>
+            <TouchableOpacity onPress={() => removeFilter('account')} style={TransactionsStyles.removeFilterButton}>
+            <Text style={TransactionsStyles.filterText}>{appliedFilters.account}  X</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {appliedFilters.category && (
+          <View style={TransactionsStyles.filterItem}>
+            <TouchableOpacity onPress={() => removeFilter('category')} style={TransactionsStyles.removeFilterButton}>
+            <Text style={TransactionsStyles.filterText}>{appliedFilters.category}   X </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </TouchableOpacity>
+
 
       <FlatList
         data={filteredTransactions}
@@ -418,9 +372,9 @@ const handleTransactionPress = (transaction) => {
         contentContainerStyle={TransactionsStyles.listContent}
       />
 
-      
 
-     
+
+
       {transactionToEdit && (
         <EditTransactionModal
           isVisible={editModalVisible}
@@ -434,6 +388,170 @@ const handleTransactionPress = (transaction) => {
         transaction={currentTransaction}
       />
       {/*/////////////////////////////////////////////////////////////////////////////////////////// */}
+      <Modal visible={filterModalVisible} animationType="slide" transparent={true}>
+        <View style={{
+          flex: 1,
+          justifyContent: "flex-end",
+          backgroundColor: "rgba(0, 0, 0, 0.5)" // Fundo transparente escuro
+        }}>
+          <View style={{
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            padding: 20,
+            alignItems: "center",
+            height: "60%", // O modal ocupa 60% da tela
+            width: '100%',
+          }}>
+            <Text style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              marginBottom: 20,
+              color: "#333" // Cor do título
+            }}>
+              Selecione Filtros
+            </Text>
+
+            {/* Type Filter */}
+            <Text style={{
+              fontSize: 16,
+              fontWeight: "bold",
+              marginBottom: 10,
+              alignSelf: "flex-start",
+              color: "#555" // Cor do subtítulo
+            }}>
+              Tipo
+            </Text>
+
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginBottom: 20
+            }}>
+              <TouchableOpacity style={{
+                backgroundColor: '#ff4d4d',
+                padding: 15,
+                borderRadius: 30,
+                width: '45%',
+                alignItems: 'center'
+              }} onPress={() => handleFilterSelection("type", "expense")}>
+                <Text style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>Despesa</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{
+                backgroundColor: '#4d94ff',
+                padding: 15,
+                borderRadius: 30,
+                width: '45%',
+                alignItems: 'center'
+              }} onPress={() => handleFilterSelection("type", "income")}>
+                <Text style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>Receita</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Account Filter */}
+            <Text style={{
+              fontSize: 16,
+              fontWeight: "bold",
+              marginBottom: 10,
+              alignSelf: "flex-start",
+              color: "#555"
+            }}>
+              Conta
+            </Text>
+            <Picker
+              selectedValue={selectedAccount}
+              onValueChange={(itemValue) => {
+                setSelectedAccount(itemValue);
+                handleFilterSelection("account", itemValue);
+              }}
+              style={{
+                height: 50,
+                width: '100%',
+                marginBottom: 20,
+                borderColor: "#ddd",
+                borderWidth: 1
+              }}
+            >
+              <Picker.Item label="Selecione uma conta" value="" />
+              {accounts.map((account) => (
+                <Picker.Item key={account.id} label={account.name} value={account.name} />
+              ))}
+            </Picker>
+
+            {/* Category Filter */}
+            <Text style={{
+              fontSize: 16,
+              fontWeight: "bold",
+              marginBottom: 10,
+              alignSelf: "flex-start",
+              color: "#555"
+            }}>
+              Categoria
+            </Text>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => {
+                setSelectedCategory(itemValue);
+                handleFilterSelection("category", itemValue);
+              }}
+              style={{
+                height: 50,
+                width: '100%',
+                marginBottom: 20,
+                borderColor: "#ddd",
+                borderWidth: 1
+              }}
+            >
+              <Picker.Item label="Selecione uma categoria" value="" />
+              {categories.map((category) => (
+                <Picker.Item key={category.id} label={category.name} value={category.name} />
+              ))}
+            </Picker>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)} style={{
+                backgroundColor: 'red',
+                padding: 15,
+                borderRadius: 30,
+                marginTop: 20,
+                width: '30%',
+                alignItems: 'center'
+              }}>
+                <Text style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>Fechar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={clearAllFilters}
+                style={[TransactionsStyles.clearFiltersButton, {
+                  backgroundColor: 'blue',
+                  padding: 15,
+                  borderRadius: 30,
+                  marginTop: 20,
+                  marginLeft: 20,
+                  width: '40%',
+                  alignItems: 'center'
+                }]}
+              >
+                <Text style={{
+                  color: 'white',
+                  fontWeight: 'bold',
+                }}>Limpar Filtros</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
