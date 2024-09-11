@@ -126,13 +126,27 @@ const TransactionsScreen = () => {
   // CONTROLE DE FILTROS
   const applyFilter = (transactions) => {
     return transactions.filter((transaction) => {
-      const categoryFilterMatches = !appliedFilters.category || getCategoryName(transaction.categoryId) === appliedFilters.category;
-      const descriptionMatches = transaction.description.toLowerCase().includes(searchText.toLowerCase());
-      const categoryMatches = getCategoryName(transaction.categoryId).toLowerCase().includes(searchText.toLowerCase());
-      const accountMatches = getAccountName(transaction.accountId).toLowerCase().includes(searchText.toLowerCase());
+      const categoryFilterMatches =
+        !appliedFilters.category ||
+        getCategoryName(transaction.categoryId) === appliedFilters.category;
+        
+      const descriptionMatches = transaction.description
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
+        
+      const categoryMatches = getCategoryName(transaction.categoryId)
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
+  
+      // Nova lógica de filtragem de contas
+      const accountName = getAccountName(transaction.accountId).toLowerCase();
+      
+      const accountMatches = accountName.includes(searchText.toLowerCase());
       const accountFilterMatches = !appliedFilters.account ||
-        getAccountName(transaction.accountId).toLowerCase() === appliedFilters.account.toLowerCase();
-
+        (appliedFilters.account.toLowerCase() === accountName ||
+          (accountName.includes(appliedFilters.account.toLowerCase()) &&
+           searchText.toLowerCase() !== accountName));
+      
       return (
         moment(transaction.date, "YYYY-MM-DD").isSame(selectedMonth, "month") &&
         (!appliedFilters.type || transaction.type === appliedFilters.type) &&
@@ -142,6 +156,7 @@ const TransactionsScreen = () => {
       );
     });
   };
+  
 
 
 
@@ -255,7 +270,7 @@ const TransactionsScreen = () => {
     setTransactionDetailsModalVisible(true);
   };
 
-
+  
 
 
   // RENDERIZAÇÃO DAS TRANSAÇÕES

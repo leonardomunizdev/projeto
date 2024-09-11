@@ -8,7 +8,7 @@ import { Picker } from '@react-native-picker/picker';
 import addTransactionsStyles from '../../../styles/screens/addTransactionsScreenStyles';
 
 const AccountModal = ({ visible, onClose }) => {
-  const { accounts, addAccount, removeAccount, updateAccount, calculateAccountBalance } = useAccounts();
+  const { accounts, addAccount, removeAccount, updateAccount } = useAccounts();
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState(null);
@@ -83,12 +83,12 @@ const handleDueDateChange = (text) => {
       setDueDate(28); // Resetar para 28 se o valor for maior que 28
     } else if (value < 1) {
       Alert.alert('Erro', 'O dia de vencimento não pode ser menor que 1.');
-      setDueDate(0); // Resetar para 1 se o valor for menor que 1
+      setDueDate(1); // Resetar para 1 se o valor for menor que 1
     } else {
       setDueDate(value);
     }
   } else {
-    setDueDate(0); // Valor padrão se o input for inválido
+    setDueDate(1); // Valor padrão se o input for inválido
   }
 };
   return (
@@ -199,8 +199,7 @@ const handleDueDateChange = (text) => {
                 renderItem={({ item }) => (
                   <View style={optionsStyles.accountItem}>
                     <Text style={optionsStyles.accountName}>
-                      {item.name} {'\n'}
-                      Saldo: {calculateAccountBalance(item.id).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      {item.name} 
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <TouchableOpacity onPress={() => openEditModal(item)}>

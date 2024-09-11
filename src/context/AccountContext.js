@@ -1,29 +1,19 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTransactions } from './TransactionContext';
-import moment from 'moment';
+
 const AccountContext = createContext();
 
 export const AccountProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]);
-  const { transactions, setTransactions } = useTransactions();
+  const { removeTransactionsByAccount } = useTransactions();
 
   useEffect(() => {
     const loadAccounts = async () => {
       try {
         const storedAccounts = await AsyncStorage.getItem('accounts');
         if (storedAccounts) {
-          const parsedAccounts = JSON.parse(storedAccounts);
-          
-          // Verifica se alguma conta não tem tipo definido e atribui "Debito"
-          const updatedAccounts = parsedAccounts.map(account => {
-            if (!account.type) {
-              return { ...account, type: 'Debito' };
-            }
-            return account;
-          });
-  
-          setAccounts(updatedAccounts);
+          setAccounts(JSON.parse(storedAccounts));
         }
       } catch (error) {
         console.error('Erro ao carregar contas:', error);
@@ -43,88 +33,39 @@ export const AccountProvider = ({ children }) => {
     saveAccounts();
   }, [accounts]);
 
-  const addAccount = (name, initialBalance = 0, type = 'Debito', dueDate = 1, debitAccountId = null) => {
-    const existingAccount = accounts.find(account => account.name === name);
-    if (existingAccount) {
-      return existingAccount.id; // Retorna a ID da conta existente
-    }
-  
-    // Se for uma conta de crédito, vincula a uma conta de débito
-    const newAccount = {
-      id: Date.now().toString(),
-      name,
-      initialBalance,
-      type,
-      dueDate: type === 'Credito' ? dueDate : undefined,
-      debitAccountId: type === 'Credito' ? debitAccountId : null, // Subconta de débito
-    };
-    
-    setAccounts(prevAccounts => [...prevAccounts, newAccount]);
-    return newAccount.id;
-  };
-  
-  
-  
-  
-  
-  
   const removeAccount = (accountId) => {
-    const updatedTransactions = transactions.filter(
-      (transaction) => transaction.accountId !== accountId
+    // Remove transações associadas à conta
+    removeTransactionsByAccount(accountId);
+
+    // Remove a conta
+    setAccounts(accounts.filter(account => account.id !== accountId));
+  };
+
+  const addAccount = (name, initialBalance, type, dueDate = null, debitAccountId = null) => {
+    const newAccount = { id: Date.now().toString(), name, initialBalance, type, dueDate, debitAccountId };
+    setAccounts([...accounts, newAccount]);
+  };
+
+  const updateAccount = (updatedAccount) => {
+    setAccounts(prevAccounts =>
+      prevAccounts.map(account => {
+        if (account.id === updatedAccount.id) {
+          // Atualiza a conta original
+          return { ...account, ...updatedAccount };
+        }
+        // Verifica se a conta é um cartão de crédito associado e atualiza o nome
+        if (account.debitAccountId === updatedAccount.id && account.type === 'Credito') {
+          return { ...account, name: `Credito ${updatedAccount.name}` };
+        }
+        return account;
+      })
     );
-
-    setTransactions(updatedTransactions);
-
-    const updatedAccounts = accounts.filter((account) => account.id !== accountId);
-    setAccounts(updatedAccounts);
-  };
-
-  const updateAccount = (accountId, newName, newType, newCreditLimit, newDueDate, debitAccountId) => {
-    const updatedAccounts = accounts.map(account =>
-      account.id === accountId
-        ? {
-            ...account,
-            name: newName,
-            type: newType,
-            dueDate: newType === 'Credito' ? newDueDate : undefined,
-            initialBalance: newType === 'Credito' ? newCreditLimit : account.initialBalance, // Atualiza limite de crédito
-            debitAccountId: newType === 'Credito' ? debitAccountId : account.debitAccountId // Atualiza conta associada
-          }
-        : account
-    );
-    setAccounts(updatedAccounts);
   };
   
-  
-  
-  const calculateAccountBalance = (accountId) => {
-    const currentDate = moment().format('YYYY-MM-DD');
-  
-    // Calcula o saldo da conta de débito
-    let accountBalance = transactions
-      .filter(transaction =>
-        transaction.accountId === accountId &&
-        (moment(transaction.date).isBefore(currentDate, 'day') || moment(transaction.date).isSame(currentDate, 'day'))
-      )
-      .reduce((total, transaction) => {
-        return transaction.type === 'income'
-          ? total + transaction.amount
-          : total - transaction.amount;
-      }, 0);
-  
-    // Se a conta for de débito, soma os limites de crédito usados das subcontas de crédito
-    const subAccounts = accounts.filter(account => account.debitAccountId === accountId);
-    subAccounts.forEach(subAccount => {
-      accountBalance += subAccount.initialBalance; // Adiciona o limite da subconta de crédito
-    });
-  
-    return accountBalance;
-  };
-  
-  
-  
+
+
   return (
-    <AccountContext.Provider value={{ accounts, addAccount, removeAccount, updateAccount, calculateAccountBalance  }}>
+    <AccountContext.Provider value={{ accounts, addAccount, removeAccount, updateAccount }}>
       {children}
     </AccountContext.Provider>
   );

@@ -323,10 +323,10 @@ export const CreditCard = ({
   accountValues,
   accounts,
   currentMonth,
-  currentYear
+  currentYear,
 }) => {
   const [isCreditCardModalVisible, setCreditCardModalVisible] = useState(false);
-  const {calculateAccountTransactionsTotal } = useTransactions();
+  const { calculateAccountTransactionsTotal } = useTransactions();
   const navigation = useNavigation();
 
   const navigateToTransactions = (account) => {
@@ -335,11 +335,8 @@ export const CreditCard = ({
   const navigateToAddTransactionsAccount = (accountId, activateSwitch) => {
     navigation.navigate("AddTransactionScreen", { accountId, activateSwitch });
   };
-  
-  
+
   const calculatePercentage = (limit, usedLimit) => {
-    console.log("pusedLimit", usedLimit);
-    console.log("plimit", limit);
     const percentage = (Math.abs(usedLimit) / Math.abs(limit)) * 100;
     return Math.min(percentage, 100); // Garante que o valor não exceda 100%
   };
@@ -357,6 +354,14 @@ export const CreditCard = ({
     );
   };
 
+  // Função para calcular o total usado em todos os cartões de crédito
+  const totalCreditUsed = accounts
+    .filter((account) => account.type === "Credito")
+    .reduce((total, account) => {
+      const usedLimit =
+        calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
+      return total + usedLimit;
+    }, 0);
 
   return (
     <>
@@ -366,39 +371,25 @@ export const CreditCard = ({
         onLongPress={onLongPress}
       >
         <Card.Content>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Text style={[HomeStyles.cardTitle, { marginBottom: 15 }]}>
-              Cartões de Credito
+              Cartões de Crédito
             </Text>
-            
           </View>
-         
+
           {accounts
             .filter((account) => account.type === "Credito")
             .map((account) => {
               const limit = account.initialBalance;
-              const key = `${currentYear}-${currentMonth}`;
-              const usedLimit = calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
+              const usedLimit =
+                calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
               const availableBalance = account.initialBalance + usedLimit;
               const percentage = calculatePercentage(limit, usedLimit);
-              
-              console.log("Key for month:", key);
 
-              console.log("lixxxxxmit", limit);
-              console.log("Usedlimit", usedLimit);
-              console.log("currentYear", currentYear);
-              console.log("currentMonth", currentMonth);
-              console.log("accountValues:", accountValues);
-              console.log("Account ID:", account.id);
-              console.log("Accounname", account.name);
               return (
                 <TouchableOpacity
                   key={account.id}
                   onPress={() => navigateToTransactions(account.name)}
-                  
-                // Passa a conta clicada para a função de abertura do modal
                 >
                   <View style={HomeStyles.accountItem}>
                     <Text
@@ -422,34 +413,39 @@ export const CreditCard = ({
                     </TouchableOpacity>
                   </View>
                   {renderProgressBar(percentage)}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
+                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                     <Text style={[styles.cardLabel, { textAlign: "right" }]}>
-                      disponível:{" "}
-                      {formatToBRL(availableBalance)}
+                      Disponível: {formatToBRL(availableBalance)}
                     </Text>
                     <Text style={[styles.cardLabel, { textAlign: "right" }]}>
-                      usado:
-
-                      {formatToBRL(usedLimit)}
-                      {console.log("values", Math.abs(accountValues[account.id]))}
+                      Usado: {formatToBRL(usedLimit)}
                     </Text>
                   </View>
                   <View style={HomeStyles.accountDivider} />
                 </TouchableOpacity>
               );
             })}
+
+          {/* Exibição do total dos créditos usados */}
+          <View style={HomeStyles.totalContainer}>
+            <Text style={HomeStyles.totalText}>Total Usado:</Text>
+            <Text
+              style={[
+                HomeStyles.totalAmount,
+                {
+                  color: totalCreditUsed < 0 ? "red" : "blue",
+                },
+              ]}
+            >
+              {formatToBRL(totalCreditUsed)}
+            </Text>
+          </View>
         </Card.Content>
       </Card>
-
-
     </>
   );
 };
+
 
 const styles = StyleSheet.create({
   progressBarContainer: {

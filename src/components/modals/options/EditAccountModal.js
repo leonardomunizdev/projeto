@@ -14,10 +14,12 @@ const EditAccountModal = ({ visible, onClose, account, onSave }) => {
     if (account) {
       setAccountType(account.type);
       setCreditLimit(account.initialBalance?.toString() || '');
-      setDueDate((account.dueDate || 1).toString()); // Garantir que é uma string
-      setAccountName(account.name);
+      setDueDate((account.dueDate || 1).toString());
+      setAccountName(account.name); // Atualiza o nome da conta
     }
   }, [account]);
+  
+  
 
   const handleSave = () => {
     if (accountType === 'Debito' && accountName.trim() === '') {
@@ -25,15 +27,21 @@ const EditAccountModal = ({ visible, onClose, account, onSave }) => {
       return;
     }
   
-    onSave(
-      account.id,
-      accountType === 'Debito' ? accountName : account.name,
-      accountType,
-      accountType === 'Credito' ? parseFloat(creditLimit) : undefined,
-      accountType === 'Credito' ? parseInt(dueDate, 10) : undefined // Converter para número ao salvar
-    );
+    // Atualizar a conta sem removê-la da lista
+    onSave({
+      id: account.id, 
+      name: accountType === 'Debito' ? accountName : account.name,
+      type: accountType,
+      initialBalance: accountType === 'Credito' ? parseFloat(creditLimit) : account.initialBalance,
+      dueDate: accountType === 'Credito' ? parseInt(dueDate, 10) : account.dueDate
+    });
+  
     onClose();
   };
+  
+  
+  
+  
   
 
   const increaseDueDate = () => {
@@ -104,7 +112,7 @@ const EditAccountModal = ({ visible, onClose, account, onSave }) => {
                 keyboardType="numeric"
               />
               <View style={addTransactionsStyles.recurrenceLabelContainer}>
-                <Text style={{ flexDirection: 'left', fontSize: 20 }}>Vencimento (Dia)</Text>
+                <Text style={{ flexDirection: 'left', fontSize: 20 }}>Vencimento</Text>
                 <View style={addTransactionsStyles.recurrenceControls}>
                   <TouchableOpacity
                     style={addTransactionsStyles.recurrenceButton}

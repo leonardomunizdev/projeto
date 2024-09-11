@@ -18,10 +18,9 @@ export const TransactionProvider = ({ children }) => {
           setTransactions(JSON.parse(storedTransactions));
         }
       } catch (error) {
-        console.error('Failed to load transactions', error);
+        console.error('Erro ao carregar transações:', error);
       }
     };
-
     loadTransactions();
   }, []);
 
@@ -30,10 +29,9 @@ export const TransactionProvider = ({ children }) => {
       try {
         await AsyncStorage.setItem('transactions', JSON.stringify(transactions));
       } catch (error) {
-        console.error('Failed to save transactions', error);
+        console.error('Erro ao salvar transações:', error);
       }
     };
-
     saveTransactions();
   }, [transactions]);
 
@@ -165,7 +163,11 @@ export const TransactionProvider = ({ children }) => {
       console.error('Failed to save attachment', error);
     }
   };
-
+  const removeTransactionsByAccount = (accountId) => {
+    setTransactions(prevTransactions =>
+      prevTransactions.filter(transaction => transaction.accountId !== accountId)
+    );
+  };
   const clearTransactions = () => {
     setTransactions([]);
   };
@@ -183,7 +185,8 @@ export const TransactionProvider = ({ children }) => {
       clearTransactions,
       updateTransaction,
       updateMultipleTransactions,
-      calculateAccountTransactionsTotal
+      calculateAccountTransactionsTotal,
+      removeTransactionsByAccount 
     }}>
       {children}
     </TransactionContext.Provider>
