@@ -178,6 +178,7 @@ export const addTransactionsStyles = StyleSheet.create({
     },
     recurrenceButtonContainer: {
       flexDirection: 'row',
+      paddingBottom: 10
     },
    
     recurrenceButtonText: {

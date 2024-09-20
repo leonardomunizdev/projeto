@@ -21,6 +21,9 @@ export const statisticsStyles = StyleSheet.create({
       paddingTop: 25,
       fontSize: 35,
       fontWeight: 'bold',
+      textAlign: 'center',
+      justifyContent: 'center',
+      alignItems: 'center'
       
     },
     iconButton: {

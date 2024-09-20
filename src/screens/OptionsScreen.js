@@ -17,7 +17,7 @@ import * as Updates from 'expo-updates';
 import HelpModal from '../components/modals/options/HelpModal';
 import JSZip from 'jszip';
 import CreditCardModal from '../components/modals/options/CreditCardModal';
-
+import StatisticsModal from '../components/modals/options/StatisticModal';
 const OptionsScreen = () => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
@@ -31,6 +31,8 @@ const OptionsScreen = () => {
   const [isLoading, setIsLoading] = useState(false); // Novo estado para carregamento
   const [helpModalVisible, setHelpModalVisible] = useState(false);
   const [isCreditCardModalVisible, setCreditCardModalVisible ] = useState(false);
+  const [isStatisticModalVisible, setStatisticModalVisible ] = useState(false);
+
 
 
 
@@ -189,9 +191,13 @@ const OptionsScreen = () => {
               <Ionicons name="list" size={RFValue(24)} color="black" />
               <Text style={optionsStyles.optionText}>Gerir Categorias</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setStatisticModalVisible(true)}>
+              <Ionicons name="list" size={RFValue(24)} color="black" />
+              <Text style={optionsStyles.optionText}>Relatório</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsDownloadInvoicesModalVisible(true)}>
               <Ionicons name="download" size={24} color="black" />
-              <Text style={optionsStyles.optionText}>Baixar Notas Fiscais</Text>
+              <Text style={optionsStyles.optionText}>Baixar informações</Text>
             </TouchableOpacity>
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsImportModalVisible(true)}>
               <Ionicons name="folder-open" size={RFValue(24)} color="black" />
@@ -256,9 +262,11 @@ const OptionsScreen = () => {
             />
             <CreditCardModal
               visible={isCreditCardModalVisible}
-              onClose={() => setCreditCardModalVisible(false)}
-             
-
+              onClose={() => setCreditCardModalVisible(false)}        
+            />
+            <StatisticsModal
+              visible = {isStatisticModalVisible}
+              onClose = {() => setStatisticModalVisible(false)}
             />
           </>
         )}

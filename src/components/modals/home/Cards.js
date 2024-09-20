@@ -328,12 +328,12 @@ export const CreditCard = ({
   const [isCreditCardModalVisible, setCreditCardModalVisible] = useState(false);
   const { calculateAccountTransactionsTotal } = useTransactions();
   const navigation = useNavigation();
-
+  const selectedType = "expense";
   const navigateToTransactions = (account) => {
     navigation.navigate("Transações", { filterAccount: account });
   };
-  const navigateToAddTransactionsAccount = (accountId, activateSwitch) => {
-    navigation.navigate("AddTransactionScreen", { accountId, activateSwitch });
+  const navigateToAddTransactionsAccount = ( selectedType,accountId, activateSwitch) => {
+    navigation.navigate("AddTransactionScreen", { selectedType,accountId, activateSwitch });
   };
 
   const calculatePercentage = (limit, usedLimit) => {
@@ -385,7 +385,7 @@ export const CreditCard = ({
                 calculateAccountTransactionsTotal(account.id, currentMonth, currentYear) || 0;
               const availableBalance = account.initialBalance + usedLimit;
               const percentage = calculatePercentage(limit, usedLimit);
-
+              console.log("Vencimento", account.dueDate)
               return (
                 <TouchableOpacity
                   key={account.id}
@@ -400,12 +400,12 @@ export const CreditCard = ({
                     >
                       {account.name}:
                       <Text style={{ fontSize: 12, fontWeight: "300" }}>
-                        Fecha dia {moment(account.dueDate).format("DD")}{" "}
+                        Fecha dia {account.dueDate}
                       </Text>
                     </Text>
                     <TouchableOpacity
                       onPress={() =>
-                        navigateToAddTransactionsAccount(account.id, true)
+                        navigateToAddTransactionsAccount( selectedType , account.id, true)
                       }
                       style={HomeStyles.addButton}
                     >

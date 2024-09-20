@@ -351,7 +351,7 @@ const TransactionDetailsModal = ({ visible, onClose, transaction }) => {
                 borderRadius: 20,
               }]}
             >
-              <Text style={styles.buttonText}>Baixar NF</Text>
+              <Text style={styles.buttonText}>Baixar Informações</Text>
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>

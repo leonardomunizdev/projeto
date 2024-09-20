@@ -9,7 +9,7 @@ import StatisticsScreen from '../screens/StatisticsScreen';
 import PlusButton from '../components/PlusButton';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity } from 'react-native';
-
+import Schedule from '../screens/Schedule';
 const Tab = createBottomTabNavigator();
 
 const TransactionsTabButton = (props) => {
@@ -50,8 +50,8 @@ const BottomTabNavigator = () => {
           let iconName;
           if (route.name === 'Transações') {
             iconName = 'clipboard-list';
-          } else if (route.name === 'Relatório') {
-            iconName = 'export';
+          } else if (route.name === 'Agenda') {
+            iconName = 'calendar-outline';
           } else if (route.name === 'Home') {
             iconName = 'home';
           } else if (route.name === 'Opções') {
@@ -86,8 +86,8 @@ const BottomTabNavigator = () => {
         options={{ tabBarLabel: '', headerShown: false }}
       />
       <Tab.Screen
-        name="Relatório"
-        component={StatisticsScreen}
+        name="Agenda"
+        component={Schedule}
         options={{ 
           tabBarButton: (props) => <Animation {...props} />,
           headerShown: false

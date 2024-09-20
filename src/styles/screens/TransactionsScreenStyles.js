@@ -192,7 +192,81 @@ export const TransactionsStyles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  
+  filterCurrentModal: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Fundo transparente escuro
+  },
+  filterContainerModal: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    height: "60%", // O modal ocupa 60% da tela
+    width: '100%',
+  },
+  filterTitleModal: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333", // Cor do título
+  },
+  filterSubTitleModal: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    alignSelf: "flex-start",
+    color: "#555", // Cor do subtítulo
+  },
+  filterTypeContainerModal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  filterButtonExpenseModal: {
+    backgroundColor: '#ff4d4d',
+    padding: 15,
+    borderRadius: 30,
+    width: '45%',
+    alignItems: 'center',
+  },
+  filterButtonIncomeModal: {
+    backgroundColor: '#4d94ff',
+    padding: 15,
+    borderRadius: 30,
+    width: '45%',
+    alignItems: 'center',
+  },
+  filterButtonTextModal: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  filterPickerModal: {
+    height: 50,
+    width: '100%',
+    marginBottom: 20,
+    borderColor: "#ddd",
+    borderWidth: 1,
+  },
+  filterCloseButtonModal: {
+    backgroundColor: 'red',
+    padding: 15,
+    borderRadius: 30,
+    marginTop: 20,
+    width: '30%',
+    alignItems: 'center',
+  },
+  filterClearButtonModal: {
+    backgroundColor: 'blue',
+    padding: 15,
+    borderRadius: 30,
+    marginTop: 20,
+    marginLeft: 20,
+    width: '40%',
+    alignItems: 'center',
+  },
 });
 
 export default TransactionsStyles;

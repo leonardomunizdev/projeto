@@ -277,8 +277,9 @@ const TransactionsScreen = () => {
   const renderItem = ({ item, index }) => {
     const dayOfWeek = formatDayOfWeek(item.date);
     const previousDate =
-      index > 0 ? filteredTransactions[index - 1].date : null;
-    const isNewDay = previousDate !== item.date;
+    index > 0 ? moment(filteredTransactions[index - 1].date).format("YYYY-MM-DD") : null;
+    const currentDate = moment(item.date).format("YYYY-MM-DD");
+    const isNewDay = previousDate !== currentDate;
 
     const recurrenceInfo = getCurrentInstallment(item);
     console.log(item.amount);
@@ -356,7 +357,7 @@ const TransactionsScreen = () => {
           <View style={TransactionsStyles.filterItem}>
             <TouchableOpacity onPress={() => removeFilter('type')} style={TransactionsStyles.removeFilterButton}>
             <Text style={[TransactionsStyles.filterText, { color: 'red' }]}>
-              {appliedFilters.type === 'expense' ? 'Despesa' : appliedFilters.type === 'income' ? 'Receita' : appliedFilters.type}   X
+              {appliedFilters.type === 'expense' ? 'Despesas' : appliedFilters.type === 'income' ? 'Receitas' : appliedFilters.type}   X
             </Text>
             </TouchableOpacity>
           </View>
@@ -404,168 +405,85 @@ const TransactionsScreen = () => {
       />
       {/*/////////////////////////////////////////////////////////////////////////////////////////// */}
       <Modal visible={filterModalVisible} animationType="slide" transparent={true}>
-        <View style={{
-          flex: 1,
-          justifyContent: "flex-end",
-          backgroundColor: "rgba(0, 0, 0, 0.5)" // Fundo transparente escuro
-        }}>
-          <View style={{
-            backgroundColor: "#fff",
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 20,
-            alignItems: "center",
-            height: "60%", // O modal ocupa 60% da tela
-            width: '100%',
-          }}>
-            <Text style={{
-              fontSize: 20,
-              fontWeight: "bold",
-              marginBottom: 20,
-              color: "#333" // Cor do título
-            }}>
-              Selecione Filtros
-            </Text>
+  <View style={TransactionsStyles.filterCurrentModal}>
+    <View style={TransactionsStyles.filterContainerModal}>
+      <Text style={TransactionsStyles.filterTitleModal}>
+        Selecione Filtros
+      </Text>
 
-            {/* Type Filter */}
-            <Text style={{
-              fontSize: 16,
-              fontWeight: "bold",
-              marginBottom: 10,
-              alignSelf: "flex-start",
-              color: "#555" // Cor do subtítulo
-            }}>
-              Tipo
-            </Text>
+      {/* Type Filter */}
+      <Text style={TransactionsStyles.filterSubTitleModal}>
+        Tipo
+      </Text>
+      <View style={TransactionsStyles.filterTypeContainerModal}>
+        <TouchableOpacity 
+          style={TransactionsStyles.filterButtonExpenseModal} 
+          onPress={() => handleFilterSelection("type", "expense")}
+        >
+          <Text style={TransactionsStyles.filterButtonTextModal}>Despesa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={TransactionsStyles.filterButtonIncomeModal} 
+          onPress={() => handleFilterSelection("type", "income")}
+        >
+          <Text style={TransactionsStyles.filterButtonTextModal}>Receita</Text>
+        </TouchableOpacity>
+      </View>
 
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              width: '100%',
-              marginBottom: 20
-            }}>
-              <TouchableOpacity style={{
-                backgroundColor: '#ff4d4d',
-                padding: 15,
-                borderRadius: 30,
-                width: '45%',
-                alignItems: 'center'
-              }} onPress={() => handleFilterSelection("type", "expense")}>
-                <Text style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}>Despesa</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={{
-                backgroundColor: '#4d94ff',
-                padding: 15,
-                borderRadius: 30,
-                width: '45%',
-                alignItems: 'center'
-              }} onPress={() => handleFilterSelection("type", "income")}>
-                <Text style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}>Receita</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Account Filter */}
+      <Text style={TransactionsStyles.filterSubTitleModal}>
+        Conta
+      </Text>
+      <Picker
+        selectedValue={selectedAccount}
+        onValueChange={(itemValue) => {
+          setSelectedAccount(itemValue);
+          handleFilterSelection("account", itemValue);
+        }}
+        style={TransactionsStyles.filterPickerModal}
+      >
+        <Picker.Item label="Selecione uma conta" value="" />
+        {accounts.map((account) => (
+          <Picker.Item key={account.id} label={account.name} value={account.name} />
+        ))}
+      </Picker>
 
-            {/* Account Filter */}
-            <Text style={{
-              fontSize: 16,
-              fontWeight: "bold",
-              marginBottom: 10,
-              alignSelf: "flex-start",
-              color: "#555"
-            }}>
-              Conta
-            </Text>
-            <Picker
-              selectedValue={selectedAccount}
-              onValueChange={(itemValue) => {
-                setSelectedAccount(itemValue);
-                handleFilterSelection("account", itemValue);
-              }}
-              style={{
-                height: 50,
-                width: '100%',
-                marginBottom: 20,
-                borderColor: "#ddd",
-                borderWidth: 1
-              }}
-            >
-              <Picker.Item label="Selecione uma conta" value="" />
-              {accounts.map((account) => (
-                <Picker.Item key={account.id} label={account.name} value={account.name} />
-              ))}
-            </Picker>
+      {/* Category Filter */}
+      <Text style={TransactionsStyles.filterSubTitleModal}>
+        Categoria
+      </Text>
+      <Picker
+        selectedValue={selectedCategory}
+        onValueChange={(itemValue) => {
+          setSelectedCategory(itemValue);
+          handleFilterSelection("category", itemValue);
+        }}
+        style={TransactionsStyles.filterPickerModal}
+      >
+        <Picker.Item label="Selecione uma categoria" value="" />
+        {categories.map((category) => (
+          <Picker.Item key={category.id} label={category.name} value={category.name} />
+        ))}
+      </Picker>
 
-            {/* Category Filter */}
-            <Text style={{
-              fontSize: 16,
-              fontWeight: "bold",
-              marginBottom: 10,
-              alignSelf: "flex-start",
-              color: "#555"
-            }}>
-              Categoria
-            </Text>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={(itemValue) => {
-                setSelectedCategory(itemValue);
-                handleFilterSelection("category", itemValue);
-              }}
-              style={{
-                height: 50,
-                width: '100%',
-                marginBottom: 20,
-                borderColor: "#ddd",
-                borderWidth: 1
-              }}
-            >
-              <Picker.Item label="Selecione uma categoria" value="" />
-              {categories.map((category) => (
-                <Picker.Item key={category.id} label={category.name} value={category.name} />
-              ))}
-            </Picker>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <TouchableOpacity 
+          onPress={() => setFilterModalVisible(false)} 
+          style={TransactionsStyles.filterCloseButtonModal}
+        >
+          <Text style={TransactionsStyles.filterButtonTextModal}>Fechar</Text>
+        </TouchableOpacity>
 
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <TouchableOpacity onPress={() => setFilterModalVisible(false)} style={{
-                backgroundColor: 'red',
-                padding: 15,
-                borderRadius: 30,
-                marginTop: 20,
-                width: '30%',
-                alignItems: 'center'
-              }}>
-                <Text style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}>Fechar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={clearAllFilters}
-                style={[TransactionsStyles.clearFiltersButton, {
-                  backgroundColor: 'blue',
-                  padding: 15,
-                  borderRadius: 30,
-                  marginTop: 20,
-                  marginLeft: 20,
-                  width: '40%',
-                  alignItems: 'center'
-                }]}
-              >
-                <Text style={{
-                  color: 'white',
-                  fontWeight: 'bold',
-                }}>Limpar Filtros</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        <TouchableOpacity
+          onPress={clearAllFilters}
+          style={TransactionsStyles.filterClearButtonModal}
+        >
+          <Text style={TransactionsStyles.filterButtonTextModal}>Limpar Filtros</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
 
     </View>
   );
