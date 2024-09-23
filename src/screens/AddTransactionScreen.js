@@ -58,6 +58,7 @@ const AddTransactionScreen = () => {
   const [categoryName, setCategoryName] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [isCredit, setIsCredit] = useState(false);
+  const [isScheduled, setIsScheduled] = useState(false);
   const [recurrence, setRecurrence] = useState({ count: "", unit: "month" });
   const [recurrenceInfo, setRecurrenceInfo] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -72,6 +73,7 @@ const AddTransactionScreen = () => {
   const { activateSwitch } = route.params || {};
   const { selectedType } = route.params || {};
 
+  console.log(transactions);
   useEffect(() => {
     if (activateSwitch !== undefined) {
       setIsCredit(activateSwitch);
@@ -81,8 +83,24 @@ const AddTransactionScreen = () => {
     }
   }, [activateSwitch]);
 
-  const toggleSwitch = () => {
-    setIsCredit((previousValue) => !previousValue);
+  useEffect(() => {
+    if (activateSwitch !== undefined) {
+      setIsScheduled(activateSwitch);
+
+    }
+  }, [activateSwitch]);
+
+
+  const toggleSwitch = (type) => {
+
+
+    if (type === "scheduled") {
+      setIsScheduled((previousValue) => !previousValue);
+    }
+    else {
+
+      setIsCredit((previousValue) => !previousValue);
+    }
   };
 
   useEffect(() => {
@@ -196,6 +214,7 @@ const AddTransactionScreen = () => {
       attachments,
       recorrenceCount: isRecurring ? recurrence.count : null,
       recurrenceType: isRecurring ? recurrence.unit : null,
+      isScheduled,
     };
 
     const transactions = isRecurring
@@ -222,6 +241,8 @@ const AddTransactionScreen = () => {
     setAccountName("");
     setSelectedCategory(""); // Limpar a categoria selecionada
     setIsRecurring(false);
+    setIsScheduled(false);
+    setIsCredit(false);
     setRecurrence({ count: "", unit: "month" });
     setRecurrenceInfo("");
     setAttachments([]);
@@ -674,11 +695,12 @@ const AddTransactionScreen = () => {
                 Agendar
               </Text>
               <Switch
-                value={isCredit}
-                onValueChange={toggleSwitch}
+                value={isScheduled}
+                onValueChange={() => toggleSwitch("scheduled")}
                 trackColor={{ false: "silver", true: getButtonColor() }}
-                thumbColor={isCredit ? getButtonColor() : "silver"}
+                thumbColor={isScheduled ? getButtonColor() : "silver"}
               />
+
             </View>
             <View style={addTransactionsStyles.attachmentContainer}>
               <TouchableOpacity onPress={pickImage} style={[getStyleButtons()]}>

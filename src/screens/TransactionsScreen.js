@@ -129,24 +129,24 @@ const TransactionsScreen = () => {
       const categoryFilterMatches =
         !appliedFilters.category ||
         getCategoryName(transaction.categoryId) === appliedFilters.category;
-        
+
       const descriptionMatches = transaction.description
         .toLowerCase()
         .includes(searchText.toLowerCase());
-        
+
       const categoryMatches = getCategoryName(transaction.categoryId)
         .toLowerCase()
         .includes(searchText.toLowerCase());
-  
+
       // Nova lógica de filtragem de contas
       const accountName = getAccountName(transaction.accountId).toLowerCase();
-      
+
       const accountMatches = accountName.includes(searchText.toLowerCase());
       const accountFilterMatches = !appliedFilters.account ||
         (appliedFilters.account.toLowerCase() === accountName ||
           (accountName.includes(appliedFilters.account.toLowerCase()) &&
-           searchText.toLowerCase() !== accountName));
-      
+            searchText.toLowerCase() !== accountName));
+
       return (
         moment(transaction.date, "YYYY-MM-DD").isSame(selectedMonth, "month") &&
         (!appliedFilters.type || transaction.type === appliedFilters.type) &&
@@ -156,7 +156,7 @@ const TransactionsScreen = () => {
       );
     });
   };
-  
+
 
 
 
@@ -270,50 +270,48 @@ const TransactionsScreen = () => {
     setTransactionDetailsModalVisible(true);
   };
 
-  
 
 
-  // RENDERIZAÇÃO DAS TRANSAÇÕES
-  const renderItem = ({ item, index }) => {
-    const dayOfWeek = formatDayOfWeek(item.date);
-    const previousDate =
+  const transactionsToRender = filteredTransactions.filter(item => !item.isScheduled);
+
+const renderItem = ({ item, index }) => {
+  const dayOfWeek = formatDayOfWeek(item.date);
+  const previousDate =
     index > 0 ? moment(filteredTransactions[index - 1].date).format("YYYY-MM-DD") : null;
-    const currentDate = moment(item.date).format("YYYY-MM-DD");
-    const isNewDay = previousDate !== currentDate;
+  const currentDate = moment(item.date).format("YYYY-MM-DD");
+  const isNewDay = previousDate !== currentDate;
 
-    const recurrenceInfo = getCurrentInstallment(item);
-    console.log(item.amount);
-    return (
+  const recurrenceInfo = getCurrentInstallment(item);
 
-      <View>
-        {isNewDay && <Text style={TransactionsStyles.dateHeader}>{dayOfWeek}</Text>}
-        <TouchableOpacity
-          style={[
-            TransactionsStyles.item,
-            item.type === "expense" ? TransactionsStyles.expenseItem : TransactionsStyles.incomeItem,
-          ]}
-          // Permite edição ao clicar na transação
-          onPress={() => handleTransactionPress(item)}
-          onLongPress={() => handleDelete(item)}
-        >
-          <View>
-            <View style={TransactionsStyles.row}>
-              <Text style={[TransactionsStyles.description]}>{item.description}</Text>
-              <Text style={TransactionsStyles.amount}>{formatCurrency(item.amount)}</Text>
-            </View>
-            <View style={TransactionsStyles.row}>
-              <Text style={TransactionsStyles.category}>
-                {getCategoryName(item.categoryId)} | {getAccountName(item.accountId)}
-              </Text>
-            </View>
-            {item.isRecurring && (
-              <Text style={TransactionsStyles.installment}>{recurrenceInfo}</Text>
-            )}
+  return (
+    <View>
+      {isNewDay && <Text style={TransactionsStyles.dateHeader}>{dayOfWeek}</Text>}
+      <TouchableOpacity
+        style={[
+          TransactionsStyles.item,
+          item.type === "expense" ? TransactionsStyles.expenseItem : TransactionsStyles.incomeItem,
+        ]}
+        onPress={() => handleTransactionPress(item)}
+        onLongPress={() => handleDelete(item)}
+      >
+        <View>
+          <View style={TransactionsStyles.row}>
+            <Text style={[TransactionsStyles.description]}>{item.description}</Text>
+            <Text style={TransactionsStyles.amount}>{formatCurrency(item.amount)}</Text>
           </View>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+          <View style={TransactionsStyles.row}>
+            <Text style={TransactionsStyles.category}>
+              {getCategoryName(item.categoryId)} | {getAccountName(item.accountId)}
+            </Text>
+          </View>
+          {item.isRecurring && (
+            <Text style={TransactionsStyles.installment}>{recurrenceInfo}</Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
   {
     /*/////////////////////////////////////////////////////////////////////////////////////////// */
@@ -356,9 +354,9 @@ const TransactionsScreen = () => {
         {appliedFilters.type && (
           <View style={TransactionsStyles.filterItem}>
             <TouchableOpacity onPress={() => removeFilter('type')} style={TransactionsStyles.removeFilterButton}>
-            <Text style={[TransactionsStyles.filterText, { color: 'red' }]}>
-              {appliedFilters.type === 'expense' ? 'Despesas' : appliedFilters.type === 'income' ? 'Receitas' : appliedFilters.type}   X
-            </Text>
+              <Text style={[TransactionsStyles.filterText, { color: 'red' }]}>
+                {appliedFilters.type === 'expense' ? 'Despesas' : appliedFilters.type === 'income' ? 'Receitas' : appliedFilters.type}   X
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -366,7 +364,7 @@ const TransactionsScreen = () => {
         {appliedFilters.account && (
           <View style={TransactionsStyles.filterItem}>
             <TouchableOpacity onPress={() => removeFilter('account')} style={TransactionsStyles.removeFilterButton}>
-            <Text style={TransactionsStyles.filterText}>{appliedFilters.account}  X</Text>
+              <Text style={TransactionsStyles.filterText}>{appliedFilters.account}  X</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -374,7 +372,7 @@ const TransactionsScreen = () => {
         {appliedFilters.category && (
           <View style={TransactionsStyles.filterItem}>
             <TouchableOpacity onPress={() => removeFilter('category')} style={TransactionsStyles.removeFilterButton}>
-            <Text style={TransactionsStyles.filterText}>{appliedFilters.category}   X </Text>
+              <Text style={TransactionsStyles.filterText}>{appliedFilters.category}   X </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -382,11 +380,12 @@ const TransactionsScreen = () => {
 
 
       <FlatList
-        data={filteredTransactions}
+        data={transactionsToRender}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={TransactionsStyles.listContent}
       />
+
 
 
 
@@ -405,85 +404,85 @@ const TransactionsScreen = () => {
       />
       {/*/////////////////////////////////////////////////////////////////////////////////////////// */}
       <Modal visible={filterModalVisible} animationType="slide" transparent={true}>
-  <View style={TransactionsStyles.filterCurrentModal}>
-    <View style={TransactionsStyles.filterContainerModal}>
-      <Text style={TransactionsStyles.filterTitleModal}>
-        Selecione Filtros
-      </Text>
+        <View style={TransactionsStyles.filterCurrentModal}>
+          <View style={TransactionsStyles.filterContainerModal}>
+            <Text style={TransactionsStyles.filterTitleModal}>
+              Selecione Filtros
+            </Text>
 
-      {/* Type Filter */}
-      <Text style={TransactionsStyles.filterSubTitleModal}>
-        Tipo
-      </Text>
-      <View style={TransactionsStyles.filterTypeContainerModal}>
-        <TouchableOpacity 
-          style={TransactionsStyles.filterButtonExpenseModal} 
-          onPress={() => handleFilterSelection("type", "expense")}
-        >
-          <Text style={TransactionsStyles.filterButtonTextModal}>Despesa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={TransactionsStyles.filterButtonIncomeModal} 
-          onPress={() => handleFilterSelection("type", "income")}
-        >
-          <Text style={TransactionsStyles.filterButtonTextModal}>Receita</Text>
-        </TouchableOpacity>
-      </View>
+            {/* Type Filter */}
+            <Text style={TransactionsStyles.filterSubTitleModal}>
+              Tipo
+            </Text>
+            <View style={TransactionsStyles.filterTypeContainerModal}>
+              <TouchableOpacity
+                style={TransactionsStyles.filterButtonExpenseModal}
+                onPress={() => handleFilterSelection("type", "expense")}
+              >
+                <Text style={TransactionsStyles.filterButtonTextModal}>Despesa</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={TransactionsStyles.filterButtonIncomeModal}
+                onPress={() => handleFilterSelection("type", "income")}
+              >
+                <Text style={TransactionsStyles.filterButtonTextModal}>Receita</Text>
+              </TouchableOpacity>
+            </View>
 
-      {/* Account Filter */}
-      <Text style={TransactionsStyles.filterSubTitleModal}>
-        Conta
-      </Text>
-      <Picker
-        selectedValue={selectedAccount}
-        onValueChange={(itemValue) => {
-          setSelectedAccount(itemValue);
-          handleFilterSelection("account", itemValue);
-        }}
-        style={TransactionsStyles.filterPickerModal}
-      >
-        <Picker.Item label="Selecione uma conta" value="" />
-        {accounts.map((account) => (
-          <Picker.Item key={account.id} label={account.name} value={account.name} />
-        ))}
-      </Picker>
+            {/* Account Filter */}
+            <Text style={TransactionsStyles.filterSubTitleModal}>
+              Conta
+            </Text>
+            <Picker
+              selectedValue={selectedAccount}
+              onValueChange={(itemValue) => {
+                setSelectedAccount(itemValue);
+                handleFilterSelection("account", itemValue);
+              }}
+              style={TransactionsStyles.filterPickerModal}
+            >
+              <Picker.Item label="Selecione uma conta" value="" />
+              {accounts.map((account) => (
+                <Picker.Item key={account.id} label={account.name} value={account.name} />
+              ))}
+            </Picker>
 
-      {/* Category Filter */}
-      <Text style={TransactionsStyles.filterSubTitleModal}>
-        Categoria
-      </Text>
-      <Picker
-        selectedValue={selectedCategory}
-        onValueChange={(itemValue) => {
-          setSelectedCategory(itemValue);
-          handleFilterSelection("category", itemValue);
-        }}
-        style={TransactionsStyles.filterPickerModal}
-      >
-        <Picker.Item label="Selecione uma categoria" value="" />
-        {categories.map((category) => (
-          <Picker.Item key={category.id} label={category.name} value={category.name} />
-        ))}
-      </Picker>
+            {/* Category Filter */}
+            <Text style={TransactionsStyles.filterSubTitleModal}>
+              Categoria
+            </Text>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => {
+                setSelectedCategory(itemValue);
+                handleFilterSelection("category", itemValue);
+              }}
+              style={TransactionsStyles.filterPickerModal}
+            >
+              <Picker.Item label="Selecione uma categoria" value="" />
+              {categories.map((category) => (
+                <Picker.Item key={category.id} label={category.name} value={category.name} />
+              ))}
+            </Picker>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <TouchableOpacity 
-          onPress={() => setFilterModalVisible(false)} 
-          style={TransactionsStyles.filterCloseButtonModal}
-        >
-          <Text style={TransactionsStyles.filterButtonTextModal}>Fechar</Text>
-        </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <TouchableOpacity
+                onPress={() => setFilterModalVisible(false)}
+                style={TransactionsStyles.filterCloseButtonModal}
+              >
+                <Text style={TransactionsStyles.filterButtonTextModal}>Fechar</Text>
+              </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={clearAllFilters}
-          style={TransactionsStyles.filterClearButtonModal}
-        >
-          <Text style={TransactionsStyles.filterButtonTextModal}>Limpar Filtros</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </View>
-</Modal>
+              <TouchableOpacity
+                onPress={clearAllFilters}
+                style={TransactionsStyles.filterClearButtonModal}
+              >
+                <Text style={TransactionsStyles.filterButtonTextModal}>Limpar Filtros</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );

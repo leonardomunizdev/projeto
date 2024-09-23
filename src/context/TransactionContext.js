@@ -145,6 +145,19 @@ export const TransactionProvider = ({ children }) => {
       )
     );
   };
+
+  const updateTransactionStatus = (transactionId) => {
+    console.log("Atualizando transação com ID:", transactionId); // Verifique o ID
+    setTransactions((prevTransactions) =>
+        prevTransactions.map((transaction) =>
+            transaction.id === transactionId
+                ? { ...transaction, isScheduled: false }
+                : transaction
+        )
+    );
+};
+
+
   const saveAttachmentToTransaction = async (transactionId, attachmentPath) => {
     try {
       const updatedTransactions = transactions.map(transaction => {
@@ -186,7 +199,8 @@ export const TransactionProvider = ({ children }) => {
       updateTransaction,
       updateMultipleTransactions,
       calculateAccountTransactionsTotal,
-      removeTransactionsByAccount 
+      removeTransactionsByAccount,
+      updateTransactionStatus
     }}>
       {children}
     </TransactionContext.Provider>

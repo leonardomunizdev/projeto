@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import {
     View,
     Text,
+    FlatList,
     TextInput,
     StyleSheet,
     TouchableOpacity,
@@ -23,10 +24,27 @@ import moment from "moment";
 
 const Schedule = () => {
     const navigation = useNavigation();
-    const { transactions, removeTransaction } = useTransactions();
+    const [updatedTransactions, setUpdatedTransactions] = useState(transactions);
+    const { transactions, updateTransactionStatus, removeTransaction } = useTransactions();
     const { categories } = useCategories();
     const { accounts } = useAccounts();
     const route = useRoute();
+
+
+
+
+
+    // FORMATA OS VALORES PARA REAIS(BRL)
+    const formatCurrency = (value) => {
+        const numberValue = parseFloat(value);
+        if (isNaN(numberValue)) {
+            return "R$ 0,00";
+        }
+        return new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+        }).format(numberValue);
+    };
 
     //FUNÇÃO PARA A SELEÇÃO DE MÊS 
     const [selectedMonth, setSelectedMonth] = useState(moment().startOf("month"));
@@ -139,6 +157,50 @@ const Schedule = () => {
     };
 
     //FUNÇÃO PARA RENDERIZAR A LISTA
+    const getCurrentInstallment = (transaction) => {
+        if (
+            !transaction.isRecurring ||
+            !transaction.startDate ||
+            !transaction.date ||
+            !transaction.recorrenceCount ||
+            !transaction.recurrenceType
+        ) {
+            return '';
+        }
+
+        const startDate = moment(transaction.startDate, "YYYY-MM-DD");
+        const transactionDate = moment(transaction.date, "YYYY-MM-DD");
+        const totalInstallments = transaction.recorrenceCount;
+
+        let installmentNumber;
+
+        // Verifica se a recorrência é mensal
+        if (transaction.recurrenceType === 'month') {
+            const monthsDifference = transactionDate.diff(startDate, "months");
+            if (transactionDate.isSame(startDate, "month")) {
+                installmentNumber = monthsDifference + 1;
+            } else {
+                installmentNumber = monthsDifference + 2;
+            }
+
+            if (installmentNumber > totalInstallments) {
+                installmentNumber = totalInstallments;
+            }
+
+            return `Parcela ${totalInstallments}`;
+
+            // Verifica se a recorrência é semanal
+        } else if (transaction.recurrenceType === 'week') {
+            return `Parcela  ${totalInstallments}`;
+        }
+
+        return '';
+    };
+
+
+    const transactionsToRender = filteredTransactions.filter(item => item.isScheduled);
+
+
     const renderItem = ({ item, index }) => {
 
         const dayOfWeek = formatDayOfWeek(item.date);
@@ -164,8 +226,20 @@ const Schedule = () => {
                 >
                     <View>
                         <View style={TransactionsStyles.row}>
-                            <Text style={[TransactionsStyles.description]}>{item.description}</Text>
-                            <Text style={TransactionsStyles.amount}>{formatCurrency(item.amount)}</Text>
+                            <Text style={[TransactionsStyles.description]}>{item.description}{'\n'}{formatCurrency(item.amount)}</Text>
+                            <View>
+                                <TouchableOpacity
+                                    style={{
+                                        backgroundColor: 'green',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                    }}
+                                    onPress={() => updateTransactionStatus(item.id)} // Atualiza o status aqui
+                                >
+                                    <Text>Pago</Text>
+                                </TouchableOpacity>
+
+                            </View>
                         </View>
                         <View style={TransactionsStyles.row}>
                             <Text style={TransactionsStyles.category}>
@@ -213,8 +287,16 @@ const Schedule = () => {
                 <TouchableOpacity onPress={() => setFilterModalVisible(true)} style={{ position: 'absolute', marginTop: '0.1%', marginLeft: '80%', paddingLeft: '10%' }}>
                     <Ionicons name="filter-circle-outline" size={40} />
                 </TouchableOpacity>
+
             </View>
-            <Text>Schedule</Text>
+
+
+            <FlatList
+                data={transactionsToRender}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id.toString()}
+                contentContainerStyle={TransactionsStyles.listContent}
+            />
 
         </View>
     );

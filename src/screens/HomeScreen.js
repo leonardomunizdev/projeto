@@ -140,6 +140,9 @@ const HomeScreen = () => {
       const transactionYear = transactionDate.getFullYear();
       const amount = parseFloat(transaction.amount);
   
+      // Ignorar transações agendadas
+      if (transaction.isScheduled) return;
+  
       if (isNaN(amount)) {
         console.warn(`Valor inválido para a transação: ${transaction.amount}`);
         return;
@@ -223,6 +226,7 @@ const HomeScreen = () => {
     // Armazenar os saldos mensais
     setMonthlyBalances(balances);
   }, [transactions, accounts, currentMonth, currentYear, savedGoal, creditCards]);
+  
   
   console.log("accountValues:", accountValues); // Verifique o valor de accountValues
   
