@@ -197,7 +197,7 @@ const OptionsScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsDownloadInvoicesModalVisible(true)}>
               <Ionicons name="download" size={24} color="black" />
-              <Text style={optionsStyles.optionText}>Baixar informações</Text>
+              <Text style={optionsStyles.optionText}>Baixar comprovantes</Text>
             </TouchableOpacity>
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsImportModalVisible(true)}>
               <Ionicons name="folder-open" size={RFValue(24)} color="black" />

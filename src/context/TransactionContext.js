@@ -147,15 +147,17 @@ export const TransactionProvider = ({ children }) => {
   };
 
   const updateTransactionStatus = (transactionId) => {
-    console.log("Atualizando transação com ID:", transactionId); // Verifique o ID
-    setTransactions((prevTransactions) =>
-        prevTransactions.map((transaction) =>
-            transaction.id === transactionId
-                ? { ...transaction, isScheduled: false }
-                : transaction
-        )
+    const currentDate = moment().format("YYYY-MM-DD");
+    
+    setTransactions(prevTransactions =>
+      prevTransactions.map(transaction =>
+        transaction.id === transactionId
+          ? { ...transaction, isScheduled: false, date: currentDate } // Atualiza a data para a data atual
+          : transaction
+      )
     );
-};
+  };
+  
 
 
   const saveAttachmentToTransaction = async (transactionId, attachmentPath) => {
