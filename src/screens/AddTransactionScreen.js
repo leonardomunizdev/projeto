@@ -216,7 +216,7 @@ const AddTransactionScreen = () => {
       recurrenceType: isRecurring ? recurrence.unit : null,
       isScheduled,
     };
-
+ 
     const transactions = isRecurring
       ? generateRecurringTransactions(baseTransaction, recurrenceId)
       : [baseTransaction];
