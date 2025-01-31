@@ -114,23 +114,26 @@ export const TransactionProvider = ({ children }) => {
   const generateRecurringTransactions = (baseTransaction, recurrence) => {
     const transactions = [];
     let nextDate = moment(baseTransaction.date);
-
+  
     for (let i = 0; i < recurrence.count; i++) {
       transactions.push({
         ...baseTransaction,
         date: nextDate.format('YYYY-MM-DD'),
         id: `${baseTransaction.id}-${i}`,
         recurringId: baseTransaction.id,
-        recurrenceCount: recurrence.count, // Adiciona o recurrenceCount à transação
+        recurrenceCount: recurrence.count,
       });
-
+  
+      // Adicione o caso para 'day'
       if (recurrence.unit === 'month') {
         nextDate = nextDate.add(1, 'month');
       } else if (recurrence.unit === 'week') {
         nextDate = nextDate.add(1, 'week');
+      } else if (recurrence.unit === 'day') {
+        nextDate = nextDate.add(1, 'day');
       }
     }
-
+  
     return transactions;
   };
 

@@ -50,9 +50,9 @@ const AddTransactionScreen = () => {
   const [date, setDate] = useState(new Date());
   const [expenseCategory, setExpenseCategory] = useState("");
   const [incomeCategory, setIncomeCategory] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState("Selecione uma conta");
+  const [selectedAccount, setSelectedAccount] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(
-    "Selecione uma categoria"
+    ""
   );
   const [accountName, setAccountName] = useState("");
   const [categoryName, setCategoryName] = useState("");
@@ -216,7 +216,7 @@ const AddTransactionScreen = () => {
       recurrenceType: isRecurring ? recurrence.unit : null,
       isScheduled,
     };
- 
+
     const transactions = isRecurring
       ? generateRecurringTransactions(baseTransaction, recurrenceId)
       : [baseTransaction];
@@ -506,19 +506,7 @@ const AddTransactionScreen = () => {
               />
             )}
 
-            {transactionType === "expense" && (
-              <View style={addTransactionsStyles.switchContainer}>
-                <Text style={addTransactionsStyles.switchText}>
-                  Cartão de Credito
-                </Text>
-                <Switch
-                  value={isCredit}
-                  onValueChange={toggleSwitch}
-                  trackColor={{ false: "silver", true: getButtonColor() }}
-                  thumbColor={isCredit ? getButtonColor() : "silver"}
-                />
-              </View>
-            )}
+
 
             {!isCredit && (
               <View style={addTransactionsStyles.pickerContainer}>
@@ -606,17 +594,31 @@ const AddTransactionScreen = () => {
                 />
               </TouchableOpacity>
             </View>
-
+            {!isRecurring &&(
             <View style={addTransactionsStyles.switchContainer}>
-              <Text style={addTransactionsStyles.switchText}>Repetir</Text>
+              <Text style={addTransactionsStyles.switchText}>
+                Agendar
+              </Text>
               <Switch
-                value={isRecurring}
-                onValueChange={(value) => setIsRecurring(value)}
+                value={isScheduled}
+                onValueChange={() => toggleSwitch("scheduled")}
                 trackColor={{ false: "silver", true: getButtonColor() }}
-                thumbColor={isRecurring ? getButtonColor() : "silver"}
+                thumbColor={isScheduled ? getButtonColor() : "silver"}
               />
-            </View>
 
+            </View>
+            )}
+            {!isScheduled && (
+              <View style={addTransactionsStyles.switchContainer}>
+                <Text style={addTransactionsStyles.switchText}>Repetir</Text>
+                <Switch
+                  value={isRecurring}
+                  onValueChange={(value) => setIsRecurring(value)}
+                  trackColor={{ false: "silver", true: getButtonColor() }}
+                  thumbColor={isRecurring ? getButtonColor() : "silver"}
+                />
+              </View>
+            )}
             {isRecurring && (
               <View style={addTransactionsStyles.recurrenceContainer}>
                 <View style={addTransactionsStyles.recurrenceLabelContainer}>
@@ -646,21 +648,9 @@ const AddTransactionScreen = () => {
                 </View>
 
                 <View style={addTransactionsStyles.recurrenceButtonContainer}>
+                  
 
-                  <TouchableOpacity
-                    style={[getButtonRecurringStyle("week")]}
-                    onPress={() =>
-                      setRecurrence((prevRecurrence) => ({
-                        ...prevRecurrence,
-                        unit: "week",
-                      }))
-                    }
-                  >
-                    <Text style={addTransactionsStyles.recurrenceButtonText}>
-                      Diario
-                    </Text>
-                  </TouchableOpacity>
-
+                  {/* Botão Semanal */}
                   <TouchableOpacity
                     style={[getButtonRecurringStyle("week")]}
                     onPress={() =>
@@ -690,18 +680,7 @@ const AddTransactionScreen = () => {
                 </TouchableOpacity>
               </View>
             )}
-            <View style={addTransactionsStyles.switchContainer}>
-              <Text style={addTransactionsStyles.switchText}>
-                Agendar
-              </Text>
-              <Switch
-                value={isScheduled}
-                onValueChange={() => toggleSwitch("scheduled")}
-                trackColor={{ false: "silver", true: getButtonColor() }}
-                thumbColor={isScheduled ? getButtonColor() : "silver"}
-              />
 
-            </View>
             <View style={addTransactionsStyles.attachmentContainer}>
               <TouchableOpacity onPress={pickImage} style={[getStyleButtons()]}>
                 <Text style={addTransactionsStyles.addAttachmentButtonText}>

@@ -9,7 +9,7 @@ import HelpModal from '../components/modals/options/HelpModal';
 import BalanceModal from '../components/modals/home/BalanceModal';
 import SelectedCardsModal from '../components/modals/home/selectedCardsModal';
 import MonthLimitModal from '../components/modals/home/MonthLimitModal';
-import { BalanceCard, AbstractCard, SpendingLimitCard, AccountsCard, MonthlyBalanceCard, CreditCard } from '../components/modals/home/Cards';
+import { BalanceCard, AbstractCard, SpendingLimitCard, AccountsCard, MonthlyBalanceCard } from '../components/modals/home/Cards';
 import useCardVisibility from '../hooks/useCardVisibility.';
 import AccountBalanceModal from "../components/modals/home/AccountBalanceModal";
 import { useCreditCards } from "../context/CreditCardContext";
@@ -413,18 +413,7 @@ const HomeScreen = () => {
             onPress={handleOpenAccountModal}
           />}
 
-        {cardVisibility.CreditCard &&
-
-          <CreditCard
-            creditCards={creditCards}
-            accounts={accounts}
-            formatToBRL={formatToBRL}
-            accountValues={accountValues}
-            onLongPress={() => setSelectedCardsModalVisible(true)}
-            currentMonth={currentMonth}
-            currentYear={currentYear}
-
-          />}
+        
 
 
         {cardVisibility.MonthlyBalanceCard &&

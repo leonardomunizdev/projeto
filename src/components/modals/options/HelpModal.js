@@ -448,21 +448,14 @@ const HelpModal = ({ visible, onClose }) => {
                             <View style={HomeStyles.accountDivider} />
                             <TouchableOpacity  disabled={true} style={optionsStyles.optionButton} >
                                 <Ionicons name="download" size={24} color="black" />
-                                <Text style={optionsStyles.optionText}>Baixar Notas Fiscais</Text>
+                                <Text style={optionsStyles.optionText}>Baixar Comprovantes</Text>
                             </TouchableOpacity>
                             <Text style={styles.modalSectionText}>
-                                Baixe suas notas fiscais e armazene-as localmente em formato PDF.
+                                Baixe seus comprovantes e armazene-os localmente em formato PDF.
                             </Text>
                             <View style={HomeStyles.accountDivider} />
 
-                            <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
-                                <Ionicons name="folder-open" size={24} color="black" />
-                                <Text style={optionsStyles.optionText}>Importar CSV</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.modalSectionText}>
-                                Importe dados financeiros de um arquivo CSV.
-                            </Text>
-                            <View style={HomeStyles.accountDivider} />
+                            
 
                             <TouchableOpacity disabled={true} style={optionsStyles.optionButton} >
                                 <Ionicons name="stats-chart" size={24} color="black" />

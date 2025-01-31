@@ -40,18 +40,14 @@ const Schedule = () => {
     setPaymentModalVisible(true); // Mostre o modal de pagamento
   };
 
-  const handleConfirmPayment = (partialAmount, attachment) => {
-    // Aqui você pode decidir o que fazer com o valor e o anexo
-    console.log("Valor Parcial:", partialAmount);
-    console.log("Anexo:", attachment);
+  const handleConfirmPayment = () => {
+    if (currentTransaction) {
+      // Atualiza o status da transação para "pago"
+      updateTransactionStatus(currentTransaction.id);
   
-    // Salvar o pagamento com o anexo no contexto ou em qualquer outro lugar que você esteja gerenciando transações
-    if (attachment) {
-      saveAttachmentToTransaction(transactionId, attachment.uri);
+      // Fecha o modal
+      setPaymentModalVisible(false);
     }
-    
-    // Fechar o modal
-    setModalVisible(false);
   };
   
 

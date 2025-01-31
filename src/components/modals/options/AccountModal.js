@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import optionsStyles from '../../../styles/screens/OptionsScreenStyles';
 import { useAccounts } from '../../../context/AccountContext';
 import EditAccountModal from './EditAccountModal';
-import { Picker } from '@react-native-picker/picker';
 import addTransactionsStyles from '../../../styles/screens/addTransactionsScreenStyles';
 
 const AccountModal = ({ visible, onClose }) => {
@@ -13,44 +12,18 @@ const AccountModal = ({ visible, onClose }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [accountToRemove, setAccountToRemove] = useState(null);
   const [selectedAccount, setSelectedAccount] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("Debito");
-  const [creditLimit, setCreditLimit] = useState('');
-  const [dueDate, setDueDate] = useState(1); // Default to 1
   const [newAccountName, setNewAccountName] = useState('');
-  const creditAccounts = accounts.filter(account => account.type === 'Credito');
   const debitAccounts = accounts.filter(account => account.type === 'Debito');
 
-  useEffect(() => {
-    if (selectedCategory === 'Credito' && selectedAccount) {
-      const selectedAccountName = accounts.find(account => account.id === selectedAccount)?.name || '';
-      setNewAccountName(`Credito ${selectedAccountName}`);
-    } else if (selectedCategory === 'Debito') {
-      setNewAccountName(''); // Permitir o usuário definir o nome da conta
-    }
-  }, [selectedCategory, selectedAccount]);
-
   const handleAddAccount = () => {
-    if (selectedCategory === 'Credito' && !selectedAccount) {
-      Alert.alert('Erro', 'Selecione uma conta para associar ao crédito.');
-      return;
-    }
-  
-    if (newAccountName.trim() === '' && selectedCategory === 'Debito') {
+    if (newAccountName.trim() === '') {
       Alert.alert('Erro', 'O nome da conta não pode estar vazio.');
       return;
     }
-  
-    // Passa o ID da conta de débito para a conta de crédito
-    const debitAccountId = selectedCategory === 'Credito' ? selectedAccount : null;
-  
-    addAccount(newAccountName, selectedCategory === 'Credito' ? parseFloat(creditLimit) : 0, selectedCategory, dueDate, debitAccountId); // Passa o dueDate
-    setCreditLimit('');
-    setDueDate(1); // Reseta para o padrão
+
+    addAccount(newAccountName, 0, 'Debito', null, null); // Adiciona apenas contas de débito
     setNewAccountName(''); // Limpar o nome da conta após adicionar
-    setSelectedAccount(null);
-    setSelectedCategory(selectedCategory === 'Credito' ? 'Credito' : 'Debito'); // Voltar ao estado inicial
   };
-  
 
   const openEditModal = (account) => {
     setSelectedAccount(account);
@@ -70,27 +43,6 @@ const AccountModal = ({ visible, onClose }) => {
     setAccountToRemove(null);
   };
 
-  // Funções para manipular o dia de vencimento
-  const increaseDueDate = () => setDueDate(prev => (prev < 28 ? prev + 1 : prev));
-const decreaseDueDate = () => setDueDate(prev => (prev > 1 ? prev - 1 : prev));
-
-const handleDueDateChange = (text) => {
-  const value = parseInt(text, 10);
-
-  if (!isNaN(value)) {
-    if (value > 28) {
-      Alert.alert('Erro', 'O dia de vencimento não pode ser maior que 28.');
-      setDueDate(28); // Resetar para 28 se o valor for maior que 28
-    } else if (value < 1) {
-      Alert.alert('Erro', 'O dia de vencimento não pode ser menor que 1.');
-      setDueDate(1); // Resetar para 1 se o valor for menor que 1
-    } else {
-      setDueDate(value);
-    }
-  } else {
-    setDueDate(1); // Valor padrão se o input for inválido
-  }
-};
   return (
     <View style={optionsStyles.container}>
       <Modal
@@ -108,135 +60,35 @@ const handleDueDateChange = (text) => {
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
             <Text style={optionsStyles.modalTitle}>Gerir Contas</Text>
-            <View style={optionsStyles.categoryButtonContainer}>
-              <TouchableOpacity
-                style={[optionsStyles.categoryButton,
-                selectedCategory === 'Debito' && optionsStyles.incomeButton
-                ]}
-                onPress={() => setSelectedCategory('Debito')}
-              >
-                <Text style={[optionsStyles.categoryButtonText,
-                selectedCategory === 'Debito' && optionsStyles.expenseButtonText
-                ]}>Contas</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[optionsStyles.categoryButton,
-                selectedCategory === 'Credito' && optionsStyles.expenseButton,
-                ]}
-                onPress={() => setSelectedCategory('Credito')}
-              >
-                <Text style={[optionsStyles.categoryButtonText,
-                selectedCategory === 'Credito' && optionsStyles.incomeButtonText
-                ]}>Cartões</Text>
-              </TouchableOpacity>
 
+            <TextInput
+              style={optionsStyles.input}
+              value={newAccountName}
+              onChangeText={setNewAccountName}
+              placeholder="Nome da nova conta"
+            />
 
-            </View>
+            <Button title="Adicionar Conta" onPress={handleAddAccount} />
 
-            {selectedCategory === 'Credito' && (
-              <>
-                <Picker
-                  selectedValue={selectedAccount}
-                  style={optionsStyles.picker}
-                  onValueChange={(itemValue) => setSelectedAccount(itemValue)}
-                >
-                  <Picker.Item label="Selecionar Conta" value={null} />
-
-                  {debitAccounts.map(account => (
-                    <Picker.Item key={account.id} label={account.name} value={account.id} />
-                  ))}
-                </Picker>
-                <TextInput
-                  style={optionsStyles.input}
-                  value={creditLimit}
-                  onChangeText={setCreditLimit}
-                  placeholder="Limite do cartão de crédito"
-                  keyboardType="numeric"
-                />
-                <View style={addTransactionsStyles.recurrenceLabelContainer}>
-                  <Text style={{ flexDirection: 'left', fontSize: 20 }}>Dia de Vencimento</Text>
-                  <View style={addTransactionsStyles.recurrenceControls}>
-                    <TouchableOpacity
-                      style={addTransactionsStyles.recurrenceButton}
-                      onPress={decreaseDueDate}
-                    >
-                      <Ionicons name={"chevron-down-outline"} />
+            <FlatList
+              data={debitAccounts}
+              keyExtractor={item => item.id}
+              renderItem={({ item }) => (
+                <View style={optionsStyles.accountItem}>
+                  <Text style={optionsStyles.accountName}>
+                    {item.name}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TouchableOpacity onPress={() => openEditModal(item)}>
+                      <Ionicons name="create" size={24} color="black" />
                     </TouchableOpacity>
-
-                    <TextInput
-                      style={addTransactionsStyles.recurrenceInput}
-                      value={dueDate.toString()}
-                      keyboardType="numeric"
-                      onChangeText={handleDueDateChange}
-                    />
-
-                    <TouchableOpacity
-                      style={addTransactionsStyles.recurrenceButton}
-                      onPress={increaseDueDate}
-                    >
-                      <Ionicons name={"chevron-up-outline"} />
+                    <TouchableOpacity onPress={() => openConfirmModal(item.id)} style={{ marginLeft: 10 }}>
+                      <Ionicons name="trash" size={24} color="red" />
                     </TouchableOpacity>
                   </View>
                 </View>
-              </>
-            )}
-
-            {selectedCategory === 'Debito' && (
-              <TextInput
-                style={optionsStyles.input}
-                value={newAccountName}
-                onChangeText={setNewAccountName}
-                placeholder="Nome da nova conta"
-              />
-            )}
-
-            <Button title="Adicionar Conta" onPress={handleAddAccount} />
-            {selectedCategory === 'Debito' && (
-              <FlatList
-                data={debitAccounts}
-                keyExtractor={item => item.id}
-
-                renderItem={({ item }) => (
-                  <View style={optionsStyles.accountItem}>
-                    <Text style={optionsStyles.accountName}>
-                      {item.name} 
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <TouchableOpacity onPress={() => openEditModal(item)}>
-                        <Ionicons name="create" size={24} color="black" />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => openConfirmModal(item.id)} style={{ marginLeft: 10 }}>
-                        <Ionicons name="trash" size={24} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              />
-            )}
-            {selectedCategory === 'Credito' && (
-              <FlatList
-                data={creditAccounts}
-                keyExtractor={item => item.id}
-
-                renderItem={({ item }) => (
-                  <View style={optionsStyles.accountItem}>
-                    <Text style={optionsStyles.accountName}>
-                      {item.name} {'\n'}
-                      Limite: {item.initialBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} {'\n'}
-                      Vencimento: Dia {item.dueDate || 'N/A'}
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <TouchableOpacity onPress={() => openEditModal(item)}>
-                        <Ionicons name="create" size={24} color="black" />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => openConfirmModal(item.id)} style={{ marginLeft: 10 }}>
-                        <Ionicons name="trash" size={24} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              />
-            )}
+              )}
+            />
           </View>
         </View>
       </Modal>

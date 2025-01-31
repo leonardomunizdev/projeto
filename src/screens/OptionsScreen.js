@@ -199,10 +199,7 @@ const OptionsScreen = () => {
               <Ionicons name="download" size={24} color="black" />
               <Text style={optionsStyles.optionText}>Baixar comprovantes</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsImportModalVisible(true)}>
-              <Ionicons name="folder-open" size={RFValue(24)} color="black" />
-              <Text style={optionsStyles.optionText}>Importar CSV</Text>
-            </TouchableOpacity>
+            
 
             <TouchableOpacity style={optionsStyles.optionButton} onPress={() => setIsChartsModalVisible(true)}>
               <Ionicons name="stats-chart" size={RFValue(24)} color="black" />

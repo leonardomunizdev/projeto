@@ -27,7 +27,6 @@ const SelectedCardsModal = ({ visible, onClose, cardVisibility, toggleCardVisibi
                   card === 'SpendingLimitCard' ? 'Limite de Gastos' :
                   card === 'AccountsCard' ? 'Contas' :
                   card === 'MonthlyBalanceCard' ? 'Balanço Mensal' :
-                  card === 'CreditCard' ? 'Cartões de Credito' : 
                   card
                 }
               </Text>
